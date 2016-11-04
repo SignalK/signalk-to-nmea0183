@@ -10,5 +10,8 @@
     "signalk-node-server-plugin"
   ],
   "author": "teppo.kurki@iki,fi",
-  "license": "ISC"
+  "license": "ISC",
+  "dependencies": {
+    "baconjs": "^0.7.88"
+  }
 }

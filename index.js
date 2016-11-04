@@ -1,5 +1,4 @@
-// const streamBundle = require('../streambundle');
-// const debug = require('debug')('signalk-server:interfaces:setSystemDateTime');
+const Bacon = require('baconjs');
 
 module.exports = function(app) {
   var plugin = {
