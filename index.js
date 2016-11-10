@@ -33,7 +33,7 @@ module.exports = function(app) {
     const selfMatcher = (delta) => delta.context && delta.context === selfContext
 
     function mapToNmea(encoder) {
-      const selfStreams = encoder.keys.map(app.streambundle.getOwnStream, app.streambundle)
+      const selfStreams = encoder.keys.map(app.streambundle.getSelfStream, app.streambundle)
       plugin.unsubscribes.push(Bacon.combineWith(encoder.f, selfStreams).changes().debounceImmediate(20).log().onValue(nmeaString => {
         app.emit('nmea0183out', nmeaString)
       }))
