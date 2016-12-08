@@ -26,6 +26,14 @@ module.exports = function(app) {
         type: "boolean",
         default: false
       },
+      PSILTBS: {
+        type: "boolean",
+        default: false
+      },
+      PSILCD1: {
+        type: "boolean",
+        default: false
+      },
     }
   }
   plugin.start = function(options) {
@@ -47,6 +55,12 @@ module.exports = function(app) {
     }
     if (options.RMC) {
       mapToNmea(RMC)
+    }
+    if (options.PSILTBS) {
+      mapToNmea(PSILTBS)
+    }
+    if (options.PSILCD1) {
+      mapToNmea(PSILCD1)
     }
   }
 
@@ -199,6 +213,57 @@ var RMC = {
   }
 }
 
+/*
+PSILTBS - Proprietary target boat speed sentence for Silva => Nexus => Garmin displays
+
+
+           0     1  2
+           |     |  |
+ $PSILTBS,XX.xx,N,*hh<CR><LF>
+Field Number:
+0 Target Boat speed in knots
+1 N for knots
+2 Checksum
+*/
+
+var PSILTBS = {
+  keys: [
+    'performance.targetSpeed'
+    ],
+  f: function(tbs) {
+    return toSentence([
+      '$PSILTBS',
+      (tbs * 1.94384).toFixed(1),
+      'N'
+    ]);
+  }
+}
+
+/*
+PSILCD1 - Proprietary polar boat speed sentence for Silva => Nexus => Garmin displays
+
+
+           0     1     2
+           |     |     |
+ $PSILCD1,XX.xx,YY.yy,*hh<CR><LF>
+Field Number:
+0 Polar Boat speed in knots
+1 Target wind angle
+2 Checksum
+*/
+
+var PSILCD1 = {
+  keys: [
+    'performance.polarSpeed', 'performance.targetAngle'
+    ],
+  f: function(polarSpeed, targetAngle) {
+    return toSentence([
+      '$PSILCD1',
+      (polarSpeed * 1.94384).toFixed(2),
+      (targetAngle / Math.PI * 180).toFixed(0)
+    ]);
+  }
+}
 //===========================================================================
 
 function toSentence(parts) {
