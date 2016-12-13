@@ -15,22 +15,32 @@ module.exports = function(app) {
     description: "If there is SK data for the conversion generate the following NMEA0183 sentences from Signal K data:",
     properties: {
       APB: {
+        title: "APB",
+        subtitle: "Autopilot info",
         type: "boolean",
         default: false
       },
       MWV: {
+        title: "MWV",
+        description: "Wind heading and speed",
         type: "boolean",
         default: false
       },
       RMC: {
+        title: "RMC",
+        description: "GPS recommended minimum",
         type: "boolean",
         default: false
       },
       PSILTBS: {
+        title: "PSILTBS",
+        description: "Send target boat speed to Silva/Nexus/Garmin displays",
         type: "boolean",
         default: false
       },
       PSILCD1: {
+        title: "PSILCD1",
+        description: "Send polar speed and target wind angle to Silva/Nexus/Garmin displays",
         type: "boolean",
         default: false
       },
