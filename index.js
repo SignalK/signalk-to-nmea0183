@@ -15,14 +15,27 @@ module.exports = function(app) {
     description: "If there is SK data for the conversion generate the following NMEA0183 sentences from Signal K data:",
     properties: {
       APB: {
+        title: "APB - Autopilot info",
         type: "boolean",
         default: false
       },
       MWV: {
+        title: "MWV - Wind heading and speed",
         type: "boolean",
         default: false
       },
       RMC: {
+        title: "RMC - GPS recommended minimum",
+        type: "boolean",
+        default: false
+      },
+      PSILTBS: {
+        title: "PSILTBS - Send target boat speed to Silva/Nexus/Garmin displays",
+        type: "boolean",
+        default: false
+      },
+      PSILCD1: {
+        title: "PSILCD1 - Send polar speed and target wind angle to Silva/Nexus/Garmin displays",
         type: "boolean",
         default: false
       },
@@ -47,6 +60,12 @@ module.exports = function(app) {
     }
     if (options.RMC) {
       mapToNmea(RMC)
+    }
+    if (options.PSILTBS) {
+      mapToNmea(PSILTBS)
+    }
+    if (options.PSILCD1) {
+      mapToNmea(PSILCD1)
     }
   }
 
@@ -199,6 +218,57 @@ var RMC = {
   }
 }
 
+/*
+PSILTBS - Proprietary target boat speed sentence for Silva => Nexus => Garmin displays
+
+
+           0     1  2
+           |     |  |
+ $PSILTBS,XX.xx,N,*hh<CR><LF>
+Field Number:
+0 Target Boat speed in knots
+1 N for knots
+2 Checksum
+*/
+
+var PSILTBS = {
+  keys: [
+    'performance.targetSpeed'
+    ],
+  f: function(tbs) {
+    return toSentence([
+      '$PSILTBS',
+      (tbs * 1.94384).toFixed(1),
+      'N'
+    ]);
+  }
+}
+
+/*
+PSILCD1 - Proprietary polar boat speed sentence for Silva => Nexus => Garmin displays
+
+
+           0     1     2
+           |     |     |
+ $PSILCD1,XX.xx,YY.yy,*hh<CR><LF>
+Field Number:
+0 Polar Boat speed in knots
+1 Target wind angle
+2 Checksum
+*/
+
+var PSILCD1 = {
+  keys: [
+    'performance.polarSpeed', 'performance.targetAngle'
+    ],
+  f: function(polarSpeed, targetAngle) {
+    return toSentence([
+      '$PSILCD1',
+      (polarSpeed * 1.94384).toFixed(2),
+      (targetAngle / Math.PI * 180).toFixed(0)
+    ]);
+  }
+}
 //===========================================================================
 
 function toSentence(parts) {
