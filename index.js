@@ -102,7 +102,7 @@ var MWV = {
   f: function mwv(angle, speed) {
     return toSentence([
       '$SKMWV',
-      angle.toFixed(1),
+      (angle / Math.PI * 180).toFixed(1),
       'R',
       speed.toFixed(1),
       'M',
