@@ -206,9 +206,9 @@ var RMC = {
     return toSentence([
       '$SKRMC', hours + minutes + seconds + '.020',
       'A',
-      conv_latlon(position.latitude),
+      toNmeaDegrees(position.latitude),
       position.latitude < 0 ? 'S' : 'N',
-      conv_latlon(position.longitude),
+      toNmeaDegrees(position.longitude),
       position.longitude < 0 ? 'W' : 'E',
       (sog * 1.94384).toFixed(1),
       radsToDeg(cog).toFixed(1),
@@ -334,7 +334,7 @@ function padd(n, p, c)
   return (pad + n).slice(-pad.length);
 }
 
-function conv_latlon(val)
+function toNmeaDegrees(val)
 {
   val = Math.abs(val)
   var minutes = Math.floor(val)
