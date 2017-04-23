@@ -39,6 +39,42 @@ module.exports = function(app) {
         type: "boolean",
         default: false
       },
+      HDT: {
+        title: "HDT - Heading True",
+        type: "boolean",
+        default: false
+      },
+      HDM: {
+        title: "HDM - Heading Magnetic",
+        type: "boolean",
+        default: false
+      },
+      ROT: {
+        title: "ROT - Rate of Turn",
+        type: "boolean",
+        default: false
+      },
+      DBK: {
+        title: "DBK - Depth Below Keel",
+        type: "boolean",
+        default: false
+      },
+      DBS: {
+        title: "DBK - Depth Below Surface",
+        type: "boolean",
+        default: false
+      },
+      DBT: {
+        title: "DBK - Depth Below Transducer",
+        type: "boolean",
+        default: false
+      },
+      MTW: {
+        title: "MTW - Water Temperature",
+        type: "boolean",
+        default: false
+      },
+
     }
   }
   plugin.start = function(options) {
@@ -47,7 +83,7 @@ module.exports = function(app) {
 
     function mapToNmea(encoder) {
       const selfStreams = encoder.keys.map(app.streambundle.getSelfStream, app.streambundle)
-      plugin.unsubscribes.push(Bacon.combineWith(encoder.f, selfStreams).changes().debounceImmediate(20).log().onValue(nmeaString => {
+      plugin.unsubscribes.push(Bacon.combineWith(encoder.f, selfStreams).changes().debounceImmediate(20).onValue(nmeaString => {
         app.emit('nmea0183out', nmeaString)
       }))
     }
@@ -66,6 +102,27 @@ module.exports = function(app) {
     }
     if (options.PSILCD1) {
       mapToNmea(PSILCD1)
+    }
+        if (options.HDT) {
+      mapToNmea(HDT)
+    }
+    if (options.HDM) {
+      mapToNmea(HDM)
+    }
+    if (options.ROT) {
+      mapToNmea(ROT)
+    }
+    if (options.DBK) {
+      mapToNmea(DBK)
+    }
+    if (options.DBS) {
+      mapToNmea(DBS)
+    }
+    if (options.DBT) {
+      mapToNmea(DBT)
+    }
+    if (options.MTW) {
+      mapToNmea(MTW)
     }
   }
 
@@ -102,7 +159,7 @@ var MWV = {
   f: function mwv(angle, speed) {
     return toSentence([
       '$SKMWV',
-      (angle / Math.PI * 180).toFixed(1),
+      radsToDeg(angle).toFixed(1),
       'R',
       speed.toFixed(1),
       'M',
@@ -210,7 +267,7 @@ var RMC = {
       '0000.00',
       'E',
       (sog * 1.94384).toFixed(1),
-      cog.toFixed(1),
+      radsToDeg(cog).toFixed(1),
       '0000',
       '7.0',
       'E'
@@ -269,6 +326,118 @@ var PSILCD1 = {
     ]);
   }
 }
+
+var HDT = {
+  keys: [
+    'navigation.headingTrue'
+  ],
+  f: function mwv(heading) {
+    return toSentence([
+      '$SKHDT',
+      radsToDeg(heading).toFixed(1),
+      'T'
+    ]);
+  }
+};
+
+var HDM = {
+  keys: [
+    'navigation.headingMagnetic'
+  ],
+  f: function mwv(heading) {
+    return toSentence([
+      '$SKHDM',
+      radsToDeg(heading).toFixed(1),
+      'M'
+    ]);
+  }
+};
+
+var ROT = {
+  keys: [
+    'navigation.rateOfTurn'
+  ],
+  f: function mwv(rot) {
+    var degm = rot * 3437.74677078493
+    return toSentence([
+      '$SKROT',
+      degm.toFixed(1),
+      'A'
+    ]);
+  }
+};
+
+var DBK = {
+  keys: [
+    'environment.depth.belowKeel'
+  ],
+  f: function mwv(depth) {
+    var feet = depth * 3.28084
+    var fathoms = depth * 0.546807
+    return toSentence([
+      '$SKDBK',
+      feet.toFixed(1),
+      'f',
+      depth.toFixed(2),
+      'M',
+      fathoms.toFixed(1),
+      'F'
+    ]);
+  }
+};
+
+var DBS = {
+  keys: [
+    'environment.depth.belowSurface'
+  ],
+  f: function mwv(depth) {
+    var feet = depth * 3.28084
+    var fathoms = depth * 0.546807
+    return toSentence([
+      '$SKDBS',
+      feet.toFixed(1),
+      'f',
+      depth.toFixed(2),
+      'M',
+      fathoms.toFixed(1),
+      'F'
+    ]);
+  }
+};
+
+var DBT = {
+  keys: [
+    'environment.depth.belowTransducer'
+  ],
+  f: function mwv(depth) {
+    var feet = depth * 3.28084
+    var fathoms = depth * 0.546807
+    return toSentence([
+      '$SKDBT',
+      feet.toFixed(1),
+      'f',
+      depth.toFixed(2),
+      'M',
+      fathoms.toFixed(1),
+      'F'
+    ]);
+  }
+};
+
+var MTW = {
+  keys: [
+    'environment.water.temperature'
+  ],
+  f: function mwv(temperature) {
+    var celcius = temperature + 273.15;
+    return toSentence([
+      '$SKMTW',
+      celcius.toFixed(1),
+      'C'
+    ]);
+  }
+};
+
 //===========================================================================
 
 function toSentence(parts) {
@@ -321,3 +490,8 @@ function toHexString(v) {
   lsn = (v >> 0) & 0x0f;
   return m_hex[msn] + m_hex[lsn];
 };
+
+function radsToDeg(radians) {
+  return radians * 180 / Math.PI
+}
+
