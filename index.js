@@ -47,7 +47,7 @@ module.exports = function(app) {
 
     function mapToNmea(encoder) {
       const selfStreams = encoder.keys.map(app.streambundle.getSelfStream, app.streambundle)
-      plugin.unsubscribes.push(Bacon.combineWith(encoder.f, selfStreams).changes().debounceImmediate(20).log().onValue(nmeaString => {
+      plugin.unsubscribes.push(Bacon.combineWith(encoder.f, selfStreams).changes().debounceImmediate(20).onValue(nmeaString => {
         app.emit('nmea0183out', nmeaString)
       }))
     }
@@ -195,22 +195,23 @@ Field Number:
 
 var RMC = {
   keys: [
-    'navigation.datetime', 'navigation.speedOverGround', 'navigation.courseOverGroundTrue'
+    'navigation.datetime', 'navigation.speedOverGround', 'navigation.courseOverGroundTrue', 'navigation.position'
   ],
-  f: function(datetime8601, sog, cog) {
+  f: function(datetime8601, sog, cog, position) {
     var datetime = new Date(datetime8601);
     var hours = ('00' + datetime.getHours()).slice(-2);
     var minutes = ('00' + datetime.getMinutes()).slice(-2);
     var seconds = ('00' + datetime.getSeconds()).slice(-2);
+
     return toSentence([
       '$SKRMC', hours + minutes + seconds + '.020',
       'A',
-      '0000.00',
-      'N',
-      '0000.00',
-      'E',
+      conv_latlon(position.latitude),
+      position.latitude < 0 ? 'S' : 'N',
+      conv_latlon(position.longitude),
+      position.longitude < 0 ? 'W' : 'E',
       (sog * 1.94384).toFixed(1),
-      cog.toFixed(1),
+      radsToDeg(cog).toFixed(1),
       '0000',
       '7.0',
       'E'
@@ -321,3 +322,27 @@ function toHexString(v) {
   lsn = (v >> 0) & 0x0f;
   return m_hex[msn] + m_hex[lsn];
 };
+
+function radsToDeg(radians) {
+  return radians * 180 / Math.PI
+}
+
+function padd(n, p, c)
+{
+  var pad_char = typeof c !== 'undefined' ? c : '0';
+  var pad = new Array(1 + p).join(pad_char);
+  return (pad + n).slice(-pad.length);
+}
+
+function conv_latlon(val)
+{
+  if ( val < 0 )
+  {
+    val *= -1;
+  }
+	
+  var lati = Math.floor(val)
+  var latm = val - lati 
+  latm *= 60.0;
+  return padd(lati.toFixed(0),2) + padd(latm.toFixed(4), 7)
+}
