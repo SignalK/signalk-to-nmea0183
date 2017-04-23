@@ -1,7 +1,5 @@
 const Bacon = require('baconjs');
 
-const util = require('util')
-
 module.exports = function(app) {
   var plugin = {
     unsubscribes: []
