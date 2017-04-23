@@ -336,11 +336,7 @@ function padd(n, p, c)
 
 function conv_latlon(val)
 {
-  if ( val < 0 )
-  {
-    val *= -1;
-  }
-	
+  val = Math.abs(val)
   var lati = Math.floor(val)
   var latm = val - lati 
   latm *= 60.0;
