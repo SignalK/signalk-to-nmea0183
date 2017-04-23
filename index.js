@@ -103,7 +103,7 @@ module.exports = function(app) {
     if (options.PSILCD1) {
       mapToNmea(PSILCD1)
     }
-        if (options.HDT) {
+    if (options.HDT) {
       mapToNmea(HDT)
     }
     if (options.HDM) {
