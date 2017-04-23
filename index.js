@@ -337,8 +337,8 @@ function padd(n, p, c)
 function conv_latlon(val)
 {
   val = Math.abs(val)
-  var lati = Math.floor(val)
-  var latm = val - lati 
-  latm *= 60.0;
-  return padd(lati.toFixed(0),2) + padd(latm.toFixed(4), 7)
+  var minutes = Math.floor(val)
+  var minutes_decimal = val % 1
+  minutes_decimal *= 60.0;
+  return padd(minutes.toFixed(0),2) + padd(minutes_decimal.toFixed(4), 7)
 }
