@@ -162,9 +162,9 @@ module.exports = function(app) {
     RMC: {
       title: "RMC - GPS recommended minimum",
       keys: [
-        'navigation.datetime', 'navigation.speedOverGround', 'navigation.courseOverGroundTrue'
+        'navigation.datetime', 'navigation.speedOverGround', 'navigation.courseOverGroundTrue', 'navigation.position'
       ],
-      f: function(datetime8601, sog, cog) {
+      f: function(datetime8601, sog, cog, position) {
         var datetime = new Date(datetime8601);
         var hours = ('00' + datetime.getHours()).slice(-2);
         var minutes = ('00' + datetime.getMinutes()).slice(-2);
