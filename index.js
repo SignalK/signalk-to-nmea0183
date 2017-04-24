@@ -361,7 +361,7 @@ module.exports = function(app) {
   //===========================================================================
   
   Object.keys(plugin.sentences).forEach(key => {
-    sentence = plugin.sentences[key]
+    var sentence = plugin.sentences[key]
     plugin.schema.properties[key] = {
       title: sentence['title'],
       type: "boolean",
