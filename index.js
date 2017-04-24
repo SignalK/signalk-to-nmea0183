@@ -172,10 +172,10 @@ module.exports = function(app) {
         return toSentence([
           '$SKRMC', hours + minutes + seconds + '.020',
           'A',
-          '0000.00',
-          'N',
-          '0000.00',
-          'E',
+          toNmeaDegrees(position.latitude),
+          position.latitude < 0 ? 'S' : 'N',
+          toNmeaDegrees(position.longitude),
+          position.longitude < 0 ? 'W' : 'E',
           (sog * 1.94384).toFixed(1),
           radsToDeg(cog).toFixed(1),
           '0000',
@@ -369,7 +369,6 @@ module.exports = function(app) {
     }
   });
 
-
   return plugin
 }
 
@@ -429,3 +428,18 @@ function radsToDeg(radians) {
   return radians * 180 / Math.PI
 }
 
+function padd(n, p, c)
+{
+  var pad_char = typeof c !== 'undefined' ? c : '0';
+  var pad = new Array(1 + p).join(pad_char);
+  return (pad + n).slice(-pad.length);
+}
+
+function toNmeaDegrees(val)
+{
+  val = Math.abs(val)
+  var minutes = Math.floor(val)
+  var minutes_decimal = val % 1
+  minutes_decimal *= 60.0;
+  return padd(minutes.toFixed(0),2) + padd(minutes_decimal.toFixed(4), 7)
+}
