@@ -348,7 +348,7 @@ module.exports = function(app) {
         'environment.water.temperature'
       ],
       f: function mwv(temperature) {
-        var celcius = temperature + 273.15;
+        var celcius = temperature - 273.15;
         return toSentence([
           '$SKMTW',
           celcius.toFixed(1),
