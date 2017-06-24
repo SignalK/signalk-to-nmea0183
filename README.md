@@ -26,3 +26,4 @@ Internally the plugin emits events named `nmea0183out`. This configuration sends
 
 ![image](https://user-images.githubusercontent.com/1049678/27145294-e21dd896-513d-11e7-9ebc-1e1d4b6cf0db.png)
 
+
