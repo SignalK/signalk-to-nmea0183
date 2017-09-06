@@ -140,8 +140,8 @@ module.exports = function(app) {
       This is one of the sentences commonly emitted by GPS units.
 
       12
-      1         2 3       4 5        6  7   8   9    10 11|  13
-      |         | |       | |        |  |   |   |    |  | |   |
+             1         2 3       4 5        6  7   8   9    10 11|  13
+             |         | |       | |        |  |   |   |    |  | |   |
       $--RMC,hhmmss.ss,A,llll.ll,a,yyyyy.yy,a,x.x,x.x,xxxx,x.x,a,m,*hh<CR><LF>
       Field Number:
       1 UTC Time
@@ -169,17 +169,25 @@ module.exports = function(app) {
         var hours = ('00' + datetime.getHours()).slice(-2);
         var minutes = ('00' + datetime.getMinutes()).slice(-2);
         var seconds = ('00' + datetime.getSeconds()).slice(-2);
+
+        var day = ('00' +datetime.getUTCDate()).slice(-2);
+        var month = ('00' +(datetime.getUTCMonth() + 1)).slice(-2); //months from 1-12
+        var year = ('00' +datetime.getUTCFullYear()).slice(-2);
+
         return toSentence([
-          '$SKRMC', hours + minutes + seconds + '.020',
+          '$SKRMC', hours + minutes + seconds,
           'A',
-          toNmeaDegrees(position.latitude),
+          // Force 4 digits before decimal point and 4 digits after
+          ('0000' + ((toNmeaDegrees(position.latitude)*1).toFixed(4))).slice(-9),
           position.latitude < 0 ? 'S' : 'N',
-          toNmeaDegrees(position.longitude),
+          // Force 5 digits before decimal point and 4 digits after
+          ('00000' + ((toNmeaDegrees(position.longitude)*1).toFixed(4))).slice(-10),
           position.longitude < 0 ? 'W' : 'E',
           (sog * 1.94384).toFixed(1),
           radsToDeg(cog).toFixed(1),
-          '0000',
-          '7.0',
+          day+month+year,
+          // We submit a Magnetic Variation of 0.
+          '0.0',
           'E'
         ]);
       }
