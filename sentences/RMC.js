@@ -1,0 +1,75 @@
+/*
+      RMC - Recommended Minimum Navigation Information
+      This is one of the sentences commonly emitted by GPS units.
+
+      12
+      1         2 3       4 5        6  7   8   9    10 11|  13
+      |         | |       | |        |  |   |   |    |  | |   |
+      $--RMC,hhmmss.ss,A,llll.ll,a,yyyyy.yy,a,x.x,x.x,xxxx,x.x,a,m,*hh<CR><LF>
+      Field Number:
+      1 UTC Time
+      2 Status, V=Navigation receiver warning A=Valid
+      3 Latitude
+      4 N or S
+      5 Longitude
+      6 E or W
+      7 Speed over ground, knots
+      8 Track made good, degrees true
+      9 Date, ddmmyy
+      10 Magnetic Variation, degrees
+      11 E or W
+      12 FAA mode indicator (NMEA 2.3 and later)
+      13 Checksum
+    */
+// This needs to run faster that others.
+
+// NMEA0183 Encoder RMC   $INRMC,200152.020,A,5943.2980,N,2444.1043,E,6.71,194.30,0000,8.1,E*40
+const { toSentence, toNmeaDegrees, radsToDeg } = require('../nmea.js')
+module.exports = function (app) {
+  return {
+    title: 'RMC - GPS recommended minimum',
+    keys: [
+      'navigation.datetime',
+      'navigation.speedOverGround',
+      'navigation.courseOverGroundTrue',
+      'navigation.position',
+      'navigation.magneticVariation'
+    ],
+    defaults: ['', undefined, undefined, undefined],
+    f: function (datetime8601, sog, cog, position) {
+      let time = ''
+      let date = ''
+      if (datetime8601.length > 0) {
+        let datetime = new Date(datetime8601)
+        let hours = ('00' + datetime.getHours()).slice(-2)
+        let minutes = ('00' + datetime.getMinutes()).slice(-2)
+        let seconds = ('00' + datetime.getSeconds()).slice(-2)
+
+        let day = ('00' + datetime.getUTCDate()).slice(-2)
+        let month = ('00' + (datetime.getUTCMonth() + 1)).slice(-2) // months from 1-12
+        let year = ('00' + datetime.getUTCFullYear()).slice(-2)
+        time = hours + minutes + seconds
+        date = day + month + year
+      }
+      return toSentence([
+        '$SKRMC',
+        time,
+        'A',
+        // Force 4 digits before decimal point and 4 digits after
+        ('0000' + (toNmeaDegrees(position.latitude) * 1).toFixed(4)).slice(-9),
+        position.latitude < 0 ? 'S' : 'N',
+        // Force 5 digits before decimal point and 4 digits after
+        ('00000' + (toNmeaDegrees(position.longitude) * 1).toFixed(4)).slice(
+          -10
+        ),
+        position.longitude < 0 ? 'W' : 'E',
+        (sog * 1.94384).toFixed(1),
+        radsToDeg(cog).toFixed(1),
+        date,
+        // We submit a Magnetic Variation of 0.
+        '0.0',
+        'E'
+      ])
+    }
+  }
+}
