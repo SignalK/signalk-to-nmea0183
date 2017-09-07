@@ -5,7 +5,7 @@
   "main": "index.js",
   "scripts": {
     "test": "mocha",
-    "format": "prettier-standard '*.js*'"
+    "format": "prettier-standard '*.js*' 'sentences/*.js'"
   },
   "keywords": ["signalk-node-server-plugin"],
   "author": "teppo.kurki@iki,fi",
