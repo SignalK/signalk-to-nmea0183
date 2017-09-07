@@ -1,28 +1,35 @@
-const Bacon = require('baconjs');
-const {toSentence, computeChecksum, toHexString, radsToDeg, padd, toNmeaDegrees} = require('./nmea')
+const Bacon = require('baconjs')
+const {
+  toSentence,
+  computeChecksum,
+  toHexString,
+  radsToDeg,
+  padd,
+  toNmeaDegrees
+} = require('./nmea')
 
-
-module.exports = function(app) {
+module.exports = function (app) {
   var plugin = {
     unsubscribes: []
-  };
+  }
 
-  plugin.id = "sk-to-nmea0183"
-  plugin.name = "Convert Signal K to NMEA0183"
-  plugin.description = "Plugin to convert Signal K to NMEA0183"
+  plugin.id = 'sk-to-nmea0183'
+  plugin.name = 'Convert Signal K to NMEA0183'
+  plugin.description = 'Plugin to convert Signal K to NMEA0183'
 
   plugin.schema = {
-    type: "object",
-    title: "Conversions to NMEA0183",
-    description: "If there is SK data for the conversion generate the following NMEA0183 sentences from Signal K data:",
+    type: 'object',
+    title: 'Conversions to NMEA0183',
+    description:
+      'If there is SK data for the conversion generate the following NMEA0183 sentences from Signal K data:',
     properties: {}
   }
-  
-  plugin.start = function(options) {
-    const selfContext = 'vessels.' + app.selfId
-    const selfMatcher = (delta) => delta.context && delta.context === selfContext
 
-    function mapToNmea(encoder) {
+  plugin.start = function (options) {
+    const selfContext = 'vessels.' + app.selfId
+    const selfMatcher = delta => delta.context && delta.context === selfContext
+
+    function mapToNmea (encoder) {
       const selfStreams = encoder.keys.map((key, index) => {
         let stream = app.streambundle.getSelfStream(key)
         if (encoder.defaults && encoder.defaults[index] != undefined) {
@@ -30,20 +37,24 @@ module.exports = function(app) {
         }
         return stream
       }, app.streambundle)
-      plugin.unsubscribes.push(Bacon.combineWith(encoder.f, selfStreams).changes().debounceImmediate(20).onValue(nmeaString => {
-        app.emit('nmea0183out', nmeaString)
-      }))
+      plugin.unsubscribes.push(
+        Bacon.combineWith(encoder.f, selfStreams)
+          .changes()
+          .debounceImmediate(20)
+          .onValue(nmeaString => {
+            app.emit('nmea0183out', nmeaString)
+          })
+      )
     }
 
     Object.keys(plugin.sentences).forEach(name => {
-      if ( options[name] )
-      {
-        mapToNmea(plugin.sentences[name]);
+      if (options[name]) {
+        mapToNmea(plugin.sentences[name])
       }
     })
   }
 
-  plugin.stop = function() {
+  plugin.stop = function () {
     plugin.unsubscribes.forEach(f => f())
   }
 
@@ -68,11 +79,12 @@ module.exports = function(app) {
     */
 
     MWV: {
-      title: "MWV - Wind heading and speed",
+      title: 'MWV - Wind heading and speed',
       keys: [
-        'environment.wind.angleApparent', 'environment.wind.speedApparent'
+        'environment.wind.angleApparent',
+        'environment.wind.speedApparent'
       ],
-      f: function mwv(angle, speed) {
+      f: function mwv (angle, speed) {
         return toSentence([
           '$SKMWV',
           radsToDeg(angle).toFixed(1),
@@ -80,7 +92,7 @@ module.exports = function(app) {
           speed.toFixed(1),
           'M',
           'A'
-        ]);
+        ])
       }
     },
 
@@ -120,15 +132,19 @@ module.exports = function(app) {
       Example: $GPAPB,A,A,0.10,R,N,V,V,011,M,DEST,011,M,011,M*82
     */
     APB: {
-      title: "APB - Autopilot info",
+      title: 'APB - Autopilot info',
       keys: [
-        'navigation.courseGreatCircle.crossTrackError', 'navigation.courseGreatCircle.bearingTrackTrue', 'navigation.courseGreatCircle.nextPoint'
+        'navigation.courseGreatCircle.crossTrackError',
+        'navigation.courseGreatCircle.bearingTrackTrue',
+        'navigation.courseGreatCircle.nextPoint'
       ],
-      f: function(xte, originToDest, nextPoint) {
+      f: function (xte, originToDest, nextPoint) {
         return toSentence([
-          '$SKAPB', 'A', 'A', Math.abs(xte), xte > 0
-            ? 'L'
-            : 'R',
+          '$SKAPB',
+          'A',
+          'A',
+          Math.abs(xte),
+          xte > 0 ? 'L' : 'R',
           'M',
           'V',
           'V',
@@ -139,7 +155,7 @@ module.exports = function(app) {
           'T',
           (nextPoint.bearingTrue / Math.PI * 180).toFixed(0),
           'T'
-        ]);
+        ])
       }
     },
 
@@ -168,36 +184,42 @@ module.exports = function(app) {
     */
 
     RMC: {
-      title: "RMC - GPS recommended minimum",
+      title: 'RMC - GPS recommended minimum',
       keys: [
-        'navigation.datetime', 'navigation.speedOverGround', 'navigation.courseOverGroundTrue', 'navigation.position'
+        'navigation.datetime',
+        'navigation.speedOverGround',
+        'navigation.courseOverGroundTrue',
+        'navigation.position'
       ],
-      defaults: [
-        "", undefined, undefined, undefined
-      ],
-      f: function(datetime8601, sog, cog, position) {
+      defaults: ['', undefined, undefined, undefined],
+      f: function (datetime8601, sog, cog, position) {
         let time = ''
         let date = ''
         if (datetime8601.length > 0) {
-          var datetime = new Date(datetime8601);
-          var hours = ('00' + datetime.getHours()).slice(-2);
-          var minutes = ('00' + datetime.getMinutes()).slice(-2);
-          var seconds = ('00' + datetime.getSeconds()).slice(-2);
+          var datetime = new Date(datetime8601)
+          var hours = ('00' + datetime.getHours()).slice(-2)
+          var minutes = ('00' + datetime.getMinutes()).slice(-2)
+          var seconds = ('00' + datetime.getSeconds()).slice(-2)
 
-          var day = ('00' +datetime.getUTCDate()).slice(-2);
-          var month = ('00' +(datetime.getUTCMonth() + 1)).slice(-2); //months from 1-12
-          var year = ('00' +datetime.getUTCFullYear()).slice(-2);
-          time = hours + minutes + seconds;
-          date = day+month+year;
+          var day = ('00' + datetime.getUTCDate()).slice(-2)
+          var month = ('00' + (datetime.getUTCMonth() + 1)).slice(-2) // months from 1-12
+          var year = ('00' + datetime.getUTCFullYear()).slice(-2)
+          time = hours + minutes + seconds
+          date = day + month + year
         }
         return toSentence([
-          '$SKRMC', time,
+          '$SKRMC',
+          time,
           'A',
           // Force 4 digits before decimal point and 4 digits after
-          ('0000' + ((toNmeaDegrees(position.latitude)*1).toFixed(4))).slice(-9),
+          ('0000' + (toNmeaDegrees(position.latitude) * 1).toFixed(4)).slice(
+            -9
+          ),
           position.latitude < 0 ? 'S' : 'N',
           // Force 5 digits before decimal point and 4 digits after
-          ('00000' + ((toNmeaDegrees(position.longitude)*1).toFixed(4))).slice(-10),
+          ('00000' + (toNmeaDegrees(position.longitude) * 1).toFixed(4)).slice(
+            -10
+          ),
           position.longitude < 0 ? 'W' : 'E',
           (sog * 1.94384).toFixed(1),
           radsToDeg(cog).toFixed(1),
@@ -205,13 +227,12 @@ module.exports = function(app) {
           // We submit a Magnetic Variation of 0.
           '0.0',
           'E'
-        ]);
+        ])
       }
     },
 
     /*
       PSILTBS - Proprietary target boat speed sentence for Silva => Nexus => Garmin displays
-
 
       0     1  2
       |     |  |
@@ -221,24 +242,17 @@ module.exports = function(app) {
       1 N for knots
       2 Checksum
     */
-    
+
     PSILTBS: {
-      title: "PSILTBS - Send target boat speed to Silva/Nexus/Garmin displays",
-      keys: [
-        'performance.targetSpeed'
-      ],
-      f: function(tbs) {
-        return toSentence([
-          '$PSILTBS',
-          (tbs * 1.94384).toFixed(1),
-          'N'
-        ]);
+      title: 'PSILTBS - Send target boat speed to Silva/Nexus/Garmin displays',
+      keys: ['performance.targetSpeed'],
+      f: function (tbs) {
+        return toSentence(['$PSILTBS', (tbs * 1.94384).toFixed(1), 'N'])
       }
     },
 
     /*
       PSILCD1 - Proprietary polar boat speed sentence for Silva => Nexus => Garmin displays
-
 
       0     1     2
       |     |     |
@@ -250,68 +264,47 @@ module.exports = function(app) {
     */
 
     PSILCD1: {
-      title: "PSILCD1 - Send polar speed and target wind angle to Silva/Nexus/Garmin displays",
-      keys: [
-        'performance.polarSpeed', 'performance.targetAngle'
-      ],
-      f: function(polarSpeed, targetAngle) {
+      title:
+        'PSILCD1 - Send polar speed and target wind angle to Silva/Nexus/Garmin displays',
+      keys: ['performance.polarSpeed', 'performance.targetAngle'],
+      f: function (polarSpeed, targetAngle) {
         return toSentence([
           '$PSILCD1',
           (polarSpeed * 1.94384).toFixed(2),
           (targetAngle / Math.PI * 180).toFixed(0)
-        ]);
+        ])
       }
     },
 
     HDT: {
-      title: "HDT - Heading True",
-      keys: [
-        'navigation.headingTrue'
-      ],
-      f: function mwv(heading) {
-        return toSentence([
-          '$SKHDT',
-          radsToDeg(heading).toFixed(1),
-          'T'
-        ]);
+      title: 'HDT - Heading True',
+      keys: ['navigation.headingTrue'],
+      f: function mwv (heading) {
+        return toSentence(['$SKHDT', radsToDeg(heading).toFixed(1), 'T'])
       }
     },
 
     HDM: {
-      title: "HDM - Heading Magnetic",
-      keys: [
-        'navigation.headingMagnetic'
-      ],
-      f: function mwv(heading) {
-        return toSentence([
-          '$SKHDM',
-          radsToDeg(heading).toFixed(1),
-          'M'
-        ]);
+      title: 'HDM - Heading Magnetic',
+      keys: ['navigation.headingMagnetic'],
+      f: function mwv (heading) {
+        return toSentence(['$SKHDM', radsToDeg(heading).toFixed(1), 'M'])
       }
     },
 
     ROT: {
-      title: "ROT - Rate of Turn",
-      keys: [
-        'navigation.rateOfTurn'
-      ],
-      f: function mwv(rot) {
+      title: 'ROT - Rate of Turn',
+      keys: ['navigation.rateOfTurn'],
+      f: function mwv (rot) {
         var degm = rot * 3437.74677078493
-        return toSentence([
-          '$SKROT',
-          degm.toFixed(1),
-          'A'
-        ]);
+        return toSentence(['$SKROT', degm.toFixed(1), 'A'])
       }
     },
 
     DBK: {
-      title: "DBK - Depth Below Keel",
-      keys: [
-        'environment.depth.belowKeel'
-      ],
-      f: function mwv(depth) {
+      title: 'DBK - Depth Below Keel',
+      keys: ['environment.depth.belowKeel'],
+      f: function mwv (depth) {
         var feet = depth * 3.28084
         var fathoms = depth * 0.546807
         return toSentence([
@@ -322,16 +315,14 @@ module.exports = function(app) {
           'M',
           fathoms.toFixed(1),
           'F'
-        ]);
+        ])
       }
     },
 
     DBS: {
-      title: "DBK - Depth Below Surface",
-      keys: [
-        'environment.depth.belowSurface'
-      ],
-      f: function mwv(depth) {
+      title: 'DBK - Depth Below Surface',
+      keys: ['environment.depth.belowSurface'],
+      f: function mwv (depth) {
         var feet = depth * 3.28084
         var fathoms = depth * 0.546807
         return toSentence([
@@ -342,16 +333,14 @@ module.exports = function(app) {
           'M',
           fathoms.toFixed(1),
           'F'
-        ]);
+        ])
       }
     },
 
     DBT: {
-      title: "DBK - Depth Below Transducer",
-      keys: [
-        'environment.depth.belowTransducer'
-      ],
-      f: function mwv(depth) {
+      title: 'DBK - Depth Below Transducer',
+      keys: ['environment.depth.belowTransducer'],
+      f: function mwv (depth) {
         var feet = depth * 3.28084
         var fathoms = depth * 0.546807
         return toSentence([
@@ -362,36 +351,30 @@ module.exports = function(app) {
           'M',
           fathoms.toFixed(1),
           'F'
-        ]);
+        ])
       }
     },
 
     MTW: {
-      title: "MTW - Water Temperature",
-      keys: [
-        'environment.water.temperature'
-      ],
-      f: function mwv(temperature) {
-        var celcius = temperature - 273.15;
-        return toSentence([
-          '$SKMTW',
-          celcius.toFixed(1),
-          'C'
-        ]);
+      title: 'MTW - Water Temperature',
+      keys: ['environment.water.temperature'],
+      f: function mwv (temperature) {
+        var celcius = temperature - 273.15
+        return toSentence(['$SKMTW', celcius.toFixed(1), 'C'])
       }
     }
-  };
+  }
 
-  //===========================================================================
-  
+  // ===========================================================================
+
   Object.keys(plugin.sentences).forEach(key => {
     var sentence = plugin.sentences[key]
     plugin.schema.properties[key] = {
       title: sentence['title'],
-      type: "boolean",
+      type: 'boolean',
       default: false
     }
-  });
+  })
 
   return plugin
 }
