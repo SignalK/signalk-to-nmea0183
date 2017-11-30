@@ -32,8 +32,8 @@ module.exports = function (app) {
       'navigation.datetime',
       'navigation.speedOverGround',
       'navigation.courseOverGroundTrue',
-      'navigation.position',
-      'navigation.magneticVariation'
+      'navigation.position'
+      //'navigation.magneticVariation'
     ],
     defaults: ['', undefined, undefined, undefined],
     f: function (datetime8601, sog, cog, position) {
