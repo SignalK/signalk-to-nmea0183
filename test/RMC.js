@@ -7,7 +7,8 @@ describe('RMC', function () {
         'navigation.speedOverGround': new Bacon.Bus(),
         'navigation.courseOverGroundTrue': new Bacon.Bus(),
         'navigation.datetime': new Bacon.Bus(),
-        'navigation.position': new Bacon.Bus()
+        'navigation.position': new Bacon.Bus(),
+        'navigation.magneticVariation': new Bacon.Bus()
     }
     const app = {
       streambundle: { getSelfStream: path => streams[path] },
