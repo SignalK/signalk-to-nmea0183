@@ -35,8 +35,8 @@ module.exports = function (app) {
       'navigation.position',
       'navigation.magneticVariation'
     ],
-    defaults: ['', undefined, undefined, undefined],
-    f: function (datetime8601, sog, cog, position) {
+    defaults: ['', undefined, undefined, undefined, 0.0],
+    f: function (datetime8601, sog, cog, position, magneticVariation) {
       let time = ''
       let date = ''
       if (datetime8601.length > 0) {
@@ -50,6 +50,11 @@ module.exports = function (app) {
         let year = ('00' + datetime.getUTCFullYear()).slice(-2)
         time = hours + minutes + seconds
         date = day + month + year
+      }
+      var magneticVariationDir = 'E'
+      if ( magneticVariation < 0 ) {
+        magneticVariationDir = 'W';
+        magneticVariation = magneticVariation * -1;
       }
       return toSentence([
         '$SKRMC',
@@ -67,8 +72,8 @@ module.exports = function (app) {
         radsToDeg(cog).toFixed(1),
         date,
         // We submit a Magnetic Variation of 0.
-        '0.0',
-        'E'
+        magneticVariation.toFixed(1),
+        magneticVariationDir
       ])
     }
   }
