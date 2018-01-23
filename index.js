@@ -61,7 +61,6 @@ module.exports = function (app) {
   }
 
   plugin.sentences = loadSentences(app, plugin)
-  console.log(plugin.sentences)
   buildSchemaFromSentences(plugin)
   return plugin
 }
