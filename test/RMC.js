@@ -2,7 +2,7 @@ const Bacon = require('baconjs')
 const assert = require('assert')    
 
 describe('RMC', function () {
-  it('works without datetime', done => {
+  it('works without datetime & magneticVariation', done => {
     const streams = {
         'navigation.speedOverGround': new Bacon.Bus(),
         'navigation.courseOverGroundTrue': new Bacon.Bus(),
@@ -13,7 +13,7 @@ describe('RMC', function () {
     const app = {
       streambundle: { getSelfStream: path => streams[path] },
       emit: (event, value) => {
-          assert.equal(value, '$SKRMC,,A,0600.0000,N,00500.0000,E,1.9,114.6,,0.0,E*70')
+          assert.equal(value, '$SKRMC,,A,0600.0000,N,00500.0000,E,1.9,114.6,,,E*5E')
           done()
       }
     }
