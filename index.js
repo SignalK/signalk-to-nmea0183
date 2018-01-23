@@ -34,7 +34,7 @@ module.exports = function (app) {
     function mapToNmea (encoder) {
       const selfStreams = encoder.keys.map((key, index) => {
         let stream = app.streambundle.getSelfStream(key)
-        if (encoder.defaults && encoder.defaults[index] != undefined) {
+        if (encoder.defaults && typeof encoder.defaults[index] != 'undefined') {
           stream = stream.merge(Bacon.once(encoder.defaults[index]))
         }
         return stream
