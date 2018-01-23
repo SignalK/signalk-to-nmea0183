@@ -35,7 +35,7 @@ module.exports = function (app) {
       'navigation.position',
       'navigation.magneticVariation'
     ],
-    defaults: ['', undefined, undefined, undefined, 0.0],
+    defaults: ['', undefined, undefined, undefined, ''],
     f: function (datetime8601, sog, cog, position, magneticVariation) {
       let time = ''
       let date = ''
@@ -71,8 +71,7 @@ module.exports = function (app) {
         (sog * 1.94384).toFixed(1),
         radsToDeg(cog).toFixed(1),
         date,
-        // We submit a Magnetic Variation of 0.
-        magneticVariation.toFixed(1),
+        typeof magneticVariation === 'number' ? magneticVariation.toFixed(1) : magneticVariation,
         magneticVariationDir
       ])
     }
