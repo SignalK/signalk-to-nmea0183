@@ -40,7 +40,14 @@ module.exports = function (app) {
         return stream
       }, app.streambundle)
       plugin.unsubscribes.push(
-        Bacon.combineWith(encoder.f, selfStreams)
+        Bacon.combineWith(function () {
+          try {
+            return encoder.f.apply(this, arguments)
+          } catch (e) {
+            console.error(e.message)
+          }
+        }, selfStreams)
+          .filter(v => typeof v !== 'undefined')
           .changes()
           .debounceImmediate(20)
           .onValue(nmeaString => {
