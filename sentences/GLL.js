@@ -20,10 +20,8 @@ module.exports = function (app) {
       var seconds = ('00' + datetime.getSeconds()).slice(-2)
       return nmea.toSentence([
         '$IIGLL',
-        nmea.toNmeaDegrees(position.latitude),
-        position.latitude < 0 ? 'S' : 'N',
-        nmea.toNmeaDegrees(position.longitude),
-        position.longitude < 0 ? 'W' : 'E',
+        nmea.toNmeaDegreesLatitude(position.latitude),
+        nmea.toNmeaDegreesLongitude(position.longitude),
         hours + minutes + seconds + '.020',
         'A'
       ])
