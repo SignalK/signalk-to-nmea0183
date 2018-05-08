@@ -5,7 +5,7 @@ module.exports = function (app) {
     title: 'HDT - Heading True calculated from magnetic heading and variation',
     keys: ['navigation.headingMagnetic', 'navigation.magneticVariation' ],
     f: function (headingMagnetic, magneticVariation) {
-      heading = headingMagnetic + magneticVariation;
+      var heading = headingMagnetic + magneticVariation
       if (heading > 2 * Math.PI) heading -= 2 * Math.PI
       else if (heading < 0 ) heading += 2 * Math.PI
       return nmea.toSentence([
