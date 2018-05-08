@@ -12,14 +12,12 @@ module.exports = function (app) {
     keys: ['navigation.headingMagnetic', 'navigation.magneticVariation' ],
     defaults: [undefined, ''],
     f: function hdg (headingMagnetic, magneticVariation) {
-      if ( magneticVariation == '' ) {
-        var magneticVariationDir = '';
-      }
-      else {
-        var magneticVariationDir = 'E';
+      var magneticVariationDir = '';
+      if ( magneticVariation != '' ) {
+        magneticVariationDir = 'E';
         if ( headingMagnetic < 0 ) {
           magneticVariationDir = 'W';
-          magneticVariation = magneticVariation * -1;
+          magneticVariation =   Math.abs(magneticVariation);
         }
         magneticVariation = nmea.radsToDeg(magneticVariation).toFixed(2);
       }
