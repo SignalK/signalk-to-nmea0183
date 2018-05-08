@@ -1,5 +1,11 @@
 ## Change Log
 
+### v1.1.0 (2018/05/08 20:15 +00:00)
+- [#21](https://github.com/SignalK/signalk-to-nmea0183/pull/21) fix RMC sentence, add Variation to HDG setence (@davidsanner)
+
+### v1.0.2 (2018/05/07 04:20 +00:00)
+- [#20](https://github.com/SignalK/signalk-to-nmea0183/pull/20) fix: RMC for >99 degrees, error handling (@tkurki)
+
 ### v1.0.0 (2018/04/08 20:05 +00:00)
 - [#17](https://github.com/SignalK/signalk-to-nmea0183/pull/17) Create XDRNA.js (@CaptainRon47)
 - [#13](https://github.com/SignalK/signalk-to-nmea0183/pull/13) fix: use blank as the default when magneticVariation is missing (@tkurki)
