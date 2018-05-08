@@ -24,7 +24,7 @@
 // This needs to run faster that others.
 
 // NMEA0183 Encoder RMC   $INRMC,200152.020,A,5943.2980,N,2444.1043,E,6.71,194.30,0000,8.1,E*40
-const { toSentence, toNmeaDegrees, radsToDeg } = require('../nmea.js')
+const { toSentence, toNmeaDegreesLatitude, toNmeaDegreesLongitude, radsToDeg } = require('../nmea.js')
 module.exports = function (app) {
   return {
     title: 'RMC - GPS recommended minimum',
@@ -61,14 +61,8 @@ module.exports = function (app) {
         '$SKRMC',
         time,
         'A',
-        // Force 4 digits before decimal point and 4 digits after
-        ('0000' + (toNmeaDegrees(position.latitude) * 1).toFixed(4)).slice(-9),
-        position.latitude < 0 ? 'S' : 'N',
-        // Force 5 digits before decimal point and 4 digits after
-        ('00000' + (toNmeaDegrees(position.longitude) * 1).toFixed(4)).slice(
-          -10
-        ),
-        position.longitude < 0 ? 'W' : 'E',
+        toNmeaDegreesLatitude(position.latitude),
+        toNmeaDegreesLongitude(position.longitude),
         (sog * 1.94384).toFixed(1),
         radsToDeg(cog).toFixed(1),
         date,

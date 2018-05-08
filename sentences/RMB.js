@@ -32,10 +32,8 @@ module.exports = function (app) {
         '$IIRMB',
         crossTrackError.toFixed(2),
         crossTrackError < 0 ? 'R' : 'L',
-        nmea.toNmeaDegrees(wpLatitude),
-        wpLatitude < 0 ? 'S' : 'N',
-        nmea.toNmeaDegrees(wpLongitude),
-        wpLongitude < 0 ? 'W' : 'E',
+        nmea.toNmeaDegreesLatitude(wpLatitude),
+        nmea.toNmeaDegreesLongitude(wpLongitude),
         wpDistance.toFixed(2),
         nmea.radsToDeg(bearingTrue).toFixed(2),
         'V', // dont set the arrival flag as it will set of alarms.
