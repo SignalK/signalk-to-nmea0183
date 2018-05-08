@@ -56,6 +56,7 @@ module.exports = function (app) {
         magneticVariationDir = 'W';
         magneticVariation = magneticVariation * -1;
       }
+      magneticVariation = radsToDeg(magneticVariation);
       return toSentence([
         '$SKRMC',
         time,
