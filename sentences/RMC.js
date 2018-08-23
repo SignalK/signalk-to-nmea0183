@@ -41,9 +41,9 @@ module.exports = function (app) {
       let date = ''
       if (datetime8601.length > 0) {
         let datetime = new Date(datetime8601)
-        let hours = ('00' + datetime.getHours()).slice(-2)
-        let minutes = ('00' + datetime.getMinutes()).slice(-2)
-        let seconds = ('00' + datetime.getSeconds()).slice(-2)
+        let hours = ('00' + datetime.getUTCHours()).slice(-2)
+        let minutes = ('00' + datetime.getUTCMinutes()).slice(-2)
+        let seconds = ('00' + datetime.getUTCSeconds()).slice(-2)
 
         let day = ('00' + datetime.getUTCDate()).slice(-2)
         let month = ('00' + (datetime.getUTCMonth() + 1)).slice(-2) // months from 1-12
