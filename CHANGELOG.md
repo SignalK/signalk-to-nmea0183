@@ -1,5 +1,10 @@
 ## Change Log
 
+### v1.2.0 (2018/08/23 16:15 +00:00)
+- [#16](https://github.com/SignalK/signalk-to-nmea0183/pull/16) feature: Add back Silva/Nexus/Garmin proprietary sentences TBS and CD1 (@joabakk)
+- [#22](https://github.com/SignalK/signalk-to-nmea0183/pull/22) Fix: Set time of position fix time to UTC as defined in RMC sentence (@davidsanner)
+- [#23](https://github.com/SignalK/signalk-to-nmea0183/pull/23) Rename XDRNA,js to XDRNA.js (@davidsanner)
+
 ### v1.1.0 (2018/05/08 20:15 +00:00)
 - [#21](https://github.com/SignalK/signalk-to-nmea0183/pull/21) fix RMC sentence, add Variation to HDG setence (@davidsanner)
 
