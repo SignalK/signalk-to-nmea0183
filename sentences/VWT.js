@@ -12,7 +12,7 @@ const nmea = require('../nmea.js')
 module.exports = function (app) {
   return {
     title: 'VWT - True wind speed relative to boat.',
-    keys: ['environment.wind.angleTrue', 'environment.wind.speedTrue'],
+    keys: ['environment.wind.angleTrueWater', 'environment.wind.speedTrue'],
     f: function (angleTrueWater, speedTrue) {
       return nmea.toSentence([
         '$IIVWT',

@@ -4,7 +4,7 @@ const nmea = require('../nmea.js')
 module.exports = function (app) {
   return {
     title: 'MWV - True Wind heading and speed',
-    keys: ['environment.wind.angleTrue', 'environment.wind.speedTrue'],
+    keys: ['environment.wind.angleTrueWater', 'environment.wind.speedTrue'],
 
     f: function (angle, speed) {
       return nmea.toSentence([
