@@ -1,5 +1,8 @@
 ## Change Log
 
+### v1.2.1 (2018/09/24 17:14 +00:00)
+- [#27](https://github.com/SignalK/signalk-to-nmea0183/pull/27) fix: use environment.wind.angleTrueWater (@tkurki)
+
 ### v1.2.0 (2018/08/23 16:15 +00:00)
 - [#16](https://github.com/SignalK/signalk-to-nmea0183/pull/16) feature: Add back Silva/Nexus/Garmin proprietary sentences TBS and CD1 (@joabakk)
 - [#22](https://github.com/SignalK/signalk-to-nmea0183/pull/22) Fix: Set time of position fix time to UTC as defined in RMC sentence (@davidsanner)
