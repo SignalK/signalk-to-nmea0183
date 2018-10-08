@@ -1,5 +1,8 @@
 ## Change Log
 
+### v1.3.0 (2018/10/08 05:48 +00:00)
+- [#28](https://github.com/SignalK/signalk-to-nmea0183/pull/28) Rudder Sensor Angle (@Dirk--)
+
 ### v1.2.1 (2018/09/24 17:14 +00:00)
 - [#27](https://github.com/SignalK/signalk-to-nmea0183/pull/27) fix: use environment.wind.angleTrueWater (@tkurki)
 
