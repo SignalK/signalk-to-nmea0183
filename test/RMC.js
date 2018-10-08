@@ -15,14 +15,15 @@ describe('RMC', function () {
       .push({ longitude: 5, latitude: 6 })
   })
 
-  it('works with large longitude', done => {
+  it('works with large longitude & magnetic variation', done => {
     const onEmit = (event, value) => {
-      assert.equal(value, '$SKRMC,,A,3749.6038,N,12225.2480,W,1.9,114.6,,,E*43')
+      assert.equal(value, '$SKRMC,,A,3749.6038,N,12225.2480,W,1.9,114.6,,180.0,E*64')
       done()
     }
     const app = createAppWithPlugin(onEmit)
     app.streambundle.getSelfStream('navigation.speedOverGround').push('1')
     app.streambundle.getSelfStream('navigation.courseOverGroundTrue').push('2')
+    app.streambundle.getSelfStream('navigation.magneticVariation').push(Math.PI)
     app.streambundle
       .getSelfStream('navigation.position')
       .push({ longitude: -122.4208, latitude: 37.82673 })

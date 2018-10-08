@@ -56,7 +56,6 @@ module.exports = function (app) {
         magneticVariationDir = 'W';
         magneticVariation = magneticVariation * -1;
       }
-      magneticVariation = radsToDeg(magneticVariation);
       return toSentence([
         '$SKRMC',
         time,
@@ -66,7 +65,7 @@ module.exports = function (app) {
         (sog * 1.94384).toFixed(1),
         radsToDeg(cog).toFixed(1),
         date,
-        typeof magneticVariation === 'number' ? magneticVariation.toFixed(1) : magneticVariation,
+        typeof magneticVariation === 'number' ? radsToDeg(magneticVariation).toFixed(1) : magneticVariation,
         magneticVariationDir
       ])
     }
