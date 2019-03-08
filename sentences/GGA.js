@@ -1,27 +1,27 @@
 /*
-      GGA - Time, position, and fix related data
-      This is one of the sentences commonly emitted by GPS units.
-      0      1        2             3 4              5 6 7 8   9     10 11     12 13  14
-      |      |        |             | |              | | | |   |      | |       | |   |     
-      $GPGGA,172814.0,3723.46587704,N,12202.26957864,W,2,6,1.2,18.893,M,-25.669,M,2.0,0031*hh<CR><LF>
+  GGA - Time, position, and fix related data
+  This is one of the sentences commonly emitted by GPS units.
+  0      1        2             3 4              5 6 7 8   9     10 11     12 13  14
+  |      |        |             | |              | | | |   |      | |       | |   |     
+  $GPGGA,172814.0,3723.46587704,N,12202.26957864,W,2,6,1.2,18.893,M,-25.669,M,2.0,0031*hh<CR><LF>
 
-      Field Number:
-      0	Message ID $GPGGA
-      1	UTC of position fix
-      2	Latitude
-      3	Direction of latitude: N (north) or S (south)
-      4	Longitude
-      5	Direction of longitude: E (east) or W (west) 
-      6	GPS Quality indicator: 0 = Fix not valid; 1 = GPS fix; 2 = Differential GPS fix, OmniSTAR VBS; 4 = Real-Time Kinematic, fixed integers; 5 = Real-Time Kinematic, float integers, OmniSTAR XP/HP or Location RTK
-      7	Number of SVs in use, range from 00 through to 24+
-      8	HDOP
-      9	Orthometric height (MSL reference)
-      10 M: unit of measure for orthometric height is meters
-      11 Geoid separation
-      12 M: geoid separation measured in meters
-      13 Age of differential GPS data record, Type 1 or Type 9. Null field when DGPS is not used.
-      14 Reference station ID, range 0000-4095. A null field when any reference station ID is selected and no corrections are received
-    */
+  Field Number:
+  0	Message ID $GPGGA
+  1	UTC of position fix
+  2	Latitude
+  3	Direction of latitude: N (north) or S (south)
+  4	Longitude
+  5	Direction of longitude: E (east) or W (west) 
+  6	GPS Quality indicator: 0 = Fix not valid; 1 = GPS fix; 2 = Differential GPS fix, OmniSTAR VBS; 4 = Real-Time Kinematic, fixed integers; 5 = Real-Time Kinematic, float integers, OmniSTAR XP/HP or Location RTK
+  7	Number of SVs in use, range from 00 through to 24+
+  8	HDOP
+  9	Orthometric height (MSL reference)
+  10 M: unit of measure for orthometric height is meters
+  11 Geoid separation
+  12 M: geoid separation measured in meters
+  13 Age of differential GPS data record, Type 1 or Type 9. Null field when DGPS is not used.
+  14 Reference station ID, range 0000-4095. A null field when any reference station ID is selected and no corrections are received
+*/
 
 const {
   toSentence,
@@ -56,7 +56,6 @@ module.exports = function (app) {
     ],
     f: function (datetime8601, position, gnssMethodQuality, gnssSatellites, gnssHorizontalDilution, gnssAntennaAltitude, gnssgeoidalSeparation, gnssDifferentialAge, gnssDifferentialReference) {
       let time = ''
-      // let date = ''
 
       if (!datetime8601 || (typeof datetime8601 === 'string' && datetime8601.trim() === '')) {
         datetime8601 = new Date().toISOString()
@@ -68,10 +67,6 @@ module.exports = function (app) {
         let minutes = ('00' + datetime.getUTCMinutes()).slice(-2)
         let seconds = ('00' + datetime.getUTCSeconds()).slice(-2)
         time = hours + minutes + seconds
-        // let day = ('00' + datetime.getUTCDate()).slice(-2)
-        // let month = ('00' + (datetime.getUTCMonth() + 1)).slice(-2) // months from 1-12
-        // let year = ('00' + datetime.getUTCFullYear()).slice(-2)
-        // date = day + month + year
       }
 
       if (!position) {
@@ -87,7 +82,6 @@ module.exports = function (app) {
         gnssDifferentialReference = ''
       }
 
-      // $SKGGA,time,lat (num),lat (dir),lon (num),lon (dir),gps quality,number of sat,HDOP,ant height,M,geoid sep,M,age of diff gps rec,ref station ID*hh<CR><LF>
       return toSentence([
         '$SKGGA',
         time,
