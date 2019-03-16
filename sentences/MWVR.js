@@ -24,6 +24,7 @@ module.exports = function (app) {
     title: 'MWV - Aparent Wind heading and speed',
     keys: ['environment.wind.angleApparent', 'environment.wind.speedApparent'],
     f: function (angle, speed) {
+      if (angle <0) angle = angle + 2 * Math.PI
       return nmea.toSentence([
         '$INMWV',
         nmea.radsToDeg(angle).toFixed(2),
