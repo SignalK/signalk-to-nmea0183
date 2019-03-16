@@ -9,7 +9,7 @@ module.exports = function (app) {
     f: function (angle, speed) {
       return nmea.toSentence([
         '$INMWV',
-        nmea.radsToDeg(angle).toFixed(2),
+        nmea.radsToPositiveDeg(angle).toFixed(2),
         'T',
         speed.toFixed(2),
         'M',
