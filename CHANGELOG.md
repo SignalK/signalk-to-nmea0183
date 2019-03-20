@@ -1,6 +1,12 @@
 ## Change Log
 
-### v1.3.0 (2018/10/08 05:48 +00:00)
+### v1.4.0 (2019/03/20 18:21 +00:00)
+- [#31](https://github.com/SignalK/signalk-to-nmea0183/pull/31) Add support for GGA sentence (@fabdrol)
+
+### v1.3.1 (2019/03/16 19:14 +00:00)
+- [#33](https://github.com/SignalK/signalk-to-nmea0183/pull/33) MWV angle should be always positive (@tkurki)
+
+### v1.3.0 (2018/10/08 05:49 +00:00)
 - [#28](https://github.com/SignalK/signalk-to-nmea0183/pull/28) Rudder Sensor Angle (@Dirk--)
 
 ### v1.2.1 (2018/09/24 17:14 +00:00)
