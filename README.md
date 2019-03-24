@@ -16,7 +16,8 @@ To use the plugin you need to
         "baudrate": 4800,
         "toStdout": "nmea0183out"
       }
-    }, {
+    }]  
+  }, {
 ...
 ```
 
