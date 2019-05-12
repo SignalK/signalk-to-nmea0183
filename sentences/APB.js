@@ -45,7 +45,7 @@ module.exports = function (app) {
     ],
     f: function (xte, originToDest, nextPoint) {
       return nmea.toSentence([
-        '$SKAPB',
+        '$IIAPB',
         'A',
         'A',
         Math.abs(xte),

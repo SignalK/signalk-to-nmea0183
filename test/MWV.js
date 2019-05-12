@@ -5,7 +5,7 @@ const { createAppWithPlugin } = require('./testutil')
 describe('MWV relative', function () {
   it('works with positive angle', done => {
     const onEmit = (event, value) => {
-      assert.equal(value, '$INMWV,180.00,R,2.00,M,A*32')
+      assert.equal(value, '$IIMWV,180.00,R,2.00,M,A*35')
       done()
     }
     const app = createAppWithPlugin(onEmit, 'MWVR')
@@ -17,7 +17,7 @@ describe('MWV relative', function () {
 
   it('works with negative angle', done => {
     const onEmit = (event, value) => {
-      assert.equal(value, '$INMWV,270.00,R,2.00,M,A*3E')
+      assert.equal(value, '$IIMWV,270.00,R,2.00,M,A*39')
       done()
     }
     const app = createAppWithPlugin(onEmit, 'MWVR')
@@ -31,7 +31,7 @@ describe('MWV relative', function () {
 describe('MWV true', function () {
   it('works with positive angle', done => {
     const onEmit = (event, value) => {
-      assert.equal(value, '$INMWV,180.00,T,2.00,M,A*34')
+      assert.equal(value, '$IIMWV,180.00,T,2.00,M,A*33')
       done()
     }
 
@@ -44,7 +44,7 @@ describe('MWV true', function () {
 
   it('works with negative angle', done => {
     const onEmit = (event, value) => {
-      assert.equal(value, '$INMWV,270.00,T,2.00,M,A*38')
+      assert.equal(value, '$IIMWV,270.00,T,2.00,M,A*3F')
       done()
     }
 

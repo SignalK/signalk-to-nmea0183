@@ -57,7 +57,7 @@ module.exports = function (app) {
         magneticVariation = magneticVariation * -1;
       }
       return toSentence([
-        '$SKRMC',
+        '$IIRMC',
         time,
         'A',
         toNmeaDegreesLatitude(position.latitude),

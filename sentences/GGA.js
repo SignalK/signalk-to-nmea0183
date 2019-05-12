@@ -83,7 +83,7 @@ module.exports = function (app) {
       }
 
       return toSentence([
-        '$SKGGA',
+        '$IIGGA',
         time,
         toNmeaDegreesLatitude(position.latitude),
         toNmeaDegreesLongitude(position.longitude),
