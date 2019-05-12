@@ -25,7 +25,7 @@ module.exports = function (app) {
     keys: ['environment.wind.angleApparent', 'environment.wind.speedApparent'],
     f: function (angle, speed) {
       return nmea.toSentence([
-        '$INMWV',
+        '$IIMWV',
         nmea.radsToPositiveDeg(angle).toFixed(2),
         'R',
         speed.toFixed(2),

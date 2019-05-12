@@ -16,7 +16,7 @@ module.exports = function (app) {
     keys: ['steering.rudderAngle'],
     f: function (rudderAngle) {
       return nmea.toSentence([
-        '$SKRSA',
+        '$IIRSA',
         nmea.radsToDeg(rudderAngle).toFixed(2),
         'A',
         '',

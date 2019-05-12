@@ -5,7 +5,7 @@ const {createAppWithPlugin} = require ('./testutil')
 describe('RMC', function () {
   it('works without datetime & magneticVariation', done => {
     const onEmit = (event, value) => {
-      assert.equal(value, '$SKRMC,,A,0600.0000,N,00500.0000,E,1.9,114.6,,,E*5E')
+      assert.equal(value, '$IIRMC,,A,0600.0000,N,00500.0000,E,1.9,114.6,,,E*46')
       done()
     }
     const app = createAppWithPlugin(onEmit, 'RMC')
@@ -18,7 +18,7 @@ describe('RMC', function () {
 
   it('works with large longitude & magnetic variation', done => {
     const onEmit = (event, value) => {
-      assert.equal(value, '$SKRMC,,A,3749.6038,N,12225.2480,W,1.9,114.6,,180.0,E*64')
+      assert.equal(value, '$IIRMC,,A,3749.6038,N,12225.2480,W,1.9,114.6,,180.0,E*7C')
       done()
     }
     const app = createAppWithPlugin(onEmit, 'RMC')
@@ -32,7 +32,7 @@ describe('RMC', function () {
 
   it('ignores a too large longitude', done => {
     const onEmit = (event, value) => {
-      assert.equal(value, '$SKRMC,,A,3749.6038,N,12225.2480,W,1.9,114.6,,,E*43')
+      assert.equal(value, '$IIRMC,,A,3749.6038,N,12225.2480,W,1.9,114.6,,,E*5B')
       done()
     }
     const app = createAppWithPlugin(onEmit, 'RMC')
