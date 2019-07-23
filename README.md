@@ -3,7 +3,7 @@ Signal K Node server plugin to convert Signal K to NMEA 0183. See the code for a
 
 To use the plugin you need to 
 1. activate the plugin and the relevant sentences under /plugins/configure (see image below)
-2. add a configuration `toStdout` to the `serialport` you want the sentences to go to
+2. add a configuration to the pipedProviders section of the .signalk/settings.json file. Add a `toStdout` to the `serialport` where you want the sentences to go as per the example below.
 
 ```
 ...
@@ -20,7 +20,9 @@ To use the plugin you need to
 ...
 ```
 
-Internally the plugin emits events named `nmea0183out`. This configuration sends the data of these events to the serialport's output.
+Internally the plugin emits events named `nmea0183out`. This configuration sends the data of these events to the serialport's output. 
+
+Be aware the data is also sent by default to TCP port 10110 in which case it is possible to have access to the generated NMEA strings without configuring a serial output device by connecting to port 10110 with a TCP client (e.g. OpenCPN, Netcat, kplex etc)
 
 
 
