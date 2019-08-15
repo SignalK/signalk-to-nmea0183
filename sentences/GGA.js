@@ -56,6 +56,7 @@ module.exports = function (app) {
     ],
     f: function (datetime8601, position, gnssMethodQuality, gnssSatellites, gnssHorizontalDilution, gnssAntennaAltitude, gnssgeoidalSeparation, gnssDifferentialAge, gnssDifferentialReference) {
       let time = ''
+      let ignssMethodQuality = 0
 
       if (!datetime8601 || (typeof datetime8601 === 'string' && datetime8601.trim() === '')) {
         datetime8601 = new Date().toISOString()
