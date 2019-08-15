@@ -92,11 +92,23 @@ module.exports = function (app) {
          case 'DGNSS fix' :
            ignssMethodQuality = 2;
            break;
+         case 'Precise GNSS' :
+           ignssMethodQuality = 3;
+           break;
          case 'RTK fixed integer' :
            ignssMethodQuality = 4;
            break;
          case 'RTK float' :
            ignssMethodQuality = 5;
+           break;
+         case 'Estimated (DR) mode' :
+           ignssMethodQuality = 6;
+           break;
+         case 'Manual input' :
+           ignssMethodQuality = 7;
+           break;
+         case 'Simulator mode' :
+           ignssMethodQuality = 8;
            break;
       }
 
