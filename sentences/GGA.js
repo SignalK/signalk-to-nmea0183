@@ -46,7 +46,7 @@ module.exports = function (app) {
     defaults: [
       null, // navigation.datetime
       null, // navigation.position
-      1, // navigation.gnss.methodQuality (= GPS Quality indicator: 0 = Fix not valid; 1 = GPS fix; 2 = Differential GPS fix, OmniSTAR VBS; 4 = Real-Time Kinematic, fixed integers; 5 = Real-Time Kinematic, float integers, OmniSTAR XP/HP or Location RTK)
+      0, // navigation.gnss.methodQuality (= GPS Quality indicator: 0 = Fix not valid; 1 = GPS fix; 2 = Differential GPS fix, OmniSTAR VBS; 4 = Real-Time Kinematic, fixed integers; 5 = Real-Time Kinematic, float integers, OmniSTAR XP/HP or Location RTK)
       0, // navigation.gnss.satellites (= Number of SVs in use, range from 00 through to 24+)
       0, // navigation.gnss.horizontalDilution (= HDOP)
       0, // navigation.gnss.antennaAltitude (= Orthometric height (MSL reference))
@@ -82,12 +82,30 @@ module.exports = function (app) {
         gnssDifferentialReference = ''
       }
 
+      switch (gnssMethodQuality) {
+         case 'no GPS' :
+           ignssMethodQuality = 0;
+           break;
+         case 'GNSS Fix' :
+           ignssMethodQuality = 1;
+           break;
+         case 'DGNSS fix' :
+           ignssMethodQuality = 2;
+           break;
+         case 'RTK fixed integer' :
+           ignssMethodQuality = 4;
+           break;
+         case 'RTK float' :
+           ignssMethodQuality = 5;
+           break;
+      }
+
       return toSentence([
         '$IIGGA',
         time,
         toNmeaDegreesLatitude(position.latitude),
         toNmeaDegreesLongitude(position.longitude),
-        gnssMethodQuality,
+        ignssMethodQuality,
         gnssSatellites,
         gnssHorizontalDilution,
         gnssAntennaAltitude,
