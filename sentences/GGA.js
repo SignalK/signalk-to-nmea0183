@@ -71,7 +71,7 @@ module.exports = function (app) {
       }
 
       if (!position) {
-        console.error(`[signalk-to-nmea0182] GGA: no position, not converting`)
+        console.error(`[signalk-to-nmea0183] GGA: no position, not converting`)
         return
       }
 
@@ -85,32 +85,32 @@ module.exports = function (app) {
 
       switch (gnssMethodQuality) {
          case 'no GPS' :
-           ignssMethodQuality = 0;
-           break;
+           ignssMethodQuality = 0
+           break
          case 'GNSS Fix' :
-           ignssMethodQuality = 1;
-           break;
+           ignssMethodQuality = 1
+           break
          case 'DGNSS fix' :
-           ignssMethodQuality = 2;
-           break;
+           ignssMethodQuality = 2
+           break
          case 'Precise GNSS' :
-           ignssMethodQuality = 3;
-           break;
+           ignssMethodQuality = 3
+           break
          case 'RTK fixed integer' :
-           ignssMethodQuality = 4;
-           break;
+           ignssMethodQuality = 4
+           break
          case 'RTK float' :
-           ignssMethodQuality = 5;
-           break;
+           ignssMethodQuality = 5
+           break
          case 'Estimated (DR) mode' :
-           ignssMethodQuality = 6;
-           break;
+           ignssMethodQuality = 6
+           break
          case 'Manual input' :
-           ignssMethodQuality = 7;
-           break;
+           ignssMethodQuality = 7
+           break
          case 'Simulator mode' :
-           ignssMethodQuality = 8;
-           break;
+           ignssMethodQuality = 8
+           break
       }
 
       return toSentence([
