@@ -1,5 +1,12 @@
 ## Change Log
 
+### v1.5.1 (2019/08/24 05:29 +00:00)
+- [#40](https://github.com/SignalK/signalk-to-nmea0183/pull/40) Fix GGA: gnssMethodQuality is numeric (@free-x)
+- [#38](https://github.com/SignalK/signalk-to-nmea0183/pull/38) docs: clarify default TCP output (@GaryWSmith)
+
+### v1.5.0 (2019/05/15 19:27 +00:00)
+- [#35](https://github.com/SignalK/signalk-to-nmea0183/pull/35) chore: Use $II as a talker ID to extend compatibility with other software (@cmotelet)
+
 ### v1.4.0 (2019/03/20 18:21 +00:00)
 - [#31](https://github.com/SignalK/signalk-to-nmea0183/pull/31) Add support for GGA sentence (@fabdrol)
 
