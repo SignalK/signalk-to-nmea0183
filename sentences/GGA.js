@@ -114,7 +114,7 @@ module.exports = function (app) {
       }
 
       return toSentence([
-        '$IIGGA',
+        '$GPGGA',
         time,
         toNmeaDegreesLatitude(position.latitude),
         toNmeaDegreesLongitude(position.longitude),
