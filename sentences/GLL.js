@@ -6,7 +6,7 @@ $IIGLL,IIII.II,a,yyyyy.yy,a,hhmmss.ss,A,A*hh
  I I I___ I_Longitude, E/W
  I__I_Latidude, N/S
 */
-// NMEA0183 Encoder GLL   $IIGLL,5943.4970,N,2444.1983,E,200001.020,A*16
+// NMEA0183 Encoder GLL   $GPGLL,5943.4970,N,2444.1983,E,200001.020,A*16
 
 const nmea = require('../nmea.js')
 module.exports = function (app) {
@@ -19,7 +19,7 @@ module.exports = function (app) {
       var minutes = ('00' + datetime.getMinutes()).slice(-2)
       var seconds = ('00' + datetime.getSeconds()).slice(-2)
       return nmea.toSentence([
-        '$IIGLL',
+        '$GPGLL',
         nmea.toNmeaDegreesLatitude(position.latitude),
         nmea.toNmeaDegreesLongitude(position.longitude),
         hours + minutes + seconds + '.020',

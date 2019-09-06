@@ -6,7 +6,7 @@ describe('GGA', function() {
 
   it('works with default values', done => {
      const onEmit = (event, value) => {
-        assert.equal(value ,'$IIGGA,172814,3723.4659,N,12202.2696,W,0,0,0,0,M,0,M,,*52')      
+        assert.equal(value ,'$GPGGA,172814,3723.4659,N,12202.2696,W,0,0,0,0,M,0,M,,*45')
         done()
      }
      const app = createAppWithPlugin(onEmit, 'GGA')
@@ -16,7 +16,7 @@ describe('GGA', function() {
 
   it('works with sample values', done=> {
      const onEmit = (event, value) => {
-        assert.equal(value ,'$IIGGA,172814,3723.4659,N,12202.2696,W,2,6,1.2,18.893,M,-25.669,M,2,0031*53')
+        assert.equal(value ,'$GPGGA,172814,3723.4659,N,12202.2696,W,2,6,1.2,18.893,M,-25.669,M,2,0031*44')
 	done()
      }
      const app = createAppWithPlugin(onEmit, 'GGA')
