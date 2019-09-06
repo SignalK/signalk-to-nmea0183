@@ -1,5 +1,8 @@
 ## Change Log
 
+### v1.6.0 (2019/09/06 15:05 +00:00)
+- [#42](https://github.com/SignalK/signalk-to-nmea0183/pull/42) fix: compatibility with navionics which only accepts $GP for RMC (@cmotelet)
+
 ### v1.5.1 (2019/08/24 05:29 +00:00)
 - [#40](https://github.com/SignalK/signalk-to-nmea0183/pull/40) Fix GGA: gnssMethodQuality is numeric (@free-x)
 - [#38](https://github.com/SignalK/signalk-to-nmea0183/pull/38) docs: clarify default TCP output (@GaryWSmith)
