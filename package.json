@@ -15,11 +15,11 @@
   "author": "teppo.kurki@iki.fi",
   "license": "ISC",
   "dependencies": {
-    "baconjs": "^0.7.88",
-    "mocha": "^3.5.0"
+    "baconjs": "^0.7.88"
   },
   "devDependencies": {
-    "prettier-standard": "^6.0.0",
-    "github-changes": "^1.0.4"
+    "github-changes": "^1.0.4",
+    "mocha": "^6.2.2",
+    "prettier-standard": "^6.0.0"
   }
 }
