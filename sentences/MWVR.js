@@ -21,6 +21,7 @@
 const nmea = require('../nmea.js')
 module.exports = function (app) {
   return {
+    sentence: 'MWV',
     title: 'MWV - Aparent Wind heading and speed',
     keys: ['environment.wind.angleApparent', 'environment.wind.speedApparent'],
     f: function (angle, speed) {

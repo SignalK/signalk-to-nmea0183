@@ -2,6 +2,7 @@
 const nmea = require('../nmea.js')
 module.exports = function (app) {
   return {
+    sentence: 'DBT',
     title: 'DBT - Depth Below Transducer',
     keys: ['environment.depth.belowTransducer'],
     f: function mwv (depth) {

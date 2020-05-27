@@ -8,6 +8,7 @@ $IIMTA,x.x,C*hh
 const nmea = require('../nmea.js')
 module.exports = function (app) {
   return {
+    sentence: 'MTA',
     title: 'MTA - Air temperature.',
     keys: ['environment.outside.temperature'],
     f: function (temperature) {

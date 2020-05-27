@@ -12,6 +12,7 @@ Field Number:
 const nmea = require('../nmea.js')
 module.exports = function (app) {
   return {
+    sentence: 'RSA',
     title: 'RSA - Rudder Sensor Angle',
     keys: ['steering.rudderAngle'],
     f: function (rudderAngle) {

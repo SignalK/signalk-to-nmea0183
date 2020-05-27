@@ -3,6 +3,7 @@
 const nmea = require('../nmea.js')
 module.exports = function (app) {
   return {
+    sentence: 'ROT',
     title: 'ROT - Rate of Turn',
     keys: ['navigation.rateOfTurn'],
     f: function (rot) {

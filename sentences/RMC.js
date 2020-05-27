@@ -27,6 +27,7 @@
 const { toSentence, toNmeaDegreesLatitude, toNmeaDegreesLongitude, radsToDeg } = require('../nmea.js')
 module.exports = function (app) {
   return {
+    sentence: 'RMC',
     title: 'RMC - GPS recommended minimum',
     keys: [
       'navigation.datetime',

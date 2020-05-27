@@ -2,6 +2,7 @@
 const nmea = require('../nmea.js')
 module.exports = function (app) {
   return {
+    sentence: 'HDM',
     title: 'HDM - Heading Magnetic',
     keys: ['navigation.headingMagnetic'],
     f: function (heading) {

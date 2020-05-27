@@ -14,7 +14,11 @@ module.exports = {
           }
         }
       },
-      emit: onEmit
+      emit: (name, value) => {
+        if (name === 'nmea0183out') {
+          onEmit(name, value)
+        }
+      }
     }
     const plugin = require('../')(app)
     const options = {}
