@@ -39,6 +39,7 @@ module.exports = function (app) {
         }
         return stream
       }, app.streambundle)
+      const sentenceEvent = encoder.sentence ? `g${encoder.sentence}` : undefined
       plugin.unsubscribes.push(
         Bacon.combineWith(function () {
           try {
@@ -52,6 +53,9 @@ module.exports = function (app) {
           .debounceImmediate(20)
           .onValue(nmeaString => {
             app.emit('nmea0183out', nmeaString)
+            if (sentenceEvent) {
+              app.emit(sentenceEvent, nmeaString)
+            }
           })
       )
     }

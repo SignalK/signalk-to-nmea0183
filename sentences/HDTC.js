@@ -2,6 +2,7 @@
 const nmea = require('../nmea.js')
 module.exports = function (app) {
   return {
+    sentence: 'HDTC',
     title: 'HDT - Heading True calculated from magnetic heading and variation',
     keys: ['navigation.headingMagnetic', 'navigation.magneticVariation' ],
     f: function (headingMagnetic, magneticVariation) {

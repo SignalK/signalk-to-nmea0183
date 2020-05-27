@@ -9,6 +9,7 @@ $IIDPT,x.x,x.x,,*hh
 const nmea = require('../nmea.js')
 module.exports = function (app) {
   return {
+    sentence: 'DPT',
     title: 'DPT - Depth',
     keys: [
       'environment.depth.belowTransducer',

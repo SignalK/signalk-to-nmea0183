@@ -11,6 +11,7 @@ $IIVWR,x.x,a,x.x,N,x.x,M,x.x,K*hh
 const nmea = require('../nmea.js')
 module.exports = function (app) {
   return {
+    sentence: 'VWR',
     optionKey: 'VWR',
     title: 'VWR - Apparent wind angle and speed',
     keys: ['environment.wind.speedApparent', 'environment.wind.angleApparent'],

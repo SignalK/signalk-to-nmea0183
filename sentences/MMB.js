@@ -8,6 +8,7 @@ $IIMMB,x.x,I,x.x,B*hh
 const nmea = require('../nmea.js')
 module.exports = function (app) {
   return {
+    sentence: 'MMB',
     title: 'MMB - Environment outside pressure',
     keys: ['environment.outside.pressure'],
     f: function (pressure) {

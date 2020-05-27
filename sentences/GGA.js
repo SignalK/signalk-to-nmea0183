@@ -31,6 +31,7 @@ const {
 
 module.exports = function (app) {
   return {
+    sentence: 'GGA',
     title: 'GGA - Time, position, and fix related data',
     keys: [
       'navigation.datetime',

@@ -37,6 +37,7 @@
 const nmea = require('../nmea.js')
 module.exports = function (app) {
   return {
+    sentence: 'APB',
     title: 'APB - Autopilot info',
     keys: [
       'navigation.courseGreatCircle.crossTrackError',

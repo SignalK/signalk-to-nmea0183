@@ -2,6 +2,7 @@
 const nmea = require('../nmea.js')
 module.exports = function (app) {
   return {
+    sentence: 'DBS',
     title: 'DBS - Depth Below Surface',
     keys: ['environment.depth.belowSurface'],
     f: function mwv (depth) {

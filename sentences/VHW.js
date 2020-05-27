@@ -11,6 +11,7 @@ $IIVHW,x .x,T,x.x,M,x.x,N,x.x,K*hh
 const nmea = require('../nmea.js')
 module.exports = function (app) {
   return {
+    sentence: 'VHW',
     title: 'VHW - Speed and direction',
     keys: [
       'navigation.headingTrue',

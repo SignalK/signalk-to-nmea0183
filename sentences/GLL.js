@@ -11,6 +11,7 @@ $IIGLL,IIII.II,a,yyyyy.yy,a,hhmmss.ss,A,A*hh
 const nmea = require('../nmea.js')
 module.exports = function (app) {
   return {
+    sentence: 'GLL',
     title: 'GLL - Geographical position, latitude and longitude',
     keys: ['navigation.datetime', 'navigation.position'],
     f: function gll (datetime8601, position) {
