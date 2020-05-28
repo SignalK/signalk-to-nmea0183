@@ -148,5 +148,6 @@ module.exports = {
   toNmeaDegreesLatitude: toNmeaDegreesLatitude,
   toNmeaDegreesLongitude: toNmeaDegreesLongitude,
   fixAngle: fixAngle,
-  radsToPositiveDeg
+  radsToPositiveDeg,
+  padd
 }
