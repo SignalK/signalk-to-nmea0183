@@ -31,7 +31,7 @@ module.exports = function (app) {
     const selfContext = 'vessels.' + app.selfId
     const selfMatcher = delta => delta.context && delta.context === selfContext
 
-    function mapToNmea (encoder) {
+    function mapToNmea (encoder, throttle) {
       const selfStreams = encoder.keys.map((key, index) => {
         let stream = app.streambundle.getSelfStream(key)
         if (encoder.defaults && typeof encoder.defaults[index] != 'undefined') {
@@ -40,17 +40,24 @@ module.exports = function (app) {
         return stream
       }, app.streambundle)
       const sentenceEvent = encoder.sentence ? `g${encoder.sentence}` : undefined
+
+      let stream = Bacon.combineWith(function () {
+        try {
+          return encoder.f.apply(this, arguments)
+        } catch (e) {
+          console.error(e.message)
+        }
+      }, selfStreams)
+        .filter(v => typeof v !== 'undefined')
+        .changes()
+        .debounceImmediate(20)
+
+      if (throttle) {
+        stream = stream.throttle(throttle)
+      }
+
       plugin.unsubscribes.push(
-        Bacon.combineWith(function () {
-          try {
-            return encoder.f.apply(this, arguments)
-          } catch (e) {
-            console.error(e.message)
-          }
-        }, selfStreams)
-          .filter(v => typeof v !== 'undefined')
-          .changes()
-          .debounceImmediate(20)
+        stream
           .onValue(nmeaString => {
             app.emit('nmea0183out', nmeaString)
             if (sentenceEvent) {
@@ -62,7 +69,7 @@ module.exports = function (app) {
 
     Object.keys(plugin.sentences).forEach(name => {
       if (options[name]) {
-        mapToNmea(plugin.sentences[name])
+        mapToNmea(plugin.sentences[name], options[getThrottlePropname(name)])
       }
     })
   }
@@ -79,10 +86,16 @@ module.exports = function (app) {
 function buildSchemaFromSentences (plugin) {
   Object.keys(plugin.sentences).forEach(key => {
     var sentence = plugin.sentences[key]
+    const throttlePropname = getThrottlePropname(key)
     plugin.schema.properties[key] = {
       title: sentence['title'],
       type: 'boolean',
       default: false
+    }
+    plugin.schema.properties[throttlePropname] = {
+      title: `${key} throttle ms`,
+      type: 'number',
+      default: 0
     }
   })
 }
@@ -98,3 +111,5 @@ function loadSentences (app, plugin) {
       return acc
     }, {})
 }
+
+const getThrottlePropname = (key) => `${key}_throttle`
