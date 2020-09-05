@@ -93,7 +93,7 @@ function buildSchemaFromSentences (plugin) {
       default: false
     }
     plugin.schema.properties[throttlePropname] = {
-      title: `throttle ms`,
+      title: `${key} throttle ms`,
       type: 'number',
       default: 0
     }
