@@ -15,7 +15,7 @@
   "author": "teppo.kurki@iki.fi",
   "license": "ISC",
   "dependencies": {
-    "baconjs": "^0.7.88"
+    "baconjs": "^3.0.15"
   },
   "devDependencies": {
     "@signalk/github-create-release": "^1.2.0",
