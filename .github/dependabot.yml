@@ -4,3 +4,7 @@ updates:
     directory: "/"
     schedule:
       interval: "daily"
+    ignored_updates:
+      - match:
+          dependency_name: "baconjs"
+          version_requirement: "3.x"
