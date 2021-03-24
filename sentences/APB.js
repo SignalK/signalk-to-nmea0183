@@ -42,24 +42,25 @@ module.exports = function (app) {
     keys: [
       'navigation.courseGreatCircle.crossTrackError',
       'navigation.courseGreatCircle.bearingTrackTrue',
-      'navigation.courseGreatCircle.nextPoint'
+      'navigation.courseGreatCircle.nextPoint.bearingTrue',
+      'navigation.courseGreatCircle.nextPoint.bearingMagnetic'
     ],
-    f: function (xte, originToDest, nextPoint) {
+    f: function (xte, originToDest, bearingTrue, bearingMagnetic) {
       return nmea.toSentence([
         '$IIAPB',
         'A',
         'A',
-        Math.abs(xte),
+        Math.abs(nmea.mToNm(xte)).toFixed(3),  // NMEA 0183 4.11 prescribes units must be the Nautical miles
         xte > 0 ? 'L' : 'R',
-        'M',
+        'N',
         'V',
         'V',
-        nmea.radsToDeg(originToDest).toFixed(0),
+        nmea.radsToPositiveDeg(originToDest).toFixed(0),
         'T',
         '00',
-        nmea.radsToDeg(nextPoint.bearingTrue).toFixed(0),
+        nmea.radsToPositiveDeg(bearingTrue).toFixed(0),
         'T',
-        nmea.radsToDeg(nextPoint.bearingMagnetic).toFixed(0),
+        nmea.radsToPositiveDeg(bearingMagnetic).toFixed(0),
         'M'
       ])
     }
