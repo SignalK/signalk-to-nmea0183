@@ -8,7 +8,7 @@ const nmea = require('../nmea.js')
 module.exports = function (app) {
   return {
     title: 'XTE - Cross-track error',
-    keys: ['navigation.courseRhumbline.crossTrackError'],
+    keys: ['navigation.courseGreatCircle.crossTrackError'],
     f: function (crossTrackError) {
       return nmea.toSentence([
         '$IIXTE',
