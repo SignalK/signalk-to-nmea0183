@@ -11,8 +11,9 @@ $IIVWT,x.x,a,x.x,N,x.x,M,x.x,K*hh
 const nmea = require('../nmea.js')
 module.exports = function (app) {
   return {
+    sentence: 'VWT',
     title: 'VWT - True wind speed relative to boat.',
-    keys: ['environment.wind.angleTrue', 'environment.wind.speedTrue'],
+    keys: ['environment.wind.angleTrueWater', 'environment.wind.speedTrue'],
     f: function (angleTrueWater, speedTrue) {
       return nmea.toSentence([
         '$IIVWT',

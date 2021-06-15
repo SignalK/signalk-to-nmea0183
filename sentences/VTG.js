@@ -10,6 +10,7 @@ $IIVTG,x.x,T,x.x,M,x.x,N,x.x,K,A*hh
 const nmea = require('../nmea.js')
 module.exports = function (app) {
   return {
+    sentence: 'VTG',
     title: 'VTG - Track made good and Ground Speed (COG,SOG)',
     keys: [
       'navigation.courseOverGroundMagnetic',

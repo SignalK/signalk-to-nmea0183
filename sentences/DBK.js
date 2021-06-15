@@ -2,6 +2,7 @@
 const nmea = require('../nmea.js')
 module.exports = function (app) {
   return {
+    sentence: 'DBK',
     title: 'DBK - Depth Below Keel',
     keys: ['environment.depth.belowKeel'],
     f: function mwv (depth) {

@@ -13,6 +13,7 @@ $IIRMB,A,x.x,a,,,IIII.II,a,yyyyy.yy,a,x.x,x.x,x.x,A,a*hh
 const nmea = require('../nmea.js')
 module.exports = function (app) {
   return {
+    sentence: 'RMB',
     title: 'RMB - Heading and distance to waypoint',
     keys: [
       'navigation.courseRhumbline.crossTrackError',

@@ -2,6 +2,7 @@
 const nmea = require('../nmea.js')
 module.exports = function (app) {
   return {
+    sentence: 'MTW',
     title: 'MTW - Water Temperature',
     keys: ['environment.water.temperature'],
     f: function (temperature) {

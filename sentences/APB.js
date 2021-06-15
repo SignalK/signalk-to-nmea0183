@@ -37,6 +37,7 @@
 const nmea = require('../nmea.js')
 module.exports = function (app) {
   return {
+    sentence: 'APB',
     title: 'APB - Autopilot info',
     keys: [
       'navigation.courseGreatCircle.crossTrackError',
@@ -45,7 +46,7 @@ module.exports = function (app) {
     ],
     f: function (xte, originToDest, nextPoint) {
       return nmea.toSentence([
-        '$SKAPB',
+        '$IIAPB',
         'A',
         'A',
         Math.abs(xte),

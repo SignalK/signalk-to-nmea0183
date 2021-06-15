@@ -9,6 +9,7 @@ $IIVLW,x.x,N,x.x,N*hh
 const nmea = require('../nmea.js')
 module.exports = function (app) {
   return {
+    sentence: 'VLW',
     title: 'VLW - Total log and daily log',
     keys: ['navigation.log', 'navigation.logTrip'],
     f: function (logDistance, tripDistance) {

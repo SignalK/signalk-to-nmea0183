@@ -13,6 +13,7 @@ $IIMWD,x.x,T,x.x,M,x.x,N,x.x,M*hh
 const nmea = require('../nmea.js')
 module.exports = function (app) {
   return {
+    sentence: 'MWD',
     title: 'MWD - Wind relative to North, speed might be ground speed.',
     keys: [
       'environment.wind.directionTrue',

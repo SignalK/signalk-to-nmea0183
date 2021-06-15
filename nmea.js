@@ -132,6 +132,14 @@ function fixAngle (d) {
   return result
 }
 
+function toPositiveRadians (d) {
+  return d < 0 ? d + 2 * Math.PI : d
+}
+
+function radsToPositiveDeg(r) {
+  return radsToDeg(toPositiveRadians(r))
+}
+
 module.exports = {
   toSentence: toSentence,
   radsToDeg: radsToDeg,
@@ -139,5 +147,7 @@ module.exports = {
   msToKM: msToKM,
   toNmeaDegreesLatitude: toNmeaDegreesLatitude,
   toNmeaDegreesLongitude: toNmeaDegreesLongitude,
-  fixAngle: fixAngle
+  fixAngle: fixAngle,
+  radsToPositiveDeg,
+  mToNm
 }

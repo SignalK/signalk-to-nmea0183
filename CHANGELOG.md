@@ -1,5 +1,32 @@
 ## Change Log
 
+### v1.6.0 (2019/09/06 15:05 +00:00)
+- [#42](https://github.com/SignalK/signalk-to-nmea0183/pull/42) fix: compatibility with navionics which only accepts $GP for RMC (@cmotelet)
+
+### v1.5.1 (2019/08/24 05:29 +00:00)
+- [#40](https://github.com/SignalK/signalk-to-nmea0183/pull/40) Fix GGA: gnssMethodQuality is numeric (@free-x)
+- [#38](https://github.com/SignalK/signalk-to-nmea0183/pull/38) docs: clarify default TCP output (@GaryWSmith)
+
+### v1.5.0 (2019/05/15 19:27 +00:00)
+- [#35](https://github.com/SignalK/signalk-to-nmea0183/pull/35) chore: Use $II as a talker ID to extend compatibility with other software (@cmotelet)
+
+### v1.4.0 (2019/03/20 18:21 +00:00)
+- [#31](https://github.com/SignalK/signalk-to-nmea0183/pull/31) Add support for GGA sentence (@fabdrol)
+
+### v1.3.1 (2019/03/16 19:14 +00:00)
+- [#33](https://github.com/SignalK/signalk-to-nmea0183/pull/33) MWV angle should be always positive (@tkurki)
+
+### v1.3.0 (2018/10/08 05:49 +00:00)
+- [#28](https://github.com/SignalK/signalk-to-nmea0183/pull/28) Rudder Sensor Angle (@Dirk--)
+
+### v1.2.1 (2018/09/24 17:14 +00:00)
+- [#27](https://github.com/SignalK/signalk-to-nmea0183/pull/27) fix: use environment.wind.angleTrueWater (@tkurki)
+
+### v1.2.0 (2018/08/23 16:15 +00:00)
+- [#16](https://github.com/SignalK/signalk-to-nmea0183/pull/16) feature: Add back Silva/Nexus/Garmin proprietary sentences TBS and CD1 (@joabakk)
+- [#22](https://github.com/SignalK/signalk-to-nmea0183/pull/22) Fix: Set time of position fix time to UTC as defined in RMC sentence (@davidsanner)
+- [#23](https://github.com/SignalK/signalk-to-nmea0183/pull/23) Rename XDRNA,js to XDRNA.js (@davidsanner)
+
 ### v1.1.0 (2018/05/08 20:15 +00:00)
 - [#21](https://github.com/SignalK/signalk-to-nmea0183/pull/21) fix RMC sentence, add Variation to HDG setence (@davidsanner)
 

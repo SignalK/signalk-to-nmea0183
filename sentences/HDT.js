@@ -2,6 +2,7 @@
 const nmea = require('../nmea.js')
 module.exports = function (app) {
   return {
+    sentence: 'HDT',
     title: 'HDT - Heading True',
     keys: ['navigation.headingTrue'],
     f: function (heading) {

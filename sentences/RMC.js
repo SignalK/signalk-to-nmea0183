@@ -27,6 +27,7 @@
 const { toSentence, toNmeaDegreesLatitude, toNmeaDegreesLongitude, radsToDeg } = require('../nmea.js')
 module.exports = function (app) {
   return {
+    sentence: 'RMC',
     title: 'RMC - GPS recommended minimum',
     keys: [
       'navigation.datetime',
@@ -56,9 +57,8 @@ module.exports = function (app) {
         magneticVariationDir = 'W';
         magneticVariation = magneticVariation * -1;
       }
-      magneticVariation = radsToDeg(magneticVariation);
       return toSentence([
-        '$SKRMC',
+        '$GPRMC',
         time,
         'A',
         toNmeaDegreesLatitude(position.latitude),
@@ -66,7 +66,7 @@ module.exports = function (app) {
         (sog * 1.94384).toFixed(1),
         radsToDeg(cog).toFixed(1),
         date,
-        typeof magneticVariation === 'number' ? magneticVariation.toFixed(1) : magneticVariation,
+        typeof magneticVariation === 'number' ? radsToDeg(magneticVariation).toFixed(1) : magneticVariation,
         magneticVariationDir
       ])
     }
