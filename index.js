@@ -63,6 +63,7 @@ module.exports = function (app) {
             if (sentenceEvent) {
               app.emit(sentenceEvent, nmeaString)
             }
+            app.debug(nmeaString)
           })
       )
     }
