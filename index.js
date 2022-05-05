@@ -33,7 +33,9 @@ module.exports = function (app) {
 
     function mapToNmea (encoder, throttle) {
       const selfStreams = encoder.keys.map((key, index) => {
+        app.debug(`key= ${key}, index= ${index}`)
         let stream = app.streambundle.getSelfStream(key)
+        app.debug(`stream => ${stream}`)
         if (encoder.defaults && typeof encoder.defaults[index] != 'undefined') {
           stream = stream.merge(Bacon.once(encoder.defaults[index]))
         }
@@ -41,8 +43,10 @@ module.exports = function (app) {
       }, app.streambundle)
       const sentenceEvent = encoder.sentence ? `g${encoder.sentence}` : undefined
 
+
       let stream = Bacon.combineWith(function () {
         try {
+          app.debug(`apply ${encoder.sentence}`)
           return encoder.f.apply(this, arguments)
         } catch (e) {
           console.error(e.message)
@@ -70,6 +74,7 @@ module.exports = function (app) {
 
     Object.keys(plugin.sentences).forEach(name => {
       if (options[name]) {
+        app.debug(`${name}= enabled`)
         mapToNmea(plugin.sentences[name], options[getThrottlePropname(name)])
       }
     })
