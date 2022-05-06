@@ -46,7 +46,6 @@ module.exports = function (app) {
       'navigation.course.calcValues.bearingMagnetic'
     ],
     f: function (xte, originToDest, bearingTrue, bearingMagnetic) {
-      console.log(`**APB**`)
       return nmea.toSentence([
         '$IIAPB',
         'A',

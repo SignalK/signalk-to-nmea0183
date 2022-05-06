@@ -46,7 +46,6 @@ module.exports = function (app) {
 
       let stream = Bacon.combineWith(function () {
         try {
-          app.debug(`apply ${encoder.sentence}`)
           return encoder.f.apply(this, arguments)
         } catch (e) {
           console.error(e.message)
