@@ -40,14 +40,12 @@ module.exports = function (app) {
     sentence: 'APB',
     title: 'APB - Autopilot info',
     keys: [
-      //'navigation.courseGreatCircle.crossTrackError',
       'navigation.course.calcValues.crossTrackError',
-      //'navigation.courseGreatCircle.bearingTrackTrue',
       'navigation.course.calcValues.bearingTrackTrue',
-      //'navigation.courseGreatCircle.nextPoint'
-      'navigation.course.calcValues.nextPoint'
+      'navigation.course.calcValues.bearingTrue',
+      'navigation.course.calcValues.bearingMagnetic'
     ],
-    f: function (xte, originToDest, nextPoint) {
+    f: function (xte, originToDest, bearingTrue, bearingMagnetic) {
       console.log(`**APB**`)
       return nmea.toSentence([
         '$IIAPB',
@@ -61,9 +59,9 @@ module.exports = function (app) {
         nmea.radsToDeg(originToDest).toFixed(0),
         'T',
         '00',
-        nmea.radsToDeg(nextPoint.bearingTrue).toFixed(0),
+        nmea.radsToDeg(bearingTrue).toFixed(0),
         'T',
-        nmea.radsToDeg(nextPoint.bearingMagnetic).toFixed(0),
+        nmea.radsToDeg(bearingMagnetic).toFixed(0),
         'M'
       ])
     }
