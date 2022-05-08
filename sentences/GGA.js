@@ -121,10 +121,10 @@ module.exports = function (app) {
         toNmeaDegreesLongitude(position.longitude),
         ignssMethodQuality,
         gnssSatellites,
-        gnssHorizontalDilution,
-        gnssAntennaAltitude,
+        gnssHorizontalDilution.toFixed(1),
+        gnssAntennaAltitude.toFixed(1),
         'M',
-        gnssgeoidalSeparation,
+        gnssgeoidalSeparation.toFixed(1),
         'M',
         gnssDifferentialAge,
         gnssDifferentialReference
