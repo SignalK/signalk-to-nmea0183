@@ -18,7 +18,8 @@ module.exports = {
         if (name === 'nmea0183out') {
           onEmit(name, value)
         }
-      }
+      },
+      debug: (msg) => console.log(msg)
     }
     const plugin = require('../')(app)
     const options = {}
