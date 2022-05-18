@@ -6,9 +6,15 @@ $IIXTE,A,A,x.x,a,N,A*hh
 // to verify
 const nmea = require('../nmea.js')
 module.exports = function (app) {
+
+  const apiVersion = app.config.version ? parseInt(app.config.version.split('.')[0]) : 1
+  const keys = apiVersion === 2
+    ? ['navigation.course.calcValues.crossTrackError']
+    : ['navigation.courseGreatCircle.crossTrackError']
+
   return {
     title: 'XTE - Cross-track error',
-    keys: ['navigation.course.calcValues.crossTrackError'],
+    keys: keys,
     f: function (crossTrackError) {
       return nmea.toSentence([
         '$IIXTE',

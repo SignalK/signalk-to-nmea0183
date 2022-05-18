@@ -12,20 +12,33 @@ $IIRMB,A,x.x,a,,,IIII.II,a,yyyyy.yy,a,x.x,x.x,x.x,A,a*hh
 // to verify
 const nmea = require('../nmea.js')
 module.exports = function (app) {
-  return {
-    sentence: 'RMB',
-    title: 'RMB - Heading and distance to waypoint',
-    keys: [
+
+  const apiVersion = app.config.version ? parseInt(app.config.version.split('.')[0]) : 1
+  const waypointPath = apiVersion === 2 
+    ? 'navigation.course.nextPoint.position' 
+    : 'navigation.courseGreatCircle.nextPoint.position'
+  const keys = apiVersion === 2
+    ? [
       'navigation.course.calcValues.crossTrackError',
       'navigation.course.calcValues.distance',
       'navigation.course.calcValues.bearingTrue'
-    ],
+    ]
+    : [
+      'navigation.courseGreatCircle.crossTrackError',
+      'navigation.courseGreatCircle.nextPoint.distance',
+      'navigation.courseGreatCircle.nextPoint.bearingTrue'
+    ]
+
+  return {
+    sentence: 'RMB',
+    title: 'RMB - Heading and distance to waypoint',
+    keys: keys,
     f: function (
       crossTrackError,
       wpDistance,
       bearingTrue
     ) {
-      const wp = app.getSelfPath('navigation.course.nextPoint.position')
+      const wp = app.getSelfPath(waypointPath)
       if (!wp) return
       return nmea.toSentence([
         '$IIRMB',
@@ -40,4 +53,5 @@ module.exports = function (app) {
       ])
     }
   }
+
 }

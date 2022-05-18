@@ -36,15 +36,26 @@
 // to verify
 const nmea = require('../nmea.js')
 module.exports = function (app) {
-  return {
-    sentence: 'APB',
-    title: 'APB - Autopilot info',
-    keys: [
+
+  const apiVersion = app.config.version ? parseInt(app.config.version.split('.')[0]) : 1
+  const keys = apiVersion === 2
+    ? [
       'navigation.course.calcValues.crossTrackError',
       'navigation.course.calcValues.bearingTrackTrue',
       'navigation.course.calcValues.bearingTrue',
       'navigation.course.calcValues.bearingMagnetic'
-    ],
+    ]
+    : [
+      'navigation.courseGreatCircle.crossTrackError',
+      'navigation.courseGreatCircle.bearingTrackTrue',
+      'navigation.courseGreatCircle.nextPoint.bearingTrue',
+      'navigation.courseGreatCircle.nextPoint.bearingMagnetic'
+    ]
+
+  return {
+    sentence: 'APB',
+    title: 'APB - Autopilot info',
+    keys: keys,
     f: function (xte, originToDest, bearingTrue, bearingMagnetic) {
       return nmea.toSentence([
         '$IIAPB',
