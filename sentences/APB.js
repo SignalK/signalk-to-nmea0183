@@ -38,7 +38,7 @@ const nmea = require('../nmea.js')
 module.exports = function (app) {
 
   const apiVersion = app.config.version ? parseInt(app.config.version.split('.')[0]) : 1
-  const keys = apiVersion === 2
+  const keys = apiVersion > 1
     ? [
       'navigation.course.calcValues.crossTrackError',
       'navigation.course.calcValues.bearingTrackTrue',
