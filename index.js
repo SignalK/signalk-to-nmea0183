@@ -23,7 +23,7 @@ module.exports = function (app) {
     type: 'object',
     title: 'Conversions to NMEA0183',
     description:
-      'If there is SK data for the conversion generate the following NMEA0183 sentences from Signal K data:',
+      'If there is SK data for the conversion generate the following NMEA0183 sentences from Signal K data. For converting NMEA2000 AIS to NMEA 0183 use the signalk-n2kais-to-nmea0183 plugin.',
     properties: {}
   }
 
