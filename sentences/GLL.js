@@ -19,13 +19,15 @@ module.exports = function (app) {
       var hours = ('00' + datetime.getHours()).slice(-2)
       var minutes = ('00' + datetime.getMinutes()).slice(-2)
       var seconds = ('00' + datetime.getSeconds()).slice(-2)
-      return nmea.toSentence([
-        '$GPGLL',
-        nmea.toNmeaDegreesLatitude(position.latitude),
-        nmea.toNmeaDegreesLongitude(position.longitude),
-        hours + minutes + seconds + '.020',
-        'A'
-      ])
+      if (position !== null) {
+        return nmea.toSentence([
+          '$GPGLL',
+          nmea.toNmeaDegreesLatitude(position.latitude),
+          nmea.toNmeaDegreesLongitude(position.longitude),
+          hours + minutes + seconds + '.020',
+          'A'
+        ])
+      }
     }
   }
 }
