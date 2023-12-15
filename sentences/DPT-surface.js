@@ -1,11 +1,12 @@
 /**
-Depth:
-$IIDPT,x.x,x.x,,*hh
- I I_Sensor offset, >0 = surface transducer distance, >0 = keel transducer distance.
- I_From Surface To Transduder
-
+DPT - Depth of Water
+$--DPT,x.x,x.x*hh
+ Fields:
+ - Water depth relative to transducer, meters
+ - Offset from transducer, meters. Positive means distance from transducer to water line, negative means distance from transducer to keel
+ - Checksum
  */
-// NMEA0183 Encoder DPT   $IIDPT,69.21,-0.001*60
+// NMEA0183 Encoder DPT   $IIDPT,9.2,1.1*4B
 const nmea = require('../nmea.js')
 module.exports = function (app) {
   return {
