@@ -1,10 +1,13 @@
 /**
 DPT - Depth of Water
-$--DPT,x.x,x.x*hh
- Fields:
- - Water depth relative to transducer, meters
- - Offset from transducer, meters. Positive means distance from transducer to water line, negative means distance from transducer to keel
- - Checksum
+        1   2   3   4
+        |   |   |   |
+ $--DPT,x.x,x.x,x.x*hh<CR><LF>
+Field Number:
+1. Water depth relative to transducer, meters
+2. Offset from transducer, meters positive means distance from transducer to water line negative means distance from transducer to keel
+3. Maximum range scale in use (NMEA 3.0 and above)
+4. Checksum
  */
 // NMEA0183 Encoder DPT   $IIDPT,9.2,1.1*4B
 const nmea = require('../nmea.js')
