@@ -19,7 +19,7 @@ module.exports = function (app) {
       return nmea.toSentence([
         '$IIDPT',
         belowTransducer.toFixed(2),
-        transducerToKeel.toFixed(3)
+        (-Math.abs(transducerToKeel)).toFixed(3)
       ])
     }
   }
