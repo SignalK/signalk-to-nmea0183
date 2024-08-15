@@ -59,6 +59,7 @@ module.exports = function (app) {
       plugin.unsubscribes.push(
         stream
           .onValue(nmeaString => {
+            app.reportOutputMessages(1)
             app.emit('nmea0183out', nmeaString)
             if (sentenceEvent) {
               app.emit(sentenceEvent, nmeaString)
