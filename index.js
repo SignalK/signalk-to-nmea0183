@@ -29,9 +29,8 @@ module.exports = function (app) {
 
   plugin.start = function (options) {
     const selfContext = 'vessels.' + app.selfId
-    const selfMatcher = delta => delta.context && delta.context === selfContext
 
-    function mapToNmea (encoder, throttle) {
+    function mapToNmea (encoder, throttle, additionalEvents) {
       const selfStreams = encoder.keys.map((key, index) => {
         let stream = app.streambundle.getSelfStream(key)
         if (encoder.defaults && typeof encoder.defaults[index] != 'undefined') {
@@ -63,6 +62,9 @@ module.exports = function (app) {
             if (sentenceEvent) {
               app.emit(sentenceEvent, nmeaString)
             }
+            for (const event of additionalEvents) {
+              app.emit(event, nmeaString);
+            }
             app.debug(nmeaString)
           })
       )
@@ -70,7 +72,11 @@ module.exports = function (app) {
 
     Object.keys(plugin.sentences).forEach(name => {
       if (options[name]) {
-        mapToNmea(plugin.sentences[name], options[getThrottlePropname(name)])
+        mapToNmea(
+          plugin.sentences[name],
+          options[getThrottlePropname(name)],
+          options[getAdditionalEventsPropname(name)] || []
+        )
       }
     })
   }
@@ -88,6 +94,7 @@ function buildSchemaFromSentences (plugin) {
   Object.keys(plugin.sentences).forEach(key => {
     var sentence = plugin.sentences[key]
     const throttlePropname = getThrottlePropname(key)
+    const additionalEventsPropname = getAdditionalEventsPropname(key);
     plugin.schema.properties[key] = {
       title: sentence['title'],
       type: 'boolean',
@@ -97,6 +104,14 @@ function buildSchemaFromSentences (plugin) {
       title: `${key} throttle ms`,
       type: 'number',
       default: 0
+    }
+    plugin.schema.properties[additionalEventsPropname] = {
+      title: `${key} additional output events`,
+      type: 'array',
+      default: [],
+      items: {
+        type: 'string',
+      },
     }
   })
 }
@@ -113,4 +128,5 @@ function loadSentences (app, plugin) {
     }, {})
 }
 
-const getThrottlePropname = (key) => `${key}_throttle`
+const getThrottlePropname = (key) => `${key}_throttle`;
+const getAdditionalEventsPropname = (key) => `${key}_events`;
