@@ -22,7 +22,6 @@ If you want to output the conversion result into a serial connection you need to
               "validateChecksum": true,
               "type": "serial",
               "suppress0183event": true,
-              "sentenceEvent": "nmea1data",
               "providerId": "a",
               "device": "/dev/ttyExample",
               "baudrate": 4800,
