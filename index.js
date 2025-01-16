@@ -62,9 +62,7 @@ module.exports = function (app) {
             if (sentenceEvent) {
               app.emit(sentenceEvent, nmeaString)
             }
-            for (const event of additionalEvents) {
-              app.emit(event, nmeaString);
-            }
+            additionalEvents.forEach(event => app.emit(event, nmeaString))
             app.debug(nmeaString)
           })
       )
