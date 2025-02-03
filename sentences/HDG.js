@@ -10,7 +10,7 @@ module.exports = function (app) {
   return {
     sentence: 'HDG',
     title: 'HDG - Heading magnetic:.',
-    keys: ['navigation.headingMagnetic', 'navigation.magneticVariation' ],
+    keys: ['navigation.headingMagnetic', , , 'navigation.magneticVariation' ],
     defaults: [undefined, ''],
     f: function hdg (headingMagnetic, magneticVariation) {
       var magneticVariationDir = ''
