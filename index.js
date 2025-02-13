@@ -9,6 +9,7 @@ const {
 } = require('./nmea')
 const path = require('path')
 const fs = require('fs')
+const { type } = require('os')
 
 module.exports = function (app) {
   var plugin = {
@@ -85,20 +86,27 @@ module.exports = function (app) {
 }
 
 function buildSchemaFromSentences (plugin) {
-  Object.keys(plugin.sentences).forEach(key => {
-    var sentence = plugin.sentences[key]
-    const throttlePropname = getThrottlePropname(key)
-    plugin.schema.properties[key] = {
-      title: sentence['title'],
-      type: 'boolean',
-      default: false
+
+  plugin.schema.properties['Active Conversions'] = {
+    type: 'array',
+    items: {
+      type: 'object',
+      properties: {
+        "Sentence": {
+          "type": "string",
+          "enum": Object.keys(plugin.sentences).map(key => `${key}: ${plugin.sentences[key].title}`)
+        },
+        "Minimum interval (milliseconds)": {
+          "type": "number",
+          "description": "Minimum interval between sentences"
+        },
+        "Event": {
+          "type": "string",
+          "description": "Event name to emit the sentence"
+        }
+      }
     }
-    plugin.schema.properties[throttlePropname] = {
-      title: `${key} throttle ms`,
-      type: 'number',
-      default: 0
-    }
-  })
+  }
 }
 
 function loadSentences (app, plugin) {
