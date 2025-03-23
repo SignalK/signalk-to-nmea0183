@@ -27,6 +27,24 @@ Field Number:
 
 const nmea = require('../nmea.js')
 module.exports = function (app) {
+
+  const apiVersion = app.config.version ? parseInt(app.config.version.split('.')[0]) : 1
+  const keys = apiVersion > 1
+    ? [
+      'navigation.course.nextPoint',
+      'navigation.course.calcValues.crossTrackError',
+      'navigation.course.calcValues.distance',
+      'navigation.course.calcValues.bearingTrue',
+      'navigation.course.calcValues.velocityMadeGood'
+    ]
+    : [
+      'navigation.courseGreatCircle.nextPoint',
+      'navigation.courseGreatCircle.crossTrackError',
+      'navigation.courseGreatCircle.nextPoint.distance',
+      'navigation.courseGreatCircle.nextPoint.bearingTrue',
+      'navigation.courseGreatCircle.nextPoint.velocityMadeGood'
+    ]
+    
   return {
     sentence: 'RMB',
     title: 'RMB - Heading and distance to waypoint',
