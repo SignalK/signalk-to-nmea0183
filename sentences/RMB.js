@@ -48,13 +48,7 @@ module.exports = function (app) {
   return {
     sentence: 'RMB',
     title: 'RMB - Heading and distance to waypoint',
-    keys: [
-      'navigation.courseGreatCircle.nextPoint',
-      'navigation.courseGreatCircle.crossTrackError',
-      'navigation.courseGreatCircle.nextPoint.distance',
-      'navigation.courseGreatCircle.nextPoint.bearingTrue',
-      'navigation.courseGreatCircle.nextPoint.velocityMadeGood'
-    ],
+    keys: keys,
     f: function (
       nextPoint,
       crossTrackError,
