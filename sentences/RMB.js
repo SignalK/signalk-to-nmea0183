@@ -48,7 +48,7 @@ module.exports = function (app) {
   return {
     sentence: 'RMB',
     title: 'RMB - Heading and distance to waypoint',
-    keys: keys,
+    keys,
     f: function (
       nextPoint,
       crossTrackError,
