@@ -1,5 +1,5 @@
-const assert = require('assert')
-const { toNmeaDegreesLatitude, toNmeaDegreesLongitude } = require('../nmea.js')
+const assert = require('assert');
+const { formatDatetime, toNmeaDegreesLatitude, toNmeaDegreesLongitude } = require('../nmea.js');
 
 describe('nmea', function () {
   describe('toNmeaDegreesLatitude()', function(){
@@ -31,3 +31,91 @@ describe('nmea', function () {
     })
   })
 })
+
+  describe('formatDatetime()', function () {
+    it('formats ISO datetime strings to NMEA0183 format', function () {
+      assert.deepEqual(formatDatetime('2025-04-27T12:34:56Z'), {
+        date: '270425',
+        day: '27',
+        hours: '12',
+        minutes: '34',
+        month: '04',
+        seconds: '56',
+        time: '123456',
+        year: '25'
+      });
+    });
+
+    it('handles timezones with +02:00 offset', function () {
+      assert.deepEqual(formatDatetime('2025-04-27T14:34:56+02:00'), {
+        date: '270425',
+        day: '27',
+        hours: '12',
+        minutes: '34',
+        month: '04',
+        seconds: '56',
+        time: '123456',
+        year: '25'
+      });
+    });
+
+    it('handles timezones with -05:00 offset', function () {
+      assert.deepEqual(formatDatetime('2025-04-27T07:34:56-05:00'), {
+        date: '270425',
+        day: '27',
+        hours: '12',
+        minutes: '34',
+        month: '04',
+        seconds: '56',
+        time: '123456',
+        year: '25'
+      });
+    });
+
+    it('handles timezones with +00:00 offset (UTC)', function () {
+      assert.deepEqual(formatDatetime('2025-04-27T12:34:56+00:00'), {
+        date: '270425',
+        day: '27',
+        hours: '12',
+        minutes: '34',
+        month: '04',
+        seconds: '56',
+        time: '123456',
+        year: '25'
+      });
+    });
+
+    it('returns empty', function () {
+      assert.deepEqual(formatDatetime(1), {
+        date: '',
+        day: '',
+        hours: '',
+        minutes: '',
+        month: '',
+        seconds: '',
+        time: '',
+        year: ''
+      });
+      assert.deepEqual(formatDatetime(null), {
+        date: '',
+        day: '',
+        hours: '',
+        minutes: '',
+        month: '',
+        seconds: '',
+        time: '',
+        year: ''
+      });
+      assert.deepEqual(formatDatetime(undefined), {
+        date: '',
+        day: '',
+        hours: '',
+        minutes: '',
+        month: '',
+        seconds: '',
+        time: '',
+        year: ''
+      });
+    });
+  });
+});

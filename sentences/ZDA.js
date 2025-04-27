@@ -13,18 +13,13 @@ module.exports = function (app) {
     title: 'ZDA - UTC time and date',
     keys: ['navigation.datetime'],
     f: function (datetime8601) {
-      var datetime = new Date(datetime8601)
-      var hours = ('00' + datetime.getUTCHours()).slice(-2)
-      var minutes = ('00' + datetime.getUTCMinutes()).slice(-2)
-      var seconds = ('00' + datetime.getUTCSeconds()).slice(-2)
-      var day = ('00' + datetime.getUTCDate()).slice(-2)
-      var month = ('00' + (datetime.getUTCMonth() + 1)).slice(-2)
+      const datetime = formatDatetime(datetime8601);
       return nmea.toSentence([
         '$IIZDA',
-        hours + minutes + seconds + '.020',
-        day,
-        month,
-        datetime.getUTCFullYear(),
+        datetime.time + '.020',
+        datetime.day,
+        datetime.month,
+        datetime.year,
         '',
         ''
       ])
