@@ -2,7 +2,7 @@
   GGA - Time, position, and fix related data
   This is one of the sentences commonly emitted by GPS units.
   0      1        2             3 4              5 6 7 8   9     10 11     12 13  14
-  |      |        |             | |              | | | |   |      | |       | |   |     
+  |      |        |             | |              | | | |   |      | |       | |   |
   $GPGGA,172814.0,3723.46587704,N,12202.26957864,W,2,6,1.2,18.893,M,-25.669,M,2.0,0031*hh<CR><LF>
 
   Field Number:
@@ -11,7 +11,7 @@
   2	Latitude
   3	Direction of latitude: N (north) or S (south)
   4	Longitude
-  5	Direction of longitude: E (east) or W (west) 
+  5	Direction of longitude: E (east) or W (west)
   6	GPS Quality indicator: 0 = Fix not valid; 1 = GPS fix; 2 = Differential GPS fix, OmniSTAR VBS; 4 = Real-Time Kinematic, fixed integers; 5 = Real-Time Kinematic, float integers, OmniSTAR XP/HP or Location RTK
   7	Number of SVs in use, range from 00 through to 24+
   8	HDOP
@@ -26,7 +26,8 @@
 const {
   toSentence,
   toNmeaDegreesLatitude,
-  toNmeaDegreesLongitude
+  toNmeaDegreesLongitude,
+  formatDatetime
 } = require('../nmea.js')
 
 module.exports = function (app) {
@@ -66,7 +67,6 @@ module.exports = function (app) {
       gnssDifferentialAge,
       gnssDifferentialReference
     ) {
-      let time = ''
       let ignssMethodQuality = 0
 
       if (
@@ -76,13 +76,7 @@ module.exports = function (app) {
         datetime8601 = new Date().toISOString()
       }
 
-      if (datetime8601.length > 0) {
-        let datetime = new Date(datetime8601)
-        let hours = ('00' + datetime.getUTCHours()).slice(-2)
-        let minutes = ('00' + datetime.getUTCMinutes()).slice(-2)
-        let seconds = ('00' + datetime.getUTCSeconds()).slice(-2)
-        time = hours + minutes + seconds
-      }
+      const datetime = formatDatetime(datetime8601)
 
       if (!position) {
         console.error(`[signalk-to-nmea0183] GGA: no position, not converting`)
@@ -129,7 +123,7 @@ module.exports = function (app) {
 
       return toSentence([
         '$GPGGA',
-        time,
+        datetime.time,
         toNmeaDegreesLatitude(position.latitude),
         toNmeaDegreesLongitude(position.longitude),
         ignssMethodQuality,
