@@ -26,8 +26,9 @@
 const {
   toSentence,
   toNmeaDegreesLatitude,
-  toNmeaDegreesLongitude
-} = require('../nmea.js')
+  toNmeaDegreesLongitude,
+  formatDatetime,
+} = require('../nmea.js');
 
 module.exports = function (app) {
   return {
@@ -56,20 +57,13 @@ module.exports = function (app) {
       null // navigation.gnss.differentialReference (= Reference station ID, range 0000-4095. A null field when any reference station ID is selected and no corrections are received)
     ],
     f: function (datetime8601, position, gnssMethodQuality, gnssSatellites, gnssHorizontalDilution, gnssAntennaAltitude, gnssgeoidalSeparation, gnssDifferentialAge, gnssDifferentialReference) {
-      let time = ''
       let ignssMethodQuality = 0
 
       if (!datetime8601 || (typeof datetime8601 === 'string' && datetime8601.trim() === '')) {
         datetime8601 = new Date().toISOString()
       }
 
-      if (datetime8601.length > 0) {
-        let datetime = new Date(datetime8601)
-        let hours = ('00' + datetime.getUTCHours()).slice(-2)
-        let minutes = ('00' + datetime.getUTCMinutes()).slice(-2)
-        let seconds = ('00' + datetime.getUTCSeconds()).slice(-2)
-        time = hours + minutes + seconds
-      }
+      const datetime = formatDatetime(datetime8601);
 
       if (!position) {
         console.error(`[signalk-to-nmea0183] GGA: no position, not converting`)
@@ -116,7 +110,7 @@ module.exports = function (app) {
 
       return toSentence([
         '$GPGGA',
-        time,
+        datetime.time,
         toNmeaDegreesLatitude(position.latitude),
         toNmeaDegreesLongitude(position.longitude),
         ignssMethodQuality,
