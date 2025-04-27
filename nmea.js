@@ -142,40 +142,45 @@ function radsToPositiveDeg(r) {
   return radsToDeg(toPositiveRadians(r))
 }
 
-function formatDatetime(datetime8601) {
+// Parses an ISO 8601 datetime string into NMEA0183 time/date components (UTC).
+// Input:  '2025-04-27T14:34:56.789+02:00'
+// Output: { hours: '12', minutes: '34', seconds: '56', centiseconds: '78',
+//           time: '123456.78', day: '27', month: '04', year: '2025', date: '270425' }
+function formatDatetime (datetime8601) {
   if (datetime8601 && typeof datetime8601 === 'string' && datetime8601.length > 0) {
-    const datetime = new Date(datetime8601);
+    var datetime = new Date(datetime8601)
 
-    const hours = ('00' + datetime.getUTCHours()).slice(-2);
-    const minutes = ('00' + datetime.getUTCMinutes()).slice(-2);
-    const seconds = ('00' + datetime.getUTCSeconds()).slice(-2);
+    var hours = ('00' + datetime.getUTCHours()).slice(-2)
+    var minutes = ('00' + datetime.getUTCMinutes()).slice(-2)
+    var seconds = ('00' + datetime.getUTCSeconds()).slice(-2)
+    var centiseconds = ('00' + Math.floor(datetime.getUTCMilliseconds() / 10)).slice(-2)
 
-    const day = ('00' + datetime.getUTCDate()).slice(-2);
-    const month = ('00' + (datetime.getUTCMonth() + 1)).slice(-2); // months from 1-12
-    const year = ('00' + datetime.getUTCFullYear()).slice(-2);
+    var day = ('00' + datetime.getUTCDate()).slice(-2)
+    var month = ('00' + (datetime.getUTCMonth() + 1)).slice(-2)
+    var year = '' + datetime.getUTCFullYear()
     return {
       hours: hours,
       minutes: minutes,
       seconds: seconds,
-      // NMEA0183 time format is hhmmss.ss
-      time: hours + minutes + seconds,
+      centiseconds: centiseconds,
+      time: hours + minutes + seconds + '.' + centiseconds,
       day: day,
       month: month,
       year: year,
-      // NMEA0183 date format is ddmmyy
-      date: day + month + year
-    };
+      date: day + month + ('00' + year).slice(-2)
+    }
   } else {
     return {
       hours: '',
       minutes: '',
       seconds: '',
+      centiseconds: '',
       time: '',
       day: '',
       month: '',
       year: '',
       date: ''
-    };
+    }
   }
 }
 

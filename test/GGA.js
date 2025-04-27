@@ -7,7 +7,7 @@ describe('GGA', function () {
     const onEmit = (event, value) => {
       assert.equal(
         value,
-        '$GPGGA,172814,3723.4659,N,12202.2696,W,0,0,0.0,0.0,M,0.0,M,,*5B'
+        '$GPGGA,172814.00,3723.4659,N,12202.2696,W,0,0,0.0,0.0,M,0.0,M,,*75'
       )
       done()
     }
@@ -24,7 +24,7 @@ describe('GGA', function () {
     const onEmit = (event, value) => {
       assert.equal(
         value,
-        '$GPGGA,172814,3723.4659,N,12202.2696,W,2,6,1.2,18.9,M,-25.7,M,2,0031*41'
+        '$GPGGA,172814.00,3723.4659,N,12202.2696,W,2,6,1.2,18.9,M,-25.7,M,2,0031*6F'
       )
       done()
     }
