@@ -31,7 +31,7 @@ module.exports = function (app) {
   const apiVersion = app.config.version ? parseInt(app.config.version.split('.')[0]) : 1
   const keys = apiVersion > 1
     ? [
-      'navigation.course.nextPoint.position',
+      'navigation.course.nextPoint',
       'navigation.course.calcValues.crossTrackError',
       'navigation.course.calcValues.distance',
       'navigation.course.calcValues.bearingTrue',
@@ -50,7 +50,7 @@ module.exports = function (app) {
     title: 'RMB - Heading and distance to waypoint',
     keys,
     f: function (
-      npPosition,
+      np,
       crossTrackError,
       wpDistance,
       bearingTrue,
@@ -63,8 +63,8 @@ module.exports = function (app) {
         crossTrackError < 0 ? 'R' : 'L',
         '',
         '',
-        nmea.toNmeaDegreesLatitude(npPosition.latitude),
-        nmea.toNmeaDegreesLongitude(npPosition.longitude),
+        nmea.toNmeaDegreesLatitude(np.position.latitude),
+        nmea.toNmeaDegreesLongitude(np.position.longitude),
         Math.abs(nmea.mToNm(wpDistance)).toFixed(2),
         nmea.radsToPositiveDeg(bearingTrue).toFixed(0),
         nmea.msToKnots(vmgWpt).toFixed(2),
