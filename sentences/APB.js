@@ -50,7 +50,7 @@ module.exports = function (app) {
         '$IIAPB',
         'A',
         'A',
-        Math.abs(nmea.mToNm(xte)).toFixed(3),  // NMEA 0183 4.11 prescribes units must be the Nautical miles
+        Math.abs(nmea.mToNm(xte)).toFixed(3), // NMEA 0183 4.11 prescribes units must be the Nautical miles
         xte > 0 ? 'L' : 'R',
         'N',
         'V',
