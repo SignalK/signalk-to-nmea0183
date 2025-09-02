@@ -40,17 +40,17 @@ module.exports = function (app) {
     sentence: 'APB',
     title: 'APB - Autopilot info',
     keys: [
-      'navigation.courseGreatCircle.crossTrackError',
-      'navigation.courseGreatCircle.bearingTrackTrue',
-      'navigation.courseGreatCircle.nextPoint.bearingTrue',
-      'navigation.courseGreatCircle.nextPoint.bearingMagnetic'
+      'navigation.course.calcValues.crossTrackError',
+      'navigation.course.calcValues.bearingTrackTrue',
+      'navigation.course.calcValues.bearingTrue',
+      'navigation.course.calcValues.bearingMagnetic'
     ],
     f: function (xte, originToDest, bearingTrue, bearingMagnetic) {
       return nmea.toSentence([
         '$IIAPB',
         'A',
         'A',
-        Math.abs(nmea.mToNm(xte)).toFixed(3),  // NMEA 0183 4.11 prescribes units must be the Nautical miles
+        Math.abs(nmea.mToNm(xte)).toFixed(3), // NMEA 0183 4.11 prescribes units must be the Nautical miles
         xte > 0 ? 'L' : 'R',
         'N',
         'V',
