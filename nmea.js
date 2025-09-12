@@ -1,20 +1,6 @@
 const m_hex = [
-  '0',
-  '1',
-  '2',
-  '3',
-  '4',
-  '5',
-  '6',
-  '7',
-  '8',
-  '9',
-  'A',
-  'B',
-  'C',
-  'D',
-  'E',
-  'F'
+  '0','1','2','3','4','5','6','7','8','9',
+  'A','B','C','D','E','F'
 ]
 
 function toSentence (parts) {
@@ -62,67 +48,59 @@ function padd (n, p, c) {
   return (pad + n).slice(-pad.length)
 }
 
-function decimalDegreesToDegreesAndDecimalMinutes ( degrees ) {
+function decimalDegreesToDegreesAndDecimalMinutes (degrees) {
   /*
-    decimalDegreesToDegreesAndDecimalMinutes takes a float (degrees)
-    representing decimal degrees and returns a tuple [deg, min, dir], where
-    deg is an int representing degrees, min is a float representing decimal
-    minutes and dir is a positive or negative integer representing the
-    direction from the origin ( +1 for N and E, -1 for S and W )
-
-    NOTE: 0 degrees is N or E
+    Toma grados decimales y devuelve [deg, min, dir]
+    donde dir = +1 (N/E), -1 (S/W).
   */
-
-  let dir=1 // default to N or E
-
-  if (degrees<0) {
+  let dir = 1
+  if (degrees < 0) {
     dir = -1
     degrees *= -1
   }
-
   let degrees_out = Math.floor(degrees)
   let minutes = (degrees % 1) * 60
-  return [ degrees_out, minutes, dir ]
+  return [degrees_out, minutes, dir]
 }
 
 function toNmeaDegreesLatitude (inVal) {
   /*
-    toNmeaDegreesLatitude takes a float (inVal) representing decimal degrees
-    and returns a string formatted as degrees and decimal minutes suitable for
-    use in an NMEA0183 sentence. (e.g. DDMM.MMMM)
+    Devuelve "DDMM.MMMM,N|S".
+    Lanza si el valor no es finito o está fuera de [-90, 90].
   */
-
-  if (typeof inVal != 'number' || inVal < -90 || inVal > 90) {
+  if (!Number.isFinite(inVal) || inVal < -90 || inVal > 90) {
     throw new Error("invalid input to toNmeaDegreesLatitude: " + inVal)
   }
-
   let [degrees, minutes, dir] = decimalDegreesToDegreesAndDecimalMinutes(inVal)
-
-  return(
-      padd(degrees.toFixed(0), 2)
-      + padd(minutes.toFixed(4), 7)
-      + "," + (dir > 0 ? "N" : "S")
-    )
+  return (
+    padd(degrees.toFixed(0), 2) +
+    padd(minutes.toFixed(4), 7) +
+    "," + (dir > 0 ? "N" : "S")
+  )
 }
 
 function toNmeaDegreesLongitude (inVal) {
   /*
-    toNmeaDegreesLongitude takes a float (inVal) representing decimal degrees
-    and returns a string formatted as degrees and decimal minutes suitable for
-    use in an NMEA0183 sentence. (e.g. DDDMM.MMMM)
+    Devuelve "DDDMM.MMMM,E|W".
+    Lanza si el valor no es finito o está fuera de [-180, 180).
   */
-
-  if (typeof inVal != 'number' || inVal <= -180 || inVal > 180) {
+  if (!Number.isFinite(inVal) || inVal < -180 || inVal >= 180) {
     throw new Error("invalid input to toNmeaDegreesLongitude: " + inVal)
   }
-
   let [degrees, minutes, dir] = decimalDegreesToDegreesAndDecimalMinutes(inVal)
+  return (
+    padd(degrees.toFixed(0), 3) +
+    padd(minutes.toFixed(4), 7) +
+    "," + (dir > 0 ? "E" : "W")
+  )
+}
 
-  return(
-      padd(degrees.toFixed(0), 3)
-      + padd(minutes.toFixed(4), 7)
-      + "," + (dir > 0 ? "E" : "W")
-    )
+// Helpers opcionales que no lanzan, devuelven null en caso de error
+function toNmeaDegreesLatitudeOrNull(v) {
+  try { return toNmeaDegreesLatitude(v) } catch { return null }
+}
+function toNmeaDegreesLongitudeOrNull(v) {
+  try { return toNmeaDegreesLongitude(v) } catch { return null }
 }
 
 function fixAngle (d) {
@@ -141,13 +119,15 @@ function radsToPositiveDeg(r) {
 }
 
 module.exports = {
-  toSentence: toSentence,
-  radsToDeg: radsToDeg,
-  msToKnots: msToKnots,
-  msToKM: msToKM,
-  toNmeaDegreesLatitude: toNmeaDegreesLatitude,
-  toNmeaDegreesLongitude: toNmeaDegreesLongitude,
-  fixAngle: fixAngle,
+  toSentence,
+  radsToDeg,
+  msToKnots,
+  msToKM,
+  toNmeaDegreesLatitude,
+  toNmeaDegreesLongitude,
+  toNmeaDegreesLatitudeOrNull,
+  toNmeaDegreesLongitudeOrNull,
+  fixAngle,
   radsToPositiveDeg,
   mToNm
 }
