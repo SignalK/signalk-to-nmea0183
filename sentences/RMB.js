@@ -16,25 +16,18 @@ module.exports = function (app) {
     sentence: 'RMB',
     title: 'RMB - Heading and distance to waypoint',
     keys: [
-      'navigation.courseRhumbline.crossTrackError',
-      'resources.waypoints.next.position.latitude',
-      'resources.waypoints.next.position.longitude',
-      'navigation.courseRhumbline.nextPoint.distance',
-      'navigation.courseRhumbline.bearingTrue'
+      'navigation.course.calcValues.crossTrackError',
+      'navigation.course.nextPoint',
+      'navigation.course.calcValues.distance',
+      'navigation.course.calcValues.bearingTrue'
     ],
-    f: function (
-      crossTrackError,
-      wpLatitude,
-      wpLongitude,
-      wpDistance,
-      bearingTrue
-    ) {
+    f: function (crossTrackError, wp, wpDistance, bearingTrue) {
       return nmea.toSentence([
         '$IIRMB',
-        crossTrackError.toFixed(2),
+        Math.abs(nmea.mToNm(crossTrackError)).toFixed(3),
         crossTrackError < 0 ? 'R' : 'L',
-        nmea.toNmeaDegreesLatitude(wpLatitude),
-        nmea.toNmeaDegreesLongitude(wpLongitude),
+        nmea.toNmeaDegreesLatitude(wp.position?.latitude),
+        nmea.toNmeaDegreesLongitude(wp.position?.longitude),
         wpDistance.toFixed(2),
         nmea.radsToDeg(bearingTrue).toFixed(2),
         'V', // dont set the arrival flag as it will set of alarms.
