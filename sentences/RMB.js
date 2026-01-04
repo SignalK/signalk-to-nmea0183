@@ -24,50 +24,29 @@ Field Number:
 14. FAA mode indicator (NMEA 2.3 and later)
 15. Checksum
 */
-
 const nmea = require('../nmea.js')
 module.exports = function (app) {
-
-  const apiVersion = app.config.version ? parseInt(app.config.version.split('.')[0]) : 1
-  const keys = apiVersion > 1
-    ? [
-      'navigation.course.nextPoint',
-      'navigation.course.calcValues.crossTrackError',
-      'navigation.course.calcValues.distance',
-      'navigation.course.calcValues.bearingTrue',
-      'navigation.course.calcValues.velocityMadeGood'
-    ]
-    : [
-      'navigation.courseGreatCircle.nextPoint.position',
-      'navigation.courseGreatCircle.crossTrackError',
-      'navigation.courseGreatCircle.nextPoint.distance',
-      'navigation.courseGreatCircle.nextPoint.bearingTrue',
-      'navigation.courseGreatCircle.nextPoint.velocityMadeGood'
-    ]
-    
   return {
     sentence: 'RMB',
     title: 'RMB - Heading and distance to waypoint',
-    keys,
-    f: function (
-      np,
-      crossTrackError,
-      wpDistance,
-      bearingTrue,
-      vmgWpt
-    ) {
+    keys: [
+      'navigation.course.calcValues.crossTrackError',
+      'navigation.course.nextPoint',
+      'navigation.course.calcValues.distance',
+      'navigation.course.calcValues.bearingTrue'
+    ],
+    f: function (crossTrackError, wp, wpDistance, bearingTrue) {
       return nmea.toSentence([
         '$IIRMB',
-        'A',
-        Math.abs(nmea.mToNm(crossTrackError)).toFixed(2),      
+        Math.abs(nmea.mToNm(crossTrackError)).toFixed(3),
         crossTrackError < 0 ? 'R' : 'L',
         '',
         '',
-        nmea.toNmeaDegreesLatitude(np.position.latitude),
-        nmea.toNmeaDegreesLongitude(np.position.longitude),
-        Math.abs(nmea.mToNm(wpDistance)).toFixed(2),
-        nmea.radsToPositiveDeg(bearingTrue).toFixed(0),
-        nmea.msToKnots(vmgWpt).toFixed(2),
+        nmea.toNmeaDegreesLatitude(wp.position?.latitude),
+        nmea.toNmeaDegreesLongitude(wp.position?.longitude),
+        wpDistance.toFixed(2),
+        nmea.radsToDeg(bearingTrue).toFixed(2),
+        '',
         '',
         'A'
       ])
