@@ -14,7 +14,7 @@ module.exports = function (app) {
         '$IIXTE',
         'A',
         'A',
-        nmea.mToNm(crossTrackError).toFixed(3),
+        Math.abs(nmea.mToNm(crossTrackError)).toFixed(3),
         crossTrackError < 0 ? 'R' : 'L',
         'N'
       ])
