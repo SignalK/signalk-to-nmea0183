@@ -44,8 +44,8 @@ module.exports = function (app) {
         '',
         nmea.toNmeaDegreesLatitude(wp.position?.latitude),
         nmea.toNmeaDegreesLongitude(wp.position?.longitude),
-        wpDistance.toFixed(2),
-        nmea.radsToDeg(bearingTrue).toFixed(2),
+        Math.abs(nmea.mToNm(wpDistance)).toFixed(2),
+        nmea.radsToPositiveDeg(bearingTrue).toFixed(2),
         '',
         '',
         'A'
