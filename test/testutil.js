@@ -1,7 +1,7 @@
 const Bacon = require('baconjs')
 
 module.exports = {
-  createAppWithPlugin: function (onEmit, enabledConversion, apiVersion) {
+  createAppWithPlugin: function (onEmit, enabledConversion) {
     const streams = {
     }
     const app = {
@@ -19,8 +19,7 @@ module.exports = {
           onEmit(name, value)
         }
       },
-      debug: (msg) => console.log(msg),
-      config: {version: apiVersion}
+      debug: (msg) => console.log(msg)
     }
     const plugin = require('../')(app)
     const options = {}
