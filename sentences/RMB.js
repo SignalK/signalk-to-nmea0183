@@ -33,11 +33,13 @@ module.exports = function (app) {
       'navigation.course.calcValues.crossTrackError',
       'navigation.course.nextPoint',
       'navigation.course.calcValues.distance',
-      'navigation.course.calcValues.bearingTrue'
+      'navigation.course.calcValues.bearingTrue',
+      'navigation.course.calcValues.velocityMadeGood'
     ],
-    f: function (crossTrackError, wp, wpDistance, bearingTrue) {
+    f: function (crossTrackError, wp, wpDistance, bearingTrue,vmg) {
       return nmea.toSentence([
         '$IIRMB',
+        'A',
         Math.abs(nmea.mToNm(crossTrackError)).toFixed(3),
         crossTrackError < 0 ? 'R' : 'L',
         '',
@@ -46,7 +48,7 @@ module.exports = function (app) {
         nmea.toNmeaDegreesLongitude(wp.position?.longitude),
         Math.abs(nmea.mToNm(wpDistance)).toFixed(2),
         nmea.radsToPositiveDeg(bearingTrue).toFixed(0),
-        '',
+        nmea.msToKnots(vmg).toFixed(2),
         '',
         'A'
       ])
