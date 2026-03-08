@@ -140,6 +140,43 @@ function radsToPositiveDeg(r) {
   return radsToDeg(toPositiveRadians(r))
 }
 
+function formatDatetime(datetime8601) {
+  if (datetime8601 && typeof datetime8601 === 'string' && datetime8601.length > 0) {
+    const datetime = new Date(datetime8601);
+
+    const hours = ('00' + datetime.getUTCHours()).slice(-2);
+    const minutes = ('00' + datetime.getUTCMinutes()).slice(-2);
+    const seconds = ('00' + datetime.getUTCSeconds()).slice(-2);
+
+    const day = ('00' + datetime.getUTCDate()).slice(-2);
+    const month = ('00' + (datetime.getUTCMonth() + 1)).slice(-2); // months from 1-12
+    const year = ('00' + datetime.getUTCFullYear()).slice(-2);
+    return {
+      hours: hours,
+      minutes: minutes,
+      seconds: seconds,
+      // NMEA0183 time format is hhmmss.ss
+      time: hours + minutes + seconds,
+      day: day,
+      month: month,
+      year: year,
+      // NMEA0183 date format is ddmmyy
+      date: day + month + year
+    };
+  } else {
+    return {
+      hours: '',
+      minutes: '',
+      seconds: '',
+      time: '',
+      day: '',
+      month: '',
+      year: '',
+      date: ''
+    };
+  }
+}
+
 module.exports = {
   toSentence: toSentence,
   radsToDeg: radsToDeg,
@@ -149,5 +186,6 @@ module.exports = {
   toNmeaDegreesLongitude: toNmeaDegreesLongitude,
   fixAngle: fixAngle,
   radsToPositiveDeg,
-  mToNm
+  mToNm,
+  formatDatetime: formatDatetime
 }

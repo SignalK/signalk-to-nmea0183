@@ -15,16 +15,13 @@ module.exports = function (app) {
     title: 'GLL - Geographical position, latitude and longitude',
     keys: ['navigation.datetime', 'navigation.position'],
     f: function gll (datetime8601, position) {
-      var datetime = new Date(datetime8601)
-      var hours = ('00' + datetime.getHours()).slice(-2)
-      var minutes = ('00' + datetime.getMinutes()).slice(-2)
-      var seconds = ('00' + datetime.getSeconds()).slice(-2)
+      const datetime = formatDatetime(datetime8601);
       if (position !== null) {
         return nmea.toSentence([
           '$GPGLL',
           nmea.toNmeaDegreesLatitude(position.latitude),
           nmea.toNmeaDegreesLongitude(position.longitude),
-          hours + minutes + seconds + '.020',
+          datetime.time + '.020',
           'A'
         ])
       }
