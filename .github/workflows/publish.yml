@@ -14,13 +14,14 @@ jobs:
     - uses: actions/setup-node@v6
       with:
         node-version: '24'
+        registry-url: 'https://registry.npmjs.org'
     - run: npm install -g npm@latest
     - run: npm --version
     - run: |
         if [[ "${{ steps.vars.outputs.tag }}" == *beta* ]];
           then
-            npm publish --access public --provenance --tag beta
+            npm publish --access public --tag beta
           else
-            npm publish --access public --provenance
+            npm publish --access public
         fi
 
