@@ -58,10 +58,10 @@ module.exports = function (app) {
         nmea.radsToPositiveDeg(originToDest).toFixed(0),
         'T',
         '00',
-        nmea.radsToPositiveDeg(bearingTrue).toFixed(0),
-        'T',
         nmea.radsToPositiveDeg(bearingMagnetic).toFixed(0),
-        'M'
+        'M',
+        nmea.radsToPositiveDeg(bearingTrue).toFixed(0),
+        'T'
       ])
     }
   }
