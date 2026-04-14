@@ -36,7 +36,7 @@ module.exports = function (app) {
       'navigation.course.calcValues.bearingTrue',
       'navigation.course.calcValues.velocityMadeGood'
     ],
-    f: function (crossTrackError, wp, wpDistance, bearingTrue,vmg) {
+    f: function (crossTrackError, wp, wpDistance, bearingTrue, vmg) {
       return nmea.toSentence([
         '$IIRMB',
         'A',

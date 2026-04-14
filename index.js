@@ -39,7 +39,9 @@ module.exports = function (app) {
         }
         return stream
       }, app.streambundle)
-      const sentenceEvent = encoder.sentence ? `g${encoder.sentence}` : undefined
+      const sentenceEvent = encoder.sentence
+        ? `g${encoder.sentence}`
+        : undefined
 
       let stream = Bacon.combineWith(function () {
         try {
@@ -57,17 +59,16 @@ module.exports = function (app) {
       }
 
       plugin.unsubscribes.push(
-        stream
-          .onValue(nmeaString => {
-            if ( app.reportOutputMessages ) {
-              app.reportOutputMessages(1)
-            }
-            app.emit('nmea0183out', nmeaString)
-            if (sentenceEvent) {
-              app.emit(sentenceEvent, nmeaString)
-            }
-            app.debug(nmeaString)
-          })
+        stream.onValue(nmeaString => {
+          if (app.reportOutputMessages) {
+            app.reportOutputMessages(1)
+          }
+          app.emit('nmea0183out', nmeaString)
+          if (sentenceEvent) {
+            app.emit(sentenceEvent, nmeaString)
+          }
+          app.debug(nmeaString)
+        })
       )
     }
 
@@ -116,4 +117,4 @@ function loadSentences (app, plugin) {
     }, {})
 }
 
-const getThrottlePropname = (key) => `${key}_throttle`
+const getThrottlePropname = key => `${key}_throttle`

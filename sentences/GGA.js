@@ -55,11 +55,24 @@ module.exports = function (app) {
       null, // navigation.gnss.differentialAge (= Age of differential GPS data record, Type 1 or Type 9. Null field when DGPS is not used)
       null // navigation.gnss.differentialReference (= Reference station ID, range 0000-4095. A null field when any reference station ID is selected and no corrections are received)
     ],
-    f: function (datetime8601, position, gnssMethodQuality, gnssSatellites, gnssHorizontalDilution, gnssAntennaAltitude, gnssgeoidalSeparation, gnssDifferentialAge, gnssDifferentialReference) {
+    f: function (
+      datetime8601,
+      position,
+      gnssMethodQuality,
+      gnssSatellites,
+      gnssHorizontalDilution,
+      gnssAntennaAltitude,
+      gnssgeoidalSeparation,
+      gnssDifferentialAge,
+      gnssDifferentialReference
+    ) {
       let time = ''
       let ignssMethodQuality = 0
 
-      if (!datetime8601 || (typeof datetime8601 === 'string' && datetime8601.trim() === '')) {
+      if (
+        !datetime8601 ||
+        (typeof datetime8601 === 'string' && datetime8601.trim() === '')
+      ) {
         datetime8601 = new Date().toISOString()
       }
 
@@ -85,33 +98,33 @@ module.exports = function (app) {
       }
 
       switch (gnssMethodQuality) {
-         case 'no GPS' :
-           ignssMethodQuality = 0
-           break
-         case 'GNSS Fix' :
-           ignssMethodQuality = 1
-           break
-         case 'DGNSS fix' :
-           ignssMethodQuality = 2
-           break
-         case 'Precise GNSS' :
-           ignssMethodQuality = 3
-           break
-         case 'RTK fixed integer' :
-           ignssMethodQuality = 4
-           break
-         case 'RTK float' :
-           ignssMethodQuality = 5
-           break
-         case 'Estimated (DR) mode' :
-           ignssMethodQuality = 6
-           break
-         case 'Manual input' :
-           ignssMethodQuality = 7
-           break
-         case 'Simulator mode' :
-           ignssMethodQuality = 8
-           break
+        case 'no GPS':
+          ignssMethodQuality = 0
+          break
+        case 'GNSS Fix':
+          ignssMethodQuality = 1
+          break
+        case 'DGNSS fix':
+          ignssMethodQuality = 2
+          break
+        case 'Precise GNSS':
+          ignssMethodQuality = 3
+          break
+        case 'RTK fixed integer':
+          ignssMethodQuality = 4
+          break
+        case 'RTK float':
+          ignssMethodQuality = 5
+          break
+        case 'Estimated (DR) mode':
+          ignssMethodQuality = 6
+          break
+        case 'Manual input':
+          ignssMethodQuality = 7
+          break
+        case 'Simulator mode':
+          ignssMethodQuality = 8
+          break
       }
 
       return toSentence([

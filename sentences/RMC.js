@@ -24,7 +24,12 @@
 // This needs to run faster that others.
 
 // NMEA0183 Encoder RMC   $INRMC,200152.020,A,5943.2980,N,2444.1043,E,6.71,194.30,0000,8.1,E*40
-const { toSentence, toNmeaDegreesLatitude, toNmeaDegreesLongitude, radsToDeg } = require('../nmea.js')
+const {
+  toSentence,
+  toNmeaDegreesLatitude,
+  toNmeaDegreesLongitude,
+  radsToDeg
+} = require('../nmea.js')
 module.exports = function (app) {
   return {
     sentence: 'RMC',
@@ -53,9 +58,9 @@ module.exports = function (app) {
         date = day + month + year
       }
       var magneticVariationDir = 'E'
-      if ( magneticVariation < 0 ) {
-        magneticVariationDir = 'W';
-        magneticVariation = magneticVariation * -1;
+      if (magneticVariation < 0) {
+        magneticVariationDir = 'W'
+        magneticVariation = magneticVariation * -1
       }
       return toSentence([
         '$GPRMC',
@@ -66,7 +71,9 @@ module.exports = function (app) {
         (sog * 1.94384).toFixed(1),
         radsToDeg(cog).toFixed(1),
         date,
-        typeof magneticVariation === 'number' ? radsToDeg(magneticVariation).toFixed(1) : magneticVariation,
+        typeof magneticVariation === 'number'
+          ? radsToDeg(magneticVariation).toFixed(1)
+          : magneticVariation,
         magneticVariationDir
       ])
     }

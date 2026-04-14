@@ -10,13 +10,13 @@ module.exports = function (app) {
   return {
     sentence: 'HDG',
     title: 'HDG - Heading magnetic:.',
-    keys: ['navigation.headingMagnetic', 'navigation.magneticVariation' ],
+    keys: ['navigation.headingMagnetic', 'navigation.magneticVariation'],
     defaults: [undefined, ''],
     f: function hdg (headingMagnetic, magneticVariation) {
       var magneticVariationDir = ''
-      if ( magneticVariation != '' ) {
+      if (magneticVariation != '') {
         magneticVariationDir = 'E'
-        if ( headingMagnetic < 0 ) {
+        if (headingMagnetic < 0) {
           magneticVariationDir = 'W'
           magneticVariation = Math.abs(magneticVariation)
         }

@@ -41,15 +41,15 @@ function toHexString (v) {
 }
 
 function radsToDeg (radians) {
-  return radians * 180 / Math.PI
+  return (radians * 180) / Math.PI
 }
 
 function msToKnots (v) {
-  return v * 3600 / 1852.0
+  return (v * 3600) / 1852.0
 }
 
 function msToKM (v) {
-  return v * 3600.0 / 1000.0
+  return (v * 3600.0) / 1000.0
 }
 
 function mToNm (v) {
@@ -62,7 +62,7 @@ function padd (n, p, c) {
   return (pad + n).slice(-pad.length)
 }
 
-function decimalDegreesToDegreesAndDecimalMinutes ( degrees ) {
+function decimalDegreesToDegreesAndDecimalMinutes (degrees) {
   /*
     decimalDegreesToDegreesAndDecimalMinutes takes a float (degrees)
     representing decimal degrees and returns a tuple [deg, min, dir], where
@@ -73,16 +73,16 @@ function decimalDegreesToDegreesAndDecimalMinutes ( degrees ) {
     NOTE: 0 degrees is N or E
   */
 
-  let dir=1 // default to N or E
+  let dir = 1 // default to N or E
 
-  if (degrees<0) {
+  if (degrees < 0) {
     dir = -1
     degrees *= -1
   }
 
   let degrees_out = Math.floor(degrees)
   let minutes = (degrees % 1) * 60
-  return [ degrees_out, minutes, dir ]
+  return [degrees_out, minutes, dir]
 }
 
 function toNmeaDegreesLatitude (inVal) {
@@ -93,16 +93,17 @@ function toNmeaDegreesLatitude (inVal) {
   */
 
   if (typeof inVal != 'number' || inVal < -90 || inVal > 90) {
-    throw new Error("invalid input to toNmeaDegreesLatitude: " + inVal)
+    throw new Error('invalid input to toNmeaDegreesLatitude: ' + inVal)
   }
 
   let [degrees, minutes, dir] = decimalDegreesToDegreesAndDecimalMinutes(inVal)
 
-  return(
-      padd(degrees.toFixed(0), 2)
-      + padd(minutes.toFixed(4), 7)
-      + "," + (dir > 0 ? "N" : "S")
-    )
+  return (
+    padd(degrees.toFixed(0), 2) +
+    padd(minutes.toFixed(4), 7) +
+    ',' +
+    (dir > 0 ? 'N' : 'S')
+  )
 }
 
 function toNmeaDegreesLongitude (inVal) {
@@ -113,16 +114,17 @@ function toNmeaDegreesLongitude (inVal) {
   */
 
   if (typeof inVal != 'number' || inVal <= -180 || inVal > 180) {
-    throw new Error("invalid input to toNmeaDegreesLongitude: " + inVal)
+    throw new Error('invalid input to toNmeaDegreesLongitude: ' + inVal)
   }
 
   let [degrees, minutes, dir] = decimalDegreesToDegreesAndDecimalMinutes(inVal)
 
-  return(
-      padd(degrees.toFixed(0), 3)
-      + padd(minutes.toFixed(4), 7)
-      + "," + (dir > 0 ? "E" : "W")
-    )
+  return (
+    padd(degrees.toFixed(0), 3) +
+    padd(minutes.toFixed(4), 7) +
+    ',' +
+    (dir > 0 ? 'E' : 'W')
+  )
 }
 
 function fixAngle (d) {
@@ -136,7 +138,7 @@ function toPositiveRadians (d) {
   return d < 0 ? d + 2 * Math.PI : d
 }
 
-function radsToPositiveDeg(r) {
+function radsToPositiveDeg (r) {
   return radsToDeg(toPositiveRadians(r))
 }
 
