@@ -16,7 +16,7 @@
   "author": "teppo.kurki@iki.fi",
   "license": "ISC",
   "dependencies": {
-    "baconjs": "^1.0.1"
+    "baconjs": "^3.0.23"
   },
   "devDependencies": {
     "mocha": "^11.7.1",
