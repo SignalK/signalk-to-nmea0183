@@ -146,41 +146,53 @@ function radsToPositiveDeg(r) {
 // Input:  '2025-04-27T14:34:56.789+02:00'
 // Output: { hours: '12', minutes: '34', seconds: '56', centiseconds: '78',
 //           time: '123456.78', day: '27', month: '04', year: '2025', date: '270425' }
-function formatDatetime (datetime8601) {
-  if (datetime8601 && typeof datetime8601 === 'string' && datetime8601.length > 0) {
-    var datetime = new Date(datetime8601)
+//
+// The input must include a timezone designator (e.g. 'Z' or '+02:00'). A naive
+// ISO string like '2025-04-27T14:34:56' is interpreted as LOCAL time by the
+// Date constructor, which is exactly the class of bug this function exists to
+// prevent. Non-string, empty, or unparseable input returns empty fields.
+function formatDatetime(datetime8601) {
+  const empty = {
+    hours: '',
+    minutes: '',
+    seconds: '',
+    centiseconds: '',
+    time: '',
+    day: '',
+    month: '',
+    year: '',
+    date: ''
+  }
 
-    var hours = ('00' + datetime.getUTCHours()).slice(-2)
-    var minutes = ('00' + datetime.getUTCMinutes()).slice(-2)
-    var seconds = ('00' + datetime.getUTCSeconds()).slice(-2)
-    var centiseconds = ('00' + Math.floor(datetime.getUTCMilliseconds() / 10)).slice(-2)
+  if (typeof datetime8601 !== 'string' || datetime8601.length === 0) {
+    return empty
+  }
 
-    var day = ('00' + datetime.getUTCDate()).slice(-2)
-    var month = ('00' + (datetime.getUTCMonth() + 1)).slice(-2)
-    var year = '' + datetime.getUTCFullYear()
-    return {
-      hours: hours,
-      minutes: minutes,
-      seconds: seconds,
-      centiseconds: centiseconds,
-      time: hours + minutes + seconds + '.' + centiseconds,
-      day: day,
-      month: month,
-      year: year,
-      date: day + month + ('00' + year).slice(-2)
-    }
-  } else {
-    return {
-      hours: '',
-      minutes: '',
-      seconds: '',
-      centiseconds: '',
-      time: '',
-      day: '',
-      month: '',
-      year: '',
-      date: ''
-    }
+  const datetime = new Date(datetime8601)
+  if (isNaN(datetime.getTime())) {
+    return empty
+  }
+
+  const hours = ('00' + datetime.getUTCHours()).slice(-2)
+  const minutes = ('00' + datetime.getUTCMinutes()).slice(-2)
+  const seconds = ('00' + datetime.getUTCSeconds()).slice(-2)
+  const centiseconds = (
+    '00' + Math.floor(datetime.getUTCMilliseconds() / 10)
+  ).slice(-2)
+
+  const day = ('00' + datetime.getUTCDate()).slice(-2)
+  const month = ('00' + (datetime.getUTCMonth() + 1)).slice(-2)
+  const year = '' + datetime.getUTCFullYear()
+  return {
+    hours,
+    minutes,
+    seconds,
+    centiseconds,
+    time: hours + minutes + seconds + '.' + centiseconds,
+    day,
+    month,
+    year,
+    date: day + month + ('00' + year).slice(-2)
   }
 }
 

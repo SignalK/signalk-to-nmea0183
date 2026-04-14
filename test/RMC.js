@@ -51,4 +51,73 @@ describe('RMC', function () {
         .push({ longitude: -122.4208, latitude: 37.82673 })
     }, 50)
   })
+
+  it('populates UTC time and ddmmyy date from a valid datetime', (done) => {
+    // Verifies the formatDatetime() output is threaded through RMC: time field
+    // uses the hhmmss.ss format (with centiseconds) and date field is ddmmyy.
+    const onEmit = (event, value) => {
+      assert.equal(
+        value,
+        '$GPRMC,200152.00,A,5943.2980,N,02444.2043,E,13.0,194.3,051215,,E*46'
+      )
+      done()
+    }
+    const app = createAppWithPlugin(onEmit, 'RMC')
+    app.streambundle
+      .getSelfStream('navigation.datetime')
+      .push('2015-12-05T20:01:52Z')
+    app.streambundle.getSelfStream('navigation.speedOverGround').push(6.71)
+    app.streambundle
+      .getSelfStream('navigation.courseOverGroundTrue')
+      .push(3.391964)
+    app.streambundle
+      .getSelfStream('navigation.position')
+      .push({ longitude: 24.736738, latitude: 59.721633 })
+  })
+
+  it('converts timezone-offset datetime to UTC', (done) => {
+    // 14:34:56+02:00 on 2025-04-27 = 12:34:56 UTC, same date.
+    const onEmit = (event, value) => {
+      assert.ok(
+        value.startsWith('$GPRMC,123456.00,A,'),
+        'expected UTC time 123456.00 in RMC sentence, got ' + value
+      )
+      assert.ok(
+        value.includes(',270425,'),
+        'expected date 270425 in RMC sentence, got ' + value
+      )
+      done()
+    }
+    const app = createAppWithPlugin(onEmit, 'RMC')
+    app.streambundle
+      .getSelfStream('navigation.datetime')
+      .push('2025-04-27T14:34:56+02:00')
+    app.streambundle.getSelfStream('navigation.speedOverGround').push(1)
+    app.streambundle.getSelfStream('navigation.courseOverGroundTrue').push(2)
+    app.streambundle
+      .getSelfStream('navigation.position')
+      .push({ longitude: 5, latitude: 6 })
+  })
+
+  it('reports a negative magnetic variation as W', (done) => {
+    // Negative radians must flip the hemisphere indicator to W and emit the
+    // absolute value of the variation. Covers the magneticVariation < 0 branch
+    // in RMC.js (the only remaining uncovered branch in that file).
+    const onEmit = (event, value) => {
+      assert.equal(
+        value,
+        '$GPRMC,,A,3749.6038,N,12225.2480,W,1.9,114.6,,180.0,W*79'
+      )
+      done()
+    }
+    const app = createAppWithPlugin(onEmit, 'RMC')
+    app.streambundle.getSelfStream('navigation.speedOverGround').push('1')
+    app.streambundle.getSelfStream('navigation.courseOverGroundTrue').push('2')
+    app.streambundle
+      .getSelfStream('navigation.magneticVariation')
+      .push(-Math.PI)
+    app.streambundle
+      .getSelfStream('navigation.position')
+      .push({ longitude: -122.4208, latitude: 37.82673 })
+  })
 })

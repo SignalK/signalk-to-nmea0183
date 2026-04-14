@@ -1,5 +1,9 @@
 const assert = require('assert')
-const { formatDatetime, toNmeaDegreesLatitude, toNmeaDegreesLongitude } = require('../nmea.js')
+const {
+  formatDatetime,
+  toNmeaDegreesLatitude,
+  toNmeaDegreesLongitude
+} = require('../nmea.js')
 
 describe('nmea', function () {
   describe('toNmeaDegreesLatitude()', function () {
@@ -197,7 +201,7 @@ describe('nmea', function () {
     })
 
     it('returns empty fields for invalid input', function () {
-      var empty = {
+      const empty = {
         date: '',
         day: '',
         hours: '',
@@ -212,6 +216,25 @@ describe('nmea', function () {
       assert.deepEqual(formatDatetime(null), empty)
       assert.deepEqual(formatDatetime(undefined), empty)
       assert.deepEqual(formatDatetime(''), empty)
+    })
+
+    it('returns empty fields for unparseable date strings', function () {
+      // Non-empty strings that Date() cannot parse must not leak NaN into the
+      // output sentence. Covers typos, garbage, and out-of-range components.
+      const empty = {
+        date: '',
+        day: '',
+        hours: '',
+        minutes: '',
+        month: '',
+        seconds: '',
+        centiseconds: '',
+        time: '',
+        year: ''
+      }
+      assert.deepEqual(formatDatetime('not-a-date'), empty)
+      assert.deepEqual(formatDatetime('hello world'), empty)
+      assert.deepEqual(formatDatetime('2025-13-45T99:99:99Z'), empty)
     })
   })
 })
