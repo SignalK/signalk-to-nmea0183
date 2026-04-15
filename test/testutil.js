@@ -21,8 +21,12 @@ module.exports = {
       debug: (msg) => console.log(msg)
     }
     const plugin = require('../')(app)
-    const options = {}
-    options[enabledConversion] = true
+    // enabledConversion can be a sentence-name string (legacy form) or a
+    // full options object so callers can also set throttle keys etc.
+    const options =
+      typeof enabledConversion === 'string'
+        ? { [enabledConversion]: true }
+        : enabledConversion
     plugin.start(options)
     return app
   }
