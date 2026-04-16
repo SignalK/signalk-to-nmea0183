@@ -3,21 +3,27 @@ const assert = require('assert')
 const { createAppWithPlugin } = require('./testutil')
 
 describe('APB', function () {
-  // Real Signal K data captured from openplotter.local (SK v2.24.0)
-  // navigating a route near Nassau, Bahamas (April 2026).
-  //
-  //   navigation.course.calcValues.crossTrackError = -39.84 m (left of track)
-  //   navigation.course.calcValues.bearingTrackTrue = 2.1503 rad (123 deg)
-  //   navigation.course.calcValues.bearingTrue = 2.1962 rad (126 deg)
-  //   navigation.course.calcValues.bearingMagnetic = 2.0400 rad (117 deg)
-  //   navigation.course.nextPoint.position = { lat: 25.041, lon: -77.243 }
+  // Real navigation data: route near Nassau, Bahamas.
+  //   crossTrackError = -39.84 m (left of track)
+  //   bearingTrackTrue = 2.1503 rad (123 deg)
+  //   bearingTrue = 2.1962 rad (126 deg)
+  //   bearingMagnetic = 2.0400 rad (117 deg)
   const realXte = -39.84
   const realBearingTrackTrue = 2.1503
   const realBearingTrue = 2.1962
   const realBearingMagnetic = 2.04
 
   function pushApbStreams(app, overrides) {
-    const data = {
+    // Push nextPoint before calcValues so it is already present when the
+    // combined stream fires. The nextPoint key has a default of {}, so
+    // pushing calcValues alone would emit immediately with that default
+    // and debounce the subsequent nextPoint update.
+    if ('nextPoint' in overrides) {
+      app.streambundle
+        .getSelfStream('navigation.course.nextPoint')
+        .push(overrides.nextPoint)
+    }
+    const calcValues = {
       'navigation.course.calcValues.crossTrackError':
         overrides.crossTrackError ?? realXte,
       'navigation.course.calcValues.bearingTrackTrue':
@@ -27,10 +33,7 @@ describe('APB', function () {
       'navigation.course.calcValues.bearingMagnetic':
         overrides.bearingMagnetic ?? realBearingMagnetic
     }
-    if ('nextPoint' in overrides) {
-      data['navigation.course.nextPoint'] = overrides.nextPoint
-    }
-    for (const [path, value] of Object.entries(data)) {
+    for (const [path, value] of Object.entries(calcValues)) {
       app.streambundle.getSelfStream(path).push(value)
     }
   }

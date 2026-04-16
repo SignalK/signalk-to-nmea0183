@@ -33,7 +33,6 @@
 
       Example: $GPAPB,A,A,0.10,R,N,V,V,011,M,DEST,011,M,011,M*82
     */
-// to verify
 const nmea = require('../nmea.js')
 module.exports = function (app) {
   return {
@@ -43,21 +42,28 @@ module.exports = function (app) {
       'navigation.course.calcValues.crossTrackError',
       'navigation.course.calcValues.bearingTrackTrue',
       'navigation.course.calcValues.bearingTrue',
-      'navigation.course.calcValues.bearingMagnetic'
+      'navigation.course.calcValues.bearingMagnetic',
+      'navigation.course.nextPoint'
     ],
-    f: function (xte, originToDest, bearingTrue, bearingMagnetic) {
+    // nextPoint defaults to {} so APB still fires when only calcValues are
+    // available (the common case today). Once signalk-server populates
+    // nextPoint.name (see SignalK/signalk-server#2595, SignalK/specification#676),
+    // the waypoint identifier will flow through automatically.
+    defaults: [undefined, undefined, undefined, undefined, {}],
+    f: function (xte, originToDest, bearingTrue, bearingMagnetic, nextPoint) {
+      var waypointId = (nextPoint && nextPoint.name) || ''
       return nmea.toSentence([
         '$IIAPB',
         'A',
         'A',
-        Math.abs(nmea.mToNm(xte)).toFixed(3), // NMEA 0183 4.11 prescribes units must be the Nautical miles
+        Math.abs(nmea.mToNm(xte)).toFixed(3),
         xte > 0 ? 'L' : 'R',
         'N',
         'V',
         'V',
         nmea.radsToPositiveDeg(originToDest).toFixed(0),
         'T',
-        '00',
+        waypointId,
         nmea.radsToPositiveDeg(bearingTrue).toFixed(0),
         'T',
         nmea.radsToPositiveDeg(bearingMagnetic).toFixed(0),
