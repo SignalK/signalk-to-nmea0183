@@ -19,4 +19,36 @@ describe('HDMC', function () {
       .push((10 * Math.PI) / 180)
     app.streambundle.getSelfStream('navigation.headingTrue').push(Math.PI)
   })
+
+  it('wraps into [0, 360) when variation exceeds true heading', (done) => {
+    // headingTrue = 5 deg, variation = 10 deg easterly
+    // headingMagnetic = 5 - 10 = -5 deg -> must wrap to 355 deg
+    const onEmit = (event, value) => {
+      assert.match(value, /^\$IIHDM,355\.0,M\*[0-9A-F]{2}$/)
+      done()
+    }
+    const app = createAppWithPlugin(onEmit, 'HDMC')
+    app.streambundle
+      .getSelfStream('navigation.magneticVariation')
+      .push((10 * Math.PI) / 180)
+    app.streambundle
+      .getSelfStream('navigation.headingTrue')
+      .push((5 * Math.PI) / 180)
+  })
+
+  it('wraps into [0, 360) when westerly variation pushes heading above 360', (done) => {
+    // headingTrue = 355 deg, variation = -10 deg (westerly)
+    // headingMagnetic = 355 - (-10) = 365 deg -> must wrap to 5 deg
+    const onEmit = (event, value) => {
+      assert.match(value, /^\$IIHDM,5\.0,M\*[0-9A-F]{2}$/)
+      done()
+    }
+    const app = createAppWithPlugin(onEmit, 'HDMC')
+    app.streambundle
+      .getSelfStream('navigation.magneticVariation')
+      .push((-10 * Math.PI) / 180)
+    app.streambundle
+      .getSelfStream('navigation.headingTrue')
+      .push((355 * Math.PI) / 180)
+  })
 })

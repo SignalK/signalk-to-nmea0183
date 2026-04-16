@@ -21,12 +21,12 @@ module.exports = function (app) {
       'environment.wind.speedTrue'
     ],
     f: function (directionTrue, magneticVariation, speedTrue) {
-      var directionMagnetic = nmea.fixAngle(directionTrue - magneticVariation)
+      var directionMagnetic = directionTrue - magneticVariation
       return nmea.toSentence([
         '$IIMWD',
-        nmea.radsToDeg(directionTrue).toFixed(2),
+        nmea.radsToPositiveDeg(directionTrue).toFixed(2),
         'T',
-        nmea.radsToDeg(directionMagnetic).toFixed(2),
+        nmea.radsToPositiveDeg(directionMagnetic).toFixed(2),
         'M',
         nmea.msToKnots(speedTrue).toFixed(2),
         'N',
