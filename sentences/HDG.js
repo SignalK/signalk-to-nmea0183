@@ -16,7 +16,7 @@ module.exports = function (app) {
       var magneticVariationDir = ''
       if (magneticVariation != '') {
         magneticVariationDir = 'E'
-        if (headingMagnetic < 0) {
+        if (magneticVariation < 0) {
           magneticVariationDir = 'W'
           magneticVariation = Math.abs(magneticVariation)
         }

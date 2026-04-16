@@ -32,4 +32,16 @@ describe('HDG', function () {
     app.streambundle.getSelfStream('navigation.magneticVariation').push(0.1)
     app.streambundle.getSelfStream('navigation.headingMagnetic').push(0.5)
   })
+
+  it('reports westerly variation with W direction and positive degrees', (done) => {
+    // magneticVariation = -0.1 rad (westerly, negative per Signal K spec)
+    // Expected: direction = 'W', degrees = 5.73 (absolute value)
+    const onEmit = (event, value) => {
+      assert.match(value, /^\$IIHDG,28\.65,5\.73,W,,\*[0-9A-F]{2}$/)
+      done()
+    }
+    const app = createAppWithPlugin(onEmit, 'HDG')
+    app.streambundle.getSelfStream('navigation.magneticVariation').push(-0.1)
+    app.streambundle.getSelfStream('navigation.headingMagnetic').push(0.5)
+  })
 })
