@@ -6,7 +6,7 @@ module.exports = function (app) {
     title: 'HDM - Heading Magnetic, calculated from True',
     keys: ['navigation.headingTrue', 'navigation.magneticVariation'],
     f: function (headingTrue, magneticVariation) {
-      var heading = headingTrue + magneticVariation
+      var heading = headingTrue - magneticVariation
       return nmea.toSentence([
         '$IIHDM',
         nmea.radsToDeg(heading).toFixed(1),
