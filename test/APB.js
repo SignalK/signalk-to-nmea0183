@@ -7,11 +7,9 @@ describe('APB', function () {
   //   crossTrackError = -39.84 m (left of track)
   //   bearingTrackTrue = 2.1503 rad (123 deg)
   //   bearingTrue = 2.1962 rad (126 deg)
-  //   bearingMagnetic = 2.0400 rad (117 deg)
   const realXte = -39.84
   const realBearingTrackTrue = 2.1503
   const realBearingTrue = 2.1962
-  const realBearingMagnetic = 2.04
 
   function pushApbStreams(app, overrides) {
     // Push nextPoint before calcValues so it is already present when the
@@ -29,9 +27,7 @@ describe('APB', function () {
       'navigation.course.calcValues.bearingTrackTrue':
         overrides.bearingTrackTrue ?? realBearingTrackTrue,
       'navigation.course.calcValues.bearingTrue':
-        overrides.bearingTrue ?? realBearingTrue,
-      'navigation.course.calcValues.bearingMagnetic':
-        overrides.bearingMagnetic ?? realBearingMagnetic
+        overrides.bearingTrue ?? realBearingTrue
     }
     for (const [path, value] of Object.entries(calcValues)) {
       app.streambundle.getSelfStream(path).push(value)
@@ -152,15 +148,57 @@ describe('APB', function () {
   it('computes bearings in degrees from radians', (done) => {
     // bearingTrackTrue = 2.1503 rad = 123 deg
     // bearingTrue = 2.1962 rad = 126 deg
-    // bearingMagnetic = 2.0400 rad = 117 deg
+    // All three bearing pairs use True (fields 9, 12, 14 = 'T').
+    // Heading to steer (field 13) equals bearingTrue, not bearingMagnetic.
     const onEmit = (event, value) => {
       const fields = parseApb(value)
       assert.equal(fields.bearingOriginToDest, '123')
       assert.equal(fields.bearingPosToDest, '126')
-      assert.equal(fields.headingToSteer, '117')
+      assert.equal(fields.headingToSteer, '126')
       done()
     }
     const app = createAppWithPlugin(onEmit, 'APB')
     pushApbStreams(app, {})
+  })
+
+  it('uses True reference for all three bearing pairs', (done) => {
+    // NMEA APB carries three bearing pairs (fields 8-9, 11-12, 13-14).
+    // All must use the same reference system. This plugin uses True for all
+    // three, which is correct for autopilots with a true heading source and
+    // matches the convention used by RMB in this repo.
+    const onEmit = (event, value) => {
+      const fields = parseApb(value)
+      assert.equal(fields.bearingOriginToDestRef, 'T', 'field 9')
+      assert.equal(fields.bearingPosToDestRef, 'T', 'field 12')
+      assert.equal(fields.headingToSteerRef, 'T', 'field 14')
+      done()
+    }
+    const app = createAppWithPlugin(onEmit, 'APB')
+    pushApbStreams(app, {})
+  })
+
+  it('steers Left when XTE is positive (vessel right of track)', (done) => {
+    const onEmit = (event, value) => {
+      const fields = parseApb(value)
+      assert.equal(fields.steerDirection, 'L', 'positive XTE = steer left')
+      assert.equal(fields.xteMagnitude, '0.054')
+      done()
+    }
+    const app = createAppWithPlugin(onEmit, 'APB')
+    pushApbStreams(app, { crossTrackError: 100 })
+  })
+
+  it('does not subscribe to bearingMagnetic', () => {
+    const app = {
+      streambundle: { getSelfStream: () => ({ toProperty: () => ({}) }) },
+      emit: () => {},
+      debug: () => {}
+    }
+    const apb = require('../sentences/APB')(app)
+    assert.ok(
+      !apb.keys.includes('navigation.course.calcValues.bearingMagnetic'),
+      'APB should not subscribe to bearingMagnetic, got: ' +
+        JSON.stringify(apb.keys)
+    )
   })
 })
