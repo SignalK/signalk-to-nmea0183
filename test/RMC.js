@@ -99,6 +99,36 @@ describe('RMC', function () {
       .push({ longitude: 5, latitude: 6 })
   })
 
+  // Regression: SignalK/signalk-to-nmea0183#87
+  // Some GPS units omit COG when stationary (SOG=0). The RMC sentence must
+  // still be emitted with an empty COG field so downstream consumers receive
+  // position and time data.
+  it('emits RMC with empty COG when COG is unavailable and SOG=0', (done) => {
+    const onEmit = (event, value) => {
+      assert.equal(value, '$GPRMC,,A,0600.0000,N,00500.0000,E,0.0,,,,E*75')
+      done()
+    }
+    const app = createAppWithPlugin(onEmit, 'RMC')
+    app.streambundle.getSelfStream('navigation.speedOverGround').push(0)
+    // navigation.courseOverGroundTrue is never pushed
+    app.streambundle
+      .getSelfStream('navigation.position')
+      .push({ longitude: 5, latitude: 6 })
+  })
+
+  it('emits RMC with empty COG when COG is unavailable and SOG>0', (done) => {
+    const onEmit = (event, value) => {
+      assert.equal(value, '$GPRMC,,A,0600.0000,N,00500.0000,E,1.9,,,,E*7D')
+      done()
+    }
+    const app = createAppWithPlugin(onEmit, 'RMC')
+    app.streambundle.getSelfStream('navigation.speedOverGround').push('1')
+    // navigation.courseOverGroundTrue is never pushed
+    app.streambundle
+      .getSelfStream('navigation.position')
+      .push({ longitude: 5, latitude: 6 })
+  })
+
   it('reports a negative magnetic variation as W', (done) => {
     // Negative radians must flip the hemisphere indicator to W and emit the
     // absolute value of the variation. Covers the magneticVariation < 0 branch

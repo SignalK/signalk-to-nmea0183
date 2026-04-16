@@ -40,7 +40,7 @@ module.exports = function (app) {
       'navigation.position',
       'navigation.magneticVariation'
     ],
-    defaults: ['', undefined, undefined, undefined, ''],
+    defaults: ['', undefined, null, undefined, ''],
     f: function (datetime8601, sog, cog, position, magneticVariation) {
       const datetime = formatDatetime(datetime8601)
       let magneticVariationDir = 'E'
@@ -55,7 +55,7 @@ module.exports = function (app) {
         toNmeaDegreesLatitude(position.latitude),
         toNmeaDegreesLongitude(position.longitude),
         (sog * 1.94384).toFixed(1),
-        radsToDeg(cog).toFixed(1),
+        cog != null ? radsToDeg(cog).toFixed(1) : '',
         datetime.date,
         typeof magneticVariation === 'number'
           ? radsToDeg(magneticVariation).toFixed(1)
