@@ -31,33 +31,29 @@
       14. M = Magnetic, T = True
       15. Checksum
 
-      All three bearing pairs use Magnetic, computed from True bearings
-      and magneticVariation.  For autopilots that require True bearings
-      use APB-true instead.
+      All three bearing pairs use True.  For autopilots that require
+      Magnetic bearings use APB instead.
 
-      Example: $GPAPB,A,A,0.10,R,N,V,V,011,M,DEST,011,M,011,M*82
+      Example: $GPAPB,A,A,0.10,R,N,V,V,011,T,DEST,011,T,011,T*82
     */
 const nmea = require('../nmea.js')
 module.exports = function (app) {
   return {
     sentence: 'APB',
-    title: 'APB - Autopilot info (magnetic bearings)',
+    title: 'APB - Autopilot info (true bearings)',
     keys: [
       'navigation.course.calcValues.crossTrackError',
       'navigation.course.calcValues.bearingTrackTrue',
       'navigation.course.calcValues.bearingTrue',
-      'navigation.course.nextPoint',
-      'navigation.magneticVariation'
+      'navigation.course.nextPoint'
     ],
-    defaults: [undefined, undefined, undefined, {}, undefined],
-    f: function (xte, originToDest, bearingTrue, nextPoint, magneticVariation) {
+    // nextPoint defaults to {} so APB still fires when only calcValues are
+    // available (the common case today). Once signalk-server populates
+    // nextPoint.name (see SignalK/signalk-server#2595, SignalK/specification#676),
+    // the waypoint identifier will flow through automatically.
+    defaults: [undefined, undefined, undefined, {}],
+    f: function (xte, originToDest, bearingTrue, nextPoint) {
       var waypointId = (nextPoint && nextPoint.name) || ''
-      var bearingOriginToDestMag = nmea.radsToPositiveDeg(
-        nmea.fixAngle(originToDest - magneticVariation)
-      )
-      var bearingToDestMag = nmea.radsToPositiveDeg(
-        nmea.fixAngle(bearingTrue - magneticVariation)
-      )
       return nmea.toSentence([
         '$IIAPB',
         'A',
@@ -67,13 +63,13 @@ module.exports = function (app) {
         'N',
         'V',
         'V',
-        bearingOriginToDestMag.toFixed(0),
-        'M',
+        nmea.radsToPositiveDeg(originToDest).toFixed(0),
+        'T',
         waypointId,
-        bearingToDestMag.toFixed(0),
-        'M',
-        bearingToDestMag.toFixed(0),
-        'M'
+        nmea.radsToPositiveDeg(bearingTrue).toFixed(0),
+        'T',
+        nmea.radsToPositiveDeg(bearingTrue).toFixed(0),
+        'T'
       ])
     }
   }
