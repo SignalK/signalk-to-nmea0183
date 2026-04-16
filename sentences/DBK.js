@@ -5,7 +5,7 @@ module.exports = function (app) {
     sentence: 'DBK',
     title: 'DBK - Depth Below Keel',
     keys: ['environment.depth.belowKeel'],
-    f: function mwv(depth) {
+    f: function dbk(depth) {
       var feet = depth * 3.28084
       var fathoms = depth * 0.546807
       return nmea.toSentence([

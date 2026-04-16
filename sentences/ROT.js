@@ -1,5 +1,3 @@
-// to verify
-
 const nmea = require('../nmea.js')
 module.exports = function (app) {
   return {

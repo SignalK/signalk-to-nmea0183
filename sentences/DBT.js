@@ -5,7 +5,7 @@ module.exports = function (app) {
     sentence: 'DBT',
     title: 'DBT - Depth Below Transducer',
     keys: ['environment.depth.belowTransducer'],
-    f: function mwv(depth) {
+    f: function dbt(depth) {
       var feet = depth * 3.28084
       var fathoms = depth * 0.546807
       return nmea.toSentence([

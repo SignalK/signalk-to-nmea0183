@@ -1,11 +1,3 @@
-const {
-  toSentence,
-  computeChecksum,
-  toHexString,
-  radsToDeg,
-  padd,
-  toNmeaDegrees
-} = require('./nmea')
 const path = require('path')
 const fs = require('fs')
 
