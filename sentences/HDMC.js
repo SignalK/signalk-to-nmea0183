@@ -7,11 +7,9 @@ module.exports = function (app) {
     keys: ['navigation.headingTrue', 'navigation.magneticVariation'],
     f: function (headingTrue, magneticVariation) {
       var heading = headingTrue - magneticVariation
-      if (heading > 2 * Math.PI) heading -= 2 * Math.PI
-      else if (heading < 0) heading += 2 * Math.PI
       return nmea.toSentence([
         '$IIHDM',
-        nmea.radsToDeg(heading).toFixed(1),
+        nmea.radsToPositiveDeg(heading).toFixed(1),
         'M'
       ])
     }

@@ -6,7 +6,7 @@
 const nmea = require('../nmea.js')
 module.exports = function (app) {
   return {
-    title: 'XDR (Barometer) - Atomospheric Pressure',
+    title: 'XDR (Barometer) - Atmospheric Pressure',
     keys: ['environment.outside.pressure'],
     f: function (pressure) {
       return nmea.toSentence([

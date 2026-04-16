@@ -8,7 +8,7 @@ module.exports = function (app) {
     f: function (heading) {
       return nmea.toSentence([
         '$IIHDM',
-        nmea.radsToDeg(heading).toFixed(1),
+        nmea.radsToPositiveDeg(heading).toFixed(1),
         'M'
       ])
     }

@@ -20,7 +20,7 @@ module.exports = function (app) {
       return nmea.toSentence([
         '$PSILCD1',
         nmea.msToKnots(polarSpeed).toFixed(2),
-        nmea.radsToDeg(targetAngle).toFixed(2)
+        nmea.radsToPositiveDeg(targetAngle).toFixed(2)
       ])
     }
   }

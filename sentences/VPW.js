@@ -4,7 +4,7 @@ $IIVPW,x.x,N,x.x,M*hh
        __I_Surface speed in knots
  */
 
-// NMEA0183 Encoder VPW   $IIVHW,6.5,N,12.64,M*48
+// NMEA0183 Encoder VPW   $IIVPW,6.5,N,12.64,M*48
 
 const nmea = require('../nmea.js')
 module.exports = function (app) {

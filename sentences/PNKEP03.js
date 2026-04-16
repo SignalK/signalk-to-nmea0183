@@ -19,7 +19,7 @@ module.exports = function (app) {
       return nmea.toSentence([
         '$PNKEP',
         '03',
-        nmea.radsToDeg(targetAngle).toFixed(2),
+        nmea.radsToPositiveDeg(targetAngle).toFixed(2),
         (polarVelocityMadeGoodRatio * 100.0).toFixed(2),
         (polarSpeedRatio * 100.0).toFixed(2)
       ])

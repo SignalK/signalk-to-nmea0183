@@ -46,6 +46,11 @@ module.exports = function (app) {
     f: function (crossTrackError, wp, wpDistance, bearingTrue, vmg, prevWp) {
       var destinationId = (wp && wp.name) || ''
       var originId = (prevWp && prevWp.name) || ''
+      var wpLat = wp.position?.latitude
+      var wpLon = wp.position?.longitude
+      if (typeof wpLat !== 'number' || typeof wpLon !== 'number') {
+        return
+      }
       return nmea.toSentence([
         '$IIRMB',
         'A',
@@ -53,8 +58,8 @@ module.exports = function (app) {
         crossTrackError < 0 ? 'R' : 'L',
         destinationId,
         originId,
-        nmea.toNmeaDegreesLatitude(wp.position?.latitude),
-        nmea.toNmeaDegreesLongitude(wp.position?.longitude),
+        nmea.toNmeaDegreesLatitude(wpLat),
+        nmea.toNmeaDegreesLongitude(wpLon),
         Math.abs(nmea.mToNm(wpDistance)).toFixed(2),
         nmea.radsToPositiveDeg(bearingTrue).toFixed(0),
         nmea.msToKnots(vmg).toFixed(2),

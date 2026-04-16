@@ -12,7 +12,6 @@ module.exports = function (app) {
     title: 'MMB - Environment outside pressure',
     keys: ['environment.outside.pressure'],
     f: function (pressure) {
-      // console.log("Got MMB--------------------------");
       return nmea.toSentence([
         '$IIMMB',
         (pressure / 3386.39).toFixed(4),

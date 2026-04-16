@@ -20,7 +20,6 @@ module.exports = function (app) {
       polarSpeed,
       polarSpeedRatio
     ) {
-      // console.log("Got Polar speed --------------------------------------------------");
       return nmea.toSentence([
         '$PNKEP',
         '99',

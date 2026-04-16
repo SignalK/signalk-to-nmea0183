@@ -37,10 +37,6 @@ module.exports = function (app) {
   }
 
   plugin.start = function (options) {
-    const selfContext = 'vessels.' + app.selfId
-    const selfMatcher = (delta) =>
-      delta.context && delta.context === selfContext
-
     function mapToNmea(encoder, throttle) {
       const selfStreams = encoder.keys.map((key, index) => {
         let stream = app.streambundle.getSelfStream(key)

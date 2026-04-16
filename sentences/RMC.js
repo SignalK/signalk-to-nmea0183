@@ -27,6 +27,7 @@ const {
   toNmeaDegreesLatitude,
   toNmeaDegreesLongitude,
   radsToDeg,
+  radsToPositiveDeg,
   msToKnots,
   formatDatetime
 } = require('../nmea.js')
@@ -61,7 +62,7 @@ module.exports = function (app) {
         toNmeaDegreesLatitude(position.latitude),
         toNmeaDegreesLongitude(position.longitude),
         msToKnots(sog).toFixed(1),
-        cog != null ? radsToDeg(cog).toFixed(1) : '',
+        cog != null ? radsToPositiveDeg(cog).toFixed(1) : '',
         datetime.date,
         magneticVariationDeg,
         magneticVariationDir

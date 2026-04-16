@@ -135,7 +135,9 @@ function fixAngle(d) {
 }
 
 function toPositiveRadians(d) {
-  return d < 0 ? d + 2 * Math.PI : d
+  let result = d % (2 * Math.PI)
+  if (result < 0) result += 2 * Math.PI
+  return result
 }
 
 function radsToPositiveDeg(r) {

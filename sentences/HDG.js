@@ -34,7 +34,7 @@ module.exports = function (app) {
 
       return nmea.toSentence([
         '$IIHDG',
-        nmea.radsToDeg(headingMagnetic).toFixed(2),
+        nmea.radsToPositiveDeg(headingMagnetic).toFixed(2),
         '',
         '',
         magneticVariationDeg,

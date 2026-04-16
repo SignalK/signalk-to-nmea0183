@@ -21,7 +21,7 @@ module.exports = function (app) {
       'environment.wind.speedTrue'
     ],
     f: function (directionTrue, magneticVariation, speedTrue) {
-      var directionMagnetic = directionTrue - magneticVariation
+      var directionMagnetic = nmea.fixAngle(directionTrue - magneticVariation)
       return nmea.toSentence([
         '$IIMWD',
         nmea.radsToPositiveDeg(directionTrue).toFixed(2),

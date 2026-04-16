@@ -12,7 +12,6 @@ module.exports = function (app) {
     title: 'PNKEP,01 - Target Polar speed',
     keys: ['performance.polarSpeed'],
     f: function (polarSpeed) {
-      // console.log("Got Polar speed --------------------------------------------------");
       return nmea.toSentence([
         '$PNKEP',
         '01',

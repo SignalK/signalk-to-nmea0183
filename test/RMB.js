@@ -166,6 +166,22 @@ describe('RMB', function () {
     pushRmbStreams(app, {})
   })
 
+  it('does not emit when nextPoint has no position', (done) => {
+    let emitted = false
+    const onEmit = () => {
+      emitted = true
+    }
+    const app = createAppWithPlugin(onEmit, 'RMB')
+    // Push nextPoint without position (default is {}, which also has no position)
+    pushRmbStreams(app, {
+      nextPoint: { name: 'DEST' }
+    })
+    setTimeout(() => {
+      assert.equal(emitted, false)
+      done()
+    }, 50)
+  })
+
   it('subscribes to previousPoint for origin waypoint metadata', () => {
     const app = {
       streambundle: { getSelfStream: () => ({ toProperty: () => ({}) }) },

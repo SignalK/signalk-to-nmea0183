@@ -51,6 +51,19 @@ describe('MWD', function () {
     pushMWD(app, (5 * Math.PI) / 180, (10 * Math.PI) / 180, 5)
   })
 
+  it('wraps magnetic direction when true near 360 and variation is westerly', (done) => {
+    // directionTrue = 355 deg (6.196 rad), variation = -10 deg (-0.175 rad)
+    // raw magnetic = 355 - (-10) = 365 deg (> 2*PI), fixAngle wraps to 5 deg
+    const onEmit = (event, value) => {
+      const parts = parseSentence(value)
+      assert.equal(parts[1], '355.00')
+      assert.equal(parts[3], '5.00')
+      done()
+    }
+    const app = createAppWithPlugin(onEmit, 'MWD')
+    pushMWD(app, (355 * Math.PI) / 180, (-10 * Math.PI) / 180, 5)
+  })
+
   it('produces positive true direction for negative radian input', (done) => {
     // directionTrue = -10 deg (equivalent to 350 deg), variation = 0
     const onEmit = (event, value) => {

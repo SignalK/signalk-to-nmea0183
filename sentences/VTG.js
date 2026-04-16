@@ -24,9 +24,9 @@ module.exports = function (app) {
     ) {
       return nmea.toSentence([
         '$IIVTG',
-        nmea.radsToDeg(courseOverGroundTrue).toFixed(2),
+        nmea.radsToPositiveDeg(courseOverGroundTrue).toFixed(2),
         'T',
-        nmea.radsToDeg(courseOverGroundMagnetic).toFixed(2),
+        nmea.radsToPositiveDeg(courseOverGroundMagnetic).toFixed(2),
         'M',
         nmea.msToKnots(speedOverGround).toFixed(2),
         'N',

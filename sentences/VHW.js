@@ -20,17 +20,11 @@ module.exports = function (app) {
     ],
     f: function vhw(headingTrue, magneticVariation, speedThroughWater) {
       var headingMagnetic = headingTrue - magneticVariation
-      if (headingMagnetic > Math.PI * 2) {
-        headingMagnetic -= Math.PI * 2
-      }
-      if (headingMagnetic < 0) {
-        headingMagnetic += Math.PI * 2
-      }
       return nmea.toSentence([
         '$IIVHW',
-        nmea.radsToDeg(headingTrue).toFixed(1),
+        nmea.radsToPositiveDeg(headingTrue).toFixed(1),
         'T',
-        nmea.radsToDeg(headingMagnetic).toFixed(1),
+        nmea.radsToPositiveDeg(headingMagnetic).toFixed(1),
         'M',
         nmea.msToKnots(speedThroughWater).toFixed(2),
         'N',
