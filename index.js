@@ -37,6 +37,7 @@ module.exports = function (app) {
   }
 
   plugin.start = function (options) {
+    plugin.options = options
     function mapToNmea(encoder, throttle) {
       const selfStreams = encoder.keys.map((key, index) => {
         let stream = app.streambundle.getSelfStream(key)
@@ -107,6 +108,9 @@ function buildSchemaFromSentences(plugin) {
       title: `${key} throttle ms`,
       type: 'number',
       default: 0
+    }
+    if (sentence.optionProperties) {
+      Object.assign(plugin.schema.properties, sentence.optionProperties)
     }
   })
 }

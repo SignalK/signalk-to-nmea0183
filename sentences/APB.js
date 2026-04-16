@@ -31,26 +31,47 @@
       14. M = Magnetic, T = True
       15. Checksum
 
-      Example: $GPAPB,A,A,0.10,R,N,V,V,011,T,DEST,011,T,011,T*82
+      Bearing reference (T or M) is controlled by the APB_magneticBearings
+      config option.  Default is True, matching pypilot and modern GPS
+      autopilots.  Enable magnetic for legacy autopilots (e.g. Raymarine
+      SeaTalk 1) that need magnetic bearings -- they also need variation
+      from HDG or RMC to convert if this option is off.
     */
 const nmea = require('../nmea.js')
-module.exports = function (app) {
+module.exports = function (app, plugin) {
   return {
     sentence: 'APB',
     title: 'APB - Autopilot info',
+    optionProperties: {
+      APB_magneticBearings: {
+        title: 'APB: use magnetic bearings (for legacy autopilots)',
+        type: 'boolean',
+        default: false
+      }
+    },
     keys: [
       'navigation.course.calcValues.crossTrackError',
       'navigation.course.calcValues.bearingTrackTrue',
       'navigation.course.calcValues.bearingTrue',
-      'navigation.course.nextPoint'
+      'navigation.course.nextPoint',
+      'navigation.magneticVariation'
     ],
-    // nextPoint defaults to {} so APB still fires when only calcValues are
-    // available (the common case today). Once signalk-server populates
-    // nextPoint.name (see SignalK/signalk-server#2595, SignalK/specification#676),
-    // the waypoint identifier will flow through automatically.
-    defaults: [undefined, undefined, undefined, {}],
-    f: function (xte, originToDest, bearingTrue, nextPoint) {
+    defaults: [undefined, undefined, undefined, {}, null],
+    f: function (xte, originToDest, bearingTrue, nextPoint, magneticVariation) {
       var waypointId = (nextPoint && nextPoint.name) || ''
+      var useMagnetic =
+        plugin.options &&
+        plugin.options.APB_magneticBearings &&
+        typeof magneticVariation === 'number'
+      var ref = useMagnetic ? 'M' : 'T'
+      var brg1 = useMagnetic
+        ? nmea.radsToPositiveDeg(
+            nmea.fixAngle(originToDest - magneticVariation)
+          )
+        : nmea.radsToPositiveDeg(originToDest)
+      var brg2 = useMagnetic
+        ? nmea.radsToPositiveDeg(nmea.fixAngle(bearingTrue - magneticVariation))
+        : nmea.radsToPositiveDeg(bearingTrue)
       return nmea.toSentence([
         '$IIAPB',
         'A',
@@ -60,13 +81,13 @@ module.exports = function (app) {
         'N',
         'V',
         'V',
-        nmea.radsToPositiveDeg(originToDest).toFixed(0),
-        'T',
+        brg1.toFixed(0),
+        ref,
         waypointId,
-        nmea.radsToPositiveDeg(bearingTrue).toFixed(0),
-        'T',
-        nmea.radsToPositiveDeg(bearingTrue).toFixed(0),
-        'T'
+        brg2.toFixed(0),
+        ref,
+        brg2.toFixed(0),
+        ref
       ])
     }
   }
