@@ -34,16 +34,25 @@ module.exports = function (app) {
       'navigation.course.nextPoint',
       'navigation.course.calcValues.distance',
       'navigation.course.calcValues.bearingTrue',
-      'navigation.course.calcValues.velocityMadeGood'
+      'navigation.course.calcValues.velocityMadeGood',
+      'navigation.course.previousPoint'
     ],
-    f: function (crossTrackError, wp, wpDistance, bearingTrue, vmg) {
+    // nextPoint and previousPoint default to {} so RMB still fires when only
+    // calcValues are available (the common case today). Once signalk-server
+    // populates nextPoint.name / previousPoint.name (see
+    // SignalK/signalk-server#2595, SignalK/specification#676), the waypoint
+    // identifiers will flow through automatically.
+    defaults: [undefined, {}, undefined, undefined, undefined, {}],
+    f: function (crossTrackError, wp, wpDistance, bearingTrue, vmg, prevWp) {
+      var destinationId = (wp && wp.name) || ''
+      var originId = (prevWp && prevWp.name) || ''
       return nmea.toSentence([
         '$IIRMB',
         'A',
         Math.abs(nmea.mToNm(crossTrackError)).toFixed(3),
         crossTrackError < 0 ? 'R' : 'L',
-        '',
-        '',
+        destinationId,
+        originId,
         nmea.toNmeaDegreesLatitude(wp.position?.latitude),
         nmea.toNmeaDegreesLongitude(wp.position?.longitude),
         Math.abs(nmea.mToNm(wpDistance)).toFixed(2),
