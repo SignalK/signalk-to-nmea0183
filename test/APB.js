@@ -7,20 +7,24 @@ describe('APB', function () {
   //   crossTrackError = -39.84 m (left of track)
   //   bearingTrackTrue = 2.1503 rad (123 deg)
   //   bearingTrue = 2.1962 rad (126 deg)
+  //   magneticVariation = -0.16 rad (-9.17 deg, westerly)
+  //   -> headingToSteerMag = bearingTrue - variation = 126 - (-9) = 135 deg
   const realXte = -39.84
   const realBearingTrackTrue = 2.1503
   const realBearingTrue = 2.1962
+  const realVariation = -0.16
 
   function pushApbStreams(app, overrides) {
-    // Push nextPoint before calcValues so it is already present when the
-    // combined stream fires. The nextPoint key has a default of {}, so
-    // pushing calcValues alone would emit immediately with that default
-    // and debounce the subsequent nextPoint update.
+    // Push nextPoint and variation before calcValues so they are present
+    // when the combined stream fires.
     if ('nextPoint' in overrides) {
       app.streambundle
         .getSelfStream('navigation.course.nextPoint')
         .push(overrides.nextPoint)
     }
+    app.streambundle
+      .getSelfStream('navigation.magneticVariation')
+      .push(overrides.magneticVariation ?? realVariation)
     const calcValues = {
       'navigation.course.calcValues.crossTrackError':
         overrides.crossTrackError ?? realXte,
@@ -38,7 +42,7 @@ describe('APB', function () {
     const body = sentence.split('*')[0]
     const parts = body.split(',')
     return {
-      talker: parts[0], // $IIAPB
+      talker: parts[0],
       status1: parts[1],
       status2: parts[2],
       xteMagnitude: parts[3],
@@ -69,11 +73,7 @@ describe('APB', function () {
     pushApbStreams(app, {})
   })
 
-  it('subscribes to navigation.course.nextPoint for waypoint metadata', () => {
-    // The APB generator must subscribe to the nextPoint path so that it can
-    // read the destination waypoint name and populate NMEA field 10 (Waypoint
-    // ID). Without this subscription, there is no source for the waypoint
-    // identifier and field 10 has to be hardcoded.
+  it('subscribes to magneticVariation for heading to steer', () => {
     const app = {
       streambundle: { getSelfStream: () => ({ toProperty: () => ({}) }) },
       emit: () => {},
@@ -81,23 +81,19 @@ describe('APB', function () {
     }
     const apb = require('../sentences/APB')(app)
     assert.ok(
+      apb.keys.includes('navigation.magneticVariation'),
+      'APB keys should include navigation.magneticVariation'
+    )
+    assert.ok(
       apb.keys.includes('navigation.course.nextPoint'),
-      'APB keys should include navigation.course.nextPoint, got: ' +
-        JSON.stringify(apb.keys)
+      'APB keys should include navigation.course.nextPoint'
     )
   })
 
   it('uses waypoint name in field 10 when nextPoint has a name', (done) => {
-    // When Signal K provides a named waypoint (e.g. user navigated to a saved
-    // waypoint via the Course API), the name should appear in APB field 10
-    // (Destination Waypoint ID) so the autopilot can display it.
     const onEmit = (event, value) => {
       const fields = parseApb(value)
-      assert.equal(
-        fields.waypointId,
-        'NASSAU',
-        'field 10 should contain the waypoint name from nextPoint'
-      )
+      assert.equal(fields.waypointId, 'NASSAU')
       done()
     }
     const app = createAppWithPlugin(onEmit, 'APB')
@@ -111,16 +107,9 @@ describe('APB', function () {
   })
 
   it('uses empty field 10 when nextPoint has no name', (done) => {
-    // Route points typically have no name (just type: "RoutePoint" and a
-    // position). NMEA allows empty fields, so field 10 should be empty rather
-    // than a meaningless placeholder like "00".
     const onEmit = (event, value) => {
       const fields = parseApb(value)
-      assert.equal(
-        fields.waypointId,
-        '',
-        'field 10 should be empty when no waypoint name is available'
-      )
+      assert.equal(fields.waypointId, '')
       done()
     }
     const app = createAppWithPlugin(onEmit, 'APB')
@@ -132,9 +121,7 @@ describe('APB', function () {
     })
   })
 
-  it('computes correct XTE and steer direction from real data', (done) => {
-    // XTE = -39.84 m means vessel is left of track, steer Right.
-    // Magnitude in NM: 39.84 * 0.000539957 = 0.022 NM
+  it('computes correct XTE and steer direction', (done) => {
     const onEmit = (event, value) => {
       const fields = parseApb(value)
       assert.equal(fields.steerDirection, 'R', 'negative XTE = steer right')
@@ -145,32 +132,21 @@ describe('APB', function () {
     pushApbStreams(app, {})
   })
 
-  it('computes bearings in degrees from radians', (done) => {
+  it('uses True for bearing fields 8-12 and Magnetic for heading to steer 13-14', (done) => {
     // bearingTrackTrue = 2.1503 rad = 123 deg
     // bearingTrue = 2.1962 rad = 126 deg
-    // All three bearing pairs use True (fields 9, 12, 14 = 'T').
-    // Heading to steer (field 13) equals bearingTrue, not bearingMagnetic.
+    // headingToSteerMag = fixAngle(bearingTrue - variation)
+    //                   = fixAngle(2.1962 - (-0.16)) = fixAngle(2.3562) = 2.3562 - 2*PI
+    //                   ... actually fixAngle(2.3562) = 2.3562 (< PI) so stays
+    //                   radsToPositiveDeg(2.3562) = 135 deg
     const onEmit = (event, value) => {
       const fields = parseApb(value)
       assert.equal(fields.bearingOriginToDest, '123')
+      assert.equal(fields.bearingOriginToDestRef, 'T')
       assert.equal(fields.bearingPosToDest, '126')
-      assert.equal(fields.headingToSteer, '126')
-      done()
-    }
-    const app = createAppWithPlugin(onEmit, 'APB')
-    pushApbStreams(app, {})
-  })
-
-  it('uses True reference for all three bearing pairs', (done) => {
-    // NMEA APB carries three bearing pairs (fields 8-9, 11-12, 13-14).
-    // All must use the same reference system. This plugin uses True for all
-    // three, which is correct for autopilots with a true heading source and
-    // matches the convention used by RMB in this repo.
-    const onEmit = (event, value) => {
-      const fields = parseApb(value)
-      assert.equal(fields.bearingOriginToDestRef, 'T', 'field 9')
-      assert.equal(fields.bearingPosToDestRef, 'T', 'field 12')
-      assert.equal(fields.headingToSteerRef, 'T', 'field 14')
+      assert.equal(fields.bearingPosToDestRef, 'T')
+      assert.equal(fields.headingToSteer, '135')
+      assert.equal(fields.headingToSteerRef, 'M')
       done()
     }
     const app = createAppWithPlugin(onEmit, 'APB')
@@ -186,19 +162,5 @@ describe('APB', function () {
     }
     const app = createAppWithPlugin(onEmit, 'APB')
     pushApbStreams(app, { crossTrackError: 100 })
-  })
-
-  it('does not subscribe to bearingMagnetic', () => {
-    const app = {
-      streambundle: { getSelfStream: () => ({ toProperty: () => ({}) }) },
-      emit: () => {},
-      debug: () => {}
-    }
-    const apb = require('../sentences/APB')(app)
-    assert.ok(
-      !apb.keys.includes('navigation.course.calcValues.bearingMagnetic'),
-      'APB should not subscribe to bearingMagnetic, got: ' +
-        JSON.stringify(apb.keys)
-    )
   })
 })
