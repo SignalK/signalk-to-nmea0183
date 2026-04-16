@@ -5,7 +5,7 @@ module.exports = function (app) {
     keys: [
       'environment.wind.angleApparent',
       'environment.wind.speedApparent',
-      'environment.wind.angleTrue',
+      'environment.wind.angleTrueWater',
       'environment.wind.speedTrue',
       'navigation.speedThroughWater',
       'performance.polarSpeed',
