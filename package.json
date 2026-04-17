@@ -5,14 +5,37 @@
   "repository": {
     "url": "https://github.com/SignalK/signalk-to-nmea0183"
   },
-  "main": "index.js",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "require": "./dist/index.js",
+      "default": "./dist/index.js"
+    },
+    "./package.json": "./package.json"
+  },
+  "sideEffects": false,
+  "engines": {
+    "node": ">=22"
+  },
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE"
+  ],
   "scripts": {
+    "build": "tsc -p tsconfig.build.json",
+    "clean": "rimraf dist",
+    "prebuild": "npm run clean",
+    "typecheck": "tsc --noEmit",
     "test": "mocha",
     "coverage": "c8 --reporter=text --reporter=lcov npm test",
     "mutation": "stryker run",
     "prettier:check": "prettier --check .",
     "prettier": "prettier --write .",
-    "format": "npm run prettier"
+    "format": "npm run prettier",
+    "prepublishOnly": "npm run build"
   },
   "keywords": [
     "signalk-node-server-plugin"
@@ -22,20 +45,33 @@
   "devDependencies": {
     "@stryker-mutator/core": "^9.6.1",
     "@stryker-mutator/mocha-runner": "^9.6.1",
+    "@types/mocha": "^10.0.10",
+    "@types/node": "^22.19.17",
     "baconjs": "^3.0.0",
     "c8": "^11.0.0",
     "mocha": "^11.7.1",
-    "prettier": "^3.8.2"
+    "prettier": "^3.8.2",
+    "rimraf": "^6.1.3",
+    "tsx": "^4.21.0",
+    "typescript": "^5.9.3"
   },
   "c8": {
+    "extension": [
+      ".ts"
+    ],
     "include": [
-      "index.js",
-      "nmea.js",
-      "sentences/**"
+      "src/**/*.ts"
     ],
     "exclude": [
       "test/**",
-      "coverage/**"
+      "coverage/**",
+      "dist/**",
+      "src/types/**"
+    ],
+    "all": true,
+    "reporter": [
+      "text",
+      "lcov"
     ]
   }
 }

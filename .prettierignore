@@ -3,5 +3,9 @@ coverage
 .nyc_output
 .claude
 package-lock.json
+<<<<<<< HEAD
+=======
+dist
+>>>>>>> 5a36666 (refactor: migrate to TypeScript strict)
 reports
 .stryker-tmp

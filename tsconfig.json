@@ -1,0 +1,40 @@
+{
+  "compilerOptions": {
+    "target": "ES2022",
+    // This package is consumed by signalk-server via plain CJS
+    // `require(...)`, so `module: commonjs` stays. `node16`/`nodenext`
+    // would flip the file-mode to whatever `package.json#type` says,
+    // which here is CJS, but it then disallows ESM `import` syntax in
+    // test files under `verbatimModuleSyntax: true`. Not worth the
+    // churn for a plugin that will always be CJS on the host side.
+    "module": "commonjs",
+    "moduleResolution": "node",
+    "lib": ["ES2022"],
+
+    "strict": true,
+    "noImplicitOverride": true,
+    "noImplicitReturns": true,
+    "noFallthroughCasesInSwitch": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "noUncheckedIndexedAccess": true,
+    // Each file must be independently transpilable (what tsx, esbuild,
+    // and bundlers want). Surfaces const-enum / re-export edge cases
+    // before they break a downstream.
+    "isolatedModules": true,
+
+    "esModuleInterop": true,
+    "forceConsistentCasingInFileNames": true,
+    "skipLibCheck": true,
+    "resolveJsonModule": true,
+
+    "declaration": true,
+    "declarationMap": true,
+    "sourceMap": true,
+    "stripInternal": true,
+    "outDir": "dist",
+    "rootDir": "."
+  },
+  "include": ["src/**/*", "test/**/*"],
+  "exclude": ["node_modules", "dist", "coverage", "reports", ".stryker-tmp"]
+}

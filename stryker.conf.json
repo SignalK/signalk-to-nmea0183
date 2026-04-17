@@ -4,10 +4,15 @@
   "reporters": ["clear-text", "progress", "html"],
   "testRunner": "mocha",
   "mochaOptions": {
-    "spec": ["test/**/*.js"]
+    "spec": ["test/**/*.ts"]
   },
   "coverageAnalysis": "perTest",
-  "mutate": ["index.js", "nmea.js", "sentences/**/*.js", "!sentences/TODO/**"],
+  "mutate": [
+    "src/index.ts",
+    "src/nmea.ts",
+    "src/sentences/**/*.ts",
+    "!src/sentences/TODO/**"
+  ],
   "thresholds": {
     "high": 90,
     "low": 80,
@@ -16,6 +21,7 @@
   "disableTypeChecks": false,
   "ignorePatterns": [
     "coverage",
+    "dist",
     "reports",
     ".stryker-tmp",
     "node_modules/.cache"
