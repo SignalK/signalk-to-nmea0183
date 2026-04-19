@@ -36,3 +36,7 @@ jspm_packages
 # Optional REPL history
 .node_repl_history
 .DS_Store
+
+# Stryker mutation testing
+reports
+.stryker-tmp
