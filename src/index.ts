@@ -11,9 +11,12 @@ import type { Path } from '@signalk/server-api'
 import type { Property } from 'baconjs'
 
 type AnyStream<T = unknown> = PluginTypes.AnyStream<T>
+type Conversion = PluginTypes.Conversion
+type PluginOptions = PluginTypes.PluginOptions
 type SentenceEncoder = PluginTypes.SentenceEncoder
 type SignalKApp = PluginTypes.SignalKApp
 type SignalKPlugin = PluginTypes.SignalKPlugin
+type SignalKPluginSchema = PluginTypes.SignalKPluginSchema
 
 // Combine N streams into a single Property whose values are fn(v1, v2, ...vN),
 // using only the instance-method .combine(other, fn) that exists on both
@@ -45,22 +48,124 @@ function combineStreamsWith(
     .map((args) => fn.apply(null, args))
 }
 
+// Unicode path-availability indicators used in schema titles. Also
+// referenced by the React config panel (which parses the bracketed
+// suffix back out of each oneOf title) and the schema-builder's
+// legend, so they live as module-level constants.
+const INDICATOR_OK = '\uD83D\uDC4D'
+const INDICATOR_NULL = '\u274E'
+const INDICATOR_MISSING = '\u274C'
+
+function pathIndicator(app: SignalKApp, skPath: string): string {
+  if (!app.getSelfPath) return INDICATOR_MISSING
+  const p = app.getSelfPath(skPath)
+  if (!p || typeof p !== 'object' || !('value' in p)) return INDICATOR_MISSING
+  return (p as { value: unknown }).value === null
+    ? INDICATOR_NULL
+    : INDICATOR_OK
+}
+
+function buildSchema(
+  app: SignalKApp,
+  sentences: Record<string, SentenceEncoder>
+): SignalKPluginSchema {
+  const sentenceOptions = Object.keys(sentences)
+    .sort()
+    .map((key) => {
+      const s = sentences[key]!
+      const paths = s.keys
+        .map((k) => `${k}(${pathIndicator(app, k)})`)
+        .join(', ')
+      return {
+        const: key,
+        title: `${s.title} [${paths}]`
+      }
+    })
+
+  return {
+    type: 'object',
+    title: 'Conversions to NMEA0183',
+    description:
+      'If there is SK data for the conversion generate the following NMEA0183 sentences from Signal K data. For converting NMEA2000 AIS to NMEA 0183 use the signalk-n2kais-to-nmea0183 plugin.',
+    properties: {
+      conversions: {
+        type: 'array',
+        title: 'Active Conversions',
+        description: `Legend: ${INDICATOR_OK} path has data, ${INDICATOR_NULL} value is null, ${INDICATOR_MISSING} path not present`,
+        items: {
+          type: 'object',
+          required: ['sentence'],
+          properties: {
+            sentence: {
+              title: 'Sentence',
+              type: 'string',
+              oneOf: sentenceOptions
+            },
+            throttle: {
+              title: 'Minimum interval (ms)',
+              description:
+                'Minimum milliseconds between emissions. 0 or empty = no throttling.',
+              type: 'number',
+              default: 0
+            },
+            event: {
+              title: 'Custom event name',
+              description:
+                'Additional event to emit on, besides nmea0183out and the per-sentence event.',
+              type: 'string'
+            }
+          }
+        }
+      }
+    }
+  }
+}
+
+// Migrate a legacy flat-boolean options object to the array form. The
+// plugin historically used `{ DBT: true, DBT_throttle: 500, ... }`; the
+// new format is `{ conversions: [{ sentence: 'DBT', throttle: 500 }] }`.
+// When the options object is already in the new shape this returns the
+// existing array unchanged.
+function resolveConversions(
+  options: PluginOptions,
+  sentences: Record<string, SentenceEncoder>,
+  debug: (msg: unknown) => void
+): Conversion[] {
+  if (Array.isArray(options.conversions)) return options.conversions
+
+  const migrated: Conversion[] = Object.keys(sentences)
+    .filter((name) => options[name])
+    .map((name) => {
+      const throttleRaw = options[`${name}_throttle`]
+      const throttle = typeof throttleRaw === 'number' ? throttleRaw : 0
+      return { sentence: name, throttle }
+    })
+
+  if (migrated.length > 0) {
+    debug(
+      `Migrated ${migrated.length} legacy conversion(s). Re-save the plugin config to complete migration.`
+    )
+  }
+  return migrated
+}
+
 const createPlugin = function (app: SignalKApp): SignalKPlugin {
   const plugin: SignalKPlugin = {
     id: 'sk-to-nmea0183',
     name: 'Convert Signal K to NMEA0183',
     description: 'Plugin to convert Signal K to NMEA0183',
-    schema: {
-      type: 'object',
-      title: 'Conversions to NMEA0183',
-      description:
-        'If there is SK data for the conversion generate the following NMEA0183 sentences from Signal K data. For converting NMEA2000 AIS to NMEA 0183 use the signalk-n2kais-to-nmea0183 plugin.',
-      properties: {}
-    },
+    // Schema is a function so each call re-reads live Signal K state
+    // via `app.getSelfPath` and annotates sentence titles with current
+    // path-availability indicators.
+    schema: () => buildSchema(app, plugin.sentences),
     unsubscribes: [],
     sentences: {},
-    start: function (options: Record<string, unknown>): void {
-      function mapToNmea(encoder: SentenceEncoder, throttle?: unknown): void {
+    start: function (options: PluginOptions): void {
+      function mapToNmea(
+        encoder: SentenceEncoder,
+        throttle: number,
+        customEvent: string | undefined
+      ): void {
         const selfStreams = encoder.keys.map((key, index) => {
           let stream: AnyStream = app.streambundle.getSelfStream(key as Path)
           if (
@@ -75,24 +180,22 @@ const createPlugin = function (app: SignalKApp): SignalKPlugin {
           ? `g${encoder.sentence}`
           : undefined
 
-        let stream = (
-          combineStreamsWith(
-            selfStreams,
-            function (this: unknown, ...args: unknown[]) {
-              try {
-                return encoder.f.apply(this, args)
-              } catch (e) {
-                console.error((e as Error).message)
-                return undefined
-              }
+        let stream = combineStreamsWith(
+          selfStreams,
+          function (this: unknown, ...args: unknown[]) {
+            try {
+              return encoder.f.apply(this, args)
+            } catch (e) {
+              console.error((e as Error).message)
+              return undefined
             }
-          ) as Property<unknown>
+          }
         )
           .filter((v) => typeof v !== 'undefined')
           .changes()
           .debounceImmediate(20)
 
-        if (typeof throttle === 'number' && throttle > 0) {
+        if (throttle > 0) {
           stream = stream.throttle(throttle)
         }
 
@@ -105,15 +208,30 @@ const createPlugin = function (app: SignalKApp): SignalKPlugin {
             if (sentenceEvent) {
               app.emit(sentenceEvent, nmeaString)
             }
+            if (customEvent) {
+              app.emit(customEvent, nmeaString)
+            }
             app.debug(nmeaString)
           })
         )
       }
 
-      Object.keys(plugin.sentences).forEach((name) => {
-        if (options[name]) {
-          mapToNmea(plugin.sentences[name]!, options[getThrottlePropname(name)])
+      const conversions = resolveConversions(
+        options,
+        plugin.sentences,
+        app.debug
+      )
+
+      conversions.forEach((conv) => {
+        const encoder = plugin.sentences[conv.sentence]
+        if (!encoder) {
+          console.error(
+            'sk-to-nmea0183: unknown sentence "%s", skipping',
+            conv.sentence
+          )
+          return
         }
+        mapToNmea(encoder, conv.throttle ?? 0, conv.event)
       })
     },
     stop: function (): void {
@@ -122,7 +240,6 @@ const createPlugin = function (app: SignalKApp): SignalKPlugin {
   }
 
   plugin.sentences = loadSentences(app, plugin)
-  buildSchemaFromSentences(plugin)
   return plugin
 }
 
@@ -150,26 +267,11 @@ namespace createPlugin {
   export type SignalKPluginSchema = PluginTypes.SignalKPluginSchema
   export type SignalKPluginSchemaProperty =
     PluginTypes.SignalKPluginSchemaProperty
+  export type Conversion = PluginTypes.Conversion
+  export type PluginOptions = PluginTypes.PluginOptions
 }
 
 export = createPlugin
-
-function buildSchemaFromSentences(plugin: SignalKPlugin): void {
-  Object.keys(plugin.sentences).forEach((key) => {
-    const sentence = plugin.sentences[key]!
-    const throttlePropname = getThrottlePropname(key)
-    plugin.schema.properties[key] = {
-      title: sentence.title,
-      type: 'boolean',
-      default: false
-    }
-    plugin.schema.properties[throttlePropname] = {
-      title: `${key} throttle ms`,
-      type: 'number',
-      default: 0
-    }
-  })
-}
 
 function loadSentences(
   app: SignalKApp,
@@ -185,5 +287,3 @@ function loadSentences(
   }
   return acc
 }
-
-const getThrottlePropname = (key: string): string => `${key}_throttle`

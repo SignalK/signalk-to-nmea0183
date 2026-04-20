@@ -30,12 +30,23 @@ with Node `>=22`.
 ## Usage
 
 1. Enable the plugin in the server admin UI (_Server → Plugin Config →
-   Convert Signal K to NMEA0183_) and tick the individual sentences you
-   want emitted.
+   Convert Signal K to NMEA0183_) and add a row per sentence you want
+   emitted. Each row shows the required Signal K paths with live
+   availability indicators (green = has data, yellow = null, red =
+   missing) so you can see at a glance what is wired up.
 2. Connect any NMEA 0183 client (OpenCPN, kplex, netcat, ...) to
    `localhost:10110` — the server's built-in TCP NMEA 0183 server.
 
-![Plugin configuration page](docs/plugin-config.png)
+![Plugin configuration page](docs/screenshots/02-table-configured.png)
+
+Per conversion you can optionally set:
+
+- **Minimum interval (ms)** to throttle high-frequency sentences (`0`
+  emits on every source update).
+- **Custom event name** to route a sentence to an extra event in
+  addition to the standard `nmea0183out`. Useful for piping a single
+  sentence to a dedicated serial port (see
+  [Serial output](#serial-output)).
 
 If the TCP server is off, enable it in _Server → Settings → Interfaces →
 nmea-tcp_. No restart needed.

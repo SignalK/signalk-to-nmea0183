@@ -60,6 +60,10 @@ jobs:
         if: matrix.baconjs == '3.0.23'
         run: npm run build
 
+      - name: Build configuration panel
+        if: matrix.baconjs == '3.0.23'
+        run: npm run build:config
+
       - name: Run tests
         if: matrix.node-version != '24.x' || matrix.baconjs != '3.0.23'
         run: npm test
