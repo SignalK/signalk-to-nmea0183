@@ -37,12 +37,10 @@ jspm_packages
 .node_repl_history
 .DS_Store
 
-<<<<<<< HEAD
-=======
 # Build output
 dist
+public
 
->>>>>>> 5a36666 (refactor: migrate to TypeScript strict)
 # Stryker mutation testing
 reports
 .stryker-tmp
