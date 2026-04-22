@@ -10,8 +10,6 @@ sentences and publishes them on the server's TCP NMEA 0183 port
 rate in milliseconds so downstream NMEA 0183 consumers don't get
 flooded.
 
-![Plugin configuration page](docs/plugin-config.png)
-
 ## Installation
 
 Through the Signal K server admin UI — App Store → search for
@@ -36,6 +34,8 @@ with Node `>=22`.
    want emitted.
 2. Connect any NMEA 0183 client (OpenCPN, kplex, netcat, ...) to
    `localhost:10110` — the server's built-in TCP NMEA 0183 server.
+
+![Plugin configuration page](docs/plugin-config.png)
 
 If the TCP server is off, enable it in _Server → Settings → Interfaces →
 nmea-tcp_. No restart needed.
