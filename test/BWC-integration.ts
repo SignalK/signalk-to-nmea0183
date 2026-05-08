@@ -32,7 +32,9 @@ describe('BWC Integration', function () {
   }
 
   it('is registered in the plugin sentence registry', () => {
-    const plugin = pluginFactory(makeStubApp()) as SignalKPlugin
+    const plugin = pluginFactory(
+      makeStubApp() as unknown as Parameters<typeof pluginFactory>[0]
+    ) as SignalKPlugin
     assert.ok(plugin.sentences.BWC, 'BWC encoder should be registered')
     assert.equal(
       plugin.sentences.BWC.title,

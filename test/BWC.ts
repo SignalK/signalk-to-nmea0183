@@ -75,7 +75,9 @@ function pushBwcStreams(app: AnyApp, overrides: BwcOverrides): void {
   }
   app.streambundle
     .getSelfStream('navigation.course.calcValues.distance')
-    .push('distance' in overrides ? overrides.distance : LIVE_SNAPSHOT_1.distance)
+    .push(
+      'distance' in overrides ? overrides.distance : LIVE_SNAPSHOT_1.distance
+    )
 }
 
 // Splits BWC into its 13 comma-separated parts. toNmeaDegrees* embeds a
@@ -178,10 +180,7 @@ describe('BWC', function () {
     it('formats longitude as DDDMM.MMMM with E/W indicator', (done) => {
       const onEmit = (_event: string, value: unknown): void => {
         // -77.0623540878296° → 077°03.7412' W
-        assert.equal(
-          parseBwc(value as string).fields.longitude,
-          '07703.7412,W'
-        )
+        assert.equal(parseBwc(value as string).fields.longitude, '07703.7412,W')
         done()
       }
       const app = createAppWithPlugin(onEmit, 'BWC')
@@ -299,9 +298,7 @@ describe('BWC', function () {
       // forge a checksum boundary, or terminate the sentence. All five
       // reserved chars must be stripped before truncation/emission.
       const onEmit = (_event: string, value: unknown): void => {
-        const { fields, body, fieldCount, checksum } = parseBwc(
-          value as string
-        )
+        const { fields, body, fieldCount, checksum } = parseBwc(value as string)
         assert.equal(fields.waypointId, 'BADWPNAME')
         assert.equal(fieldCount, 13, 'no extra fields injected')
         assert.equal(checksum, xorChecksum(body), 'checksum still valid')
@@ -406,8 +403,7 @@ describe('BWC', function () {
     expectEmits(
       'longitude -179.9999 (just inside western antimeridian)',
       { nextPoint: { position: { latitude: 0, longitude: -179.9999 } } },
-      (s) =>
-        assert.match(parseBwc(s).fields.longitude!, /^17959\.\d{4},W$/)
+      (s) => assert.match(parseBwc(s).fields.longitude!, /^17959\.\d{4},W$/)
     )
     expectNoEmit(
       'rejects longitude exactly -180 (codebase treats antimeridian as +180 only)',
