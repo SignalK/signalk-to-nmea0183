@@ -9,7 +9,7 @@ import type { SignalKPlugin } from '../src/types/plugin'
 
 // Live snapshot from openplotter (vessel sailing near Marsh Harbour,
 // Bahamas, 9° W magnetic variation, route active with a Location-type
-// destination so nextPoint has no name field).
+// destination so the waypoint name has no published delta source).
 const LIVE_SNAPSHOT = {
   datetime: '2026-05-08T16:38:51.000Z',
   position: { latitude: 26.547522602871112, longitude: -77.0623540878296 },
@@ -57,7 +57,7 @@ describe('BWC Integration', function () {
 
     const sentence = encoder.f(
       LIVE_SNAPSHOT.datetime,
-      { position: LIVE_SNAPSHOT.position },
+      LIVE_SNAPSHOT.position,
       LIVE_SNAPSHOT.bearingTrue,
       LIVE_SNAPSHOT.bearingMagnetic,
       LIVE_SNAPSHOT.distance
@@ -73,7 +73,7 @@ describe('BWC Integration', function () {
 
     const sentence = encoder.f(
       LIVE_SNAPSHOT.datetime,
-      { position: LIVE_SNAPSHOT.position },
+      LIVE_SNAPSHOT.position,
       LIVE_SNAPSHOT.bearingTrue,
       LIVE_SNAPSHOT.bearingMagnetic,
       LIVE_SNAPSHOT.distance
@@ -107,9 +107,9 @@ describe('BWC Integration', function () {
 
     const sentence = encoder.f(
       LIVE_SNAPSHOT.datetime,
-      { position: LIVE_SNAPSHOT.position },
+      LIVE_SNAPSHOT.position,
       LIVE_SNAPSHOT.bearingTrue,
-      undefined,
+      null,
       LIVE_SNAPSHOT.distance
     )
 
@@ -125,7 +125,7 @@ describe('BWC Integration', function () {
 
     const sentence = encoder.f(
       LIVE_SNAPSHOT.datetime,
-      { position: LIVE_SNAPSHOT.position },
+      LIVE_SNAPSHOT.position,
       LIVE_SNAPSHOT.bearingTrue,
       LIVE_SNAPSHOT.bearingMagnetic,
       LIVE_SNAPSHOT.distance
