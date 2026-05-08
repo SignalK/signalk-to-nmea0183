@@ -38,6 +38,18 @@ const expectations: Expectation[] = [
     ]
   },
   {
+    name: 'BWC',
+    sentence: 'BWC',
+    title: 'BWC - Bearing and distance to waypoint',
+    keys: [
+      'navigation.datetime',
+      'navigation.courseGreatCircle.nextPoint',
+      'navigation.course.calcValues.bearingTrue',
+      'navigation.course.calcValues.bearingMagnetic',
+      'navigation.course.calcValues.distance'
+    ]
+  },
+  {
     name: 'DBK',
     sentence: 'DBK',
     title: 'DBK - Depth Below Keel',

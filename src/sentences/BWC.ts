@@ -1,5 +1,5 @@
 /*
-Bearing and Distance to Waypoint:
+Bearing and Distance to Waypoint (Great Circle):
                                                           12  13
      1       2       3 4        5 6         7 8    9 10 11|   |
      |       |       | |        | |         | |    | |  | |   |
@@ -13,21 +13,43 @@ Field Number:
 5. E or W
 6. Bearing to waypoint, degrees true
 7. T indicating true bearing
-8. Bearing to waypoint, degrees magnetic
-9. M indicating magnetic
+8. Bearing to waypoint, degrees magnetic (empty if unknown)
+9. M indicating magnetic (empty if field 8 is empty)
 10. Distance to waypoint, Nautical miles
 11. N indicating Nautical miles
 12. Waypoint ID
 13. Checksum
+
+Signal K source paths verified against signalk-server's CourseApi:
+  - navigation.courseGreatCircle.nextPoint     -> waypoint position (and future name)
+  - navigation.course.calcValues.bearingTrue   -> bearing to waypoint, true (rad)
+  - navigation.course.calcValues.bearingMagnetic -> bearing to waypoint, magnetic (rad, optional)
+  - navigation.course.calcValues.distance      -> distance to waypoint (m)
+
+The course-provider publishes calcValues with calcMethod="GreatCircle", so the
+'course' namespace carries the great-circle values that BWC requires; the
+'courseGreatCircle' namespace only carries activeRoute / nextPoint / previousPoint.
 */
 import * as nmea from '../nmea'
 import type { SentenceEncoder, SignalKApp } from '../types/plugin'
 
 interface NextPoint {
   position?: { latitude?: number; longitude?: number }
-  bearing?: number
-  distance?: number
   name?: string
+}
+
+// NMEA0183 reserves these characters for sentence framing. A waypoint name
+// containing them would inject fields, forge a checksum boundary, or break
+// out of the sentence entirely.
+const NMEA_RESERVED = /[,*$\r\n]/g
+const MAX_WAYPOINT_ID_LEN = 20
+
+function inLatRange(v: unknown): v is number {
+  return typeof v === 'number' && Number.isFinite(v) && v >= -90 && v <= 90
+}
+
+function inLonRange(v: unknown): v is number {
+  return typeof v === 'number' && Number.isFinite(v) && v >= -180 && v <= 180
 }
 
 export default function (_app: SignalKApp): SentenceEncoder {
@@ -37,15 +59,20 @@ export default function (_app: SignalKApp): SentenceEncoder {
     keys: [
       'navigation.datetime',
       'navigation.courseGreatCircle.nextPoint',
-      'navigation.magneticVariation'
+      'navigation.course.calcValues.bearingTrue',
+      'navigation.course.calcValues.bearingMagnetic',
+      'navigation.course.calcValues.distance'
     ],
-    // No defaults; all three streams must emit before combined stream fires.
-    // nextPoint is required (position, bearing, distance must all be present).
-    defaults: ['', undefined, undefined],
+    // bearingMagnetic defaults to undefined: when the server does not publish
+    // it, fields 8 and 9 are emitted empty per NMEA0183 "value unknown" convention.
+    // All other inputs are required.
+    defaults: ['', undefined, undefined, undefined, undefined],
     f: function (
       datetime8601: string,
-      nextPoint: NextPoint,
-      magneticVariation: number | undefined
+      nextPoint: NextPoint | null | undefined,
+      bearingTrue: number | undefined,
+      bearingMagnetic: number | undefined,
+      distance: number | undefined
     ): string | undefined {
       const datetime = nmea.formatDatetime(datetime8601)
       if (!datetime.time) {
@@ -53,43 +80,37 @@ export default function (_app: SignalKApp): SentenceEncoder {
         return undefined
       }
 
+      if (nextPoint == null) {
+        _app.debug('BWC: skipping emission - nextPoint is null')
+        return undefined
+      }
+
       const wpLat = nextPoint.position?.latitude
       const wpLon = nextPoint.position?.longitude
-      const bearingTrue = nextPoint.bearing
-      const distance = nextPoint.distance
 
       if (
-        typeof wpLat !== 'number' ||
-        typeof wpLon !== 'number' ||
-        typeof bearingTrue !== 'number' ||
-        typeof distance !== 'number'
+        !inLatRange(wpLat) ||
+        !inLonRange(wpLon) ||
+        !Number.isFinite(bearingTrue) ||
+        !Number.isFinite(distance) ||
+        (distance as number) < 0
       ) {
         _app.debug(
-          `BWC: skipping emission - missing required field (lat:${wpLat} lon:${wpLon} bearing:${bearingTrue} dist:${distance})`
+          `BWC: skipping emission - invalid input (lat:${wpLat} lon:${wpLon} bearing:${bearingTrue} dist:${distance})`
         )
         return undefined
       }
 
-      const bearingTrueDeg = nmea.radsToPositiveDeg(bearingTrue)
-      let bearingMagneticDeg = bearingTrueDeg
+      const bearingTrueDeg = nmea.radsToPositiveDeg(bearingTrue as number)
+      const bearingMagneticDeg = Number.isFinite(bearingMagnetic)
+        ? nmea.radsToPositiveDeg(bearingMagnetic as number)
+        : undefined
 
-      // Calculate magnetic bearing from true bearing and magnetic variation.
-      // Formula: mag = true - variation (where east variation is positive).
-      // Example: true 30°, variation +10° (east) → mag 20° (compass points east of true).
-      if (typeof magneticVariation === 'number') {
-        bearingMagneticDeg = bearingTrueDeg - nmea.radsToDeg(magneticVariation)
-        // Normalize to 0-360 range
-        if (bearingMagneticDeg < 0) {
-          bearingMagneticDeg += 360
-        } else if (bearingMagneticDeg >= 360) {
-          bearingMagneticDeg -= 360
-        }
-      }
-
-      // Validate and sanitize waypoint name to prevent corruption of NMEA sentence.
-      let waypointId = nextPoint.name || ''
-      if (waypointId.length > 20) {
-        waypointId = waypointId.slice(0, 20)
+      const rawName = typeof nextPoint.name === 'string' ? nextPoint.name : ''
+      const sanitized = rawName.replace(NMEA_RESERVED, '')
+      let waypointId = sanitized
+      if (waypointId.length > MAX_WAYPOINT_ID_LEN) {
+        waypointId = waypointId.slice(0, MAX_WAYPOINT_ID_LEN)
         _app.debug('BWC: truncated waypoint name to 20 characters')
       }
 
@@ -100,9 +121,9 @@ export default function (_app: SignalKApp): SentenceEncoder {
         nmea.toNmeaDegreesLongitude(wpLon),
         bearingTrueDeg.toFixed(1),
         'T',
-        bearingMagneticDeg.toFixed(1),
-        'M',
-        nmea.mToNm(distance).toFixed(2),
+        bearingMagneticDeg !== undefined ? bearingMagneticDeg.toFixed(1) : '',
+        bearingMagneticDeg !== undefined ? 'M' : '',
+        nmea.mToNm(distance as number).toFixed(2),
         'N',
         waypointId
       ])
