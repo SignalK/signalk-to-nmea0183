@@ -21,6 +21,7 @@ import type { SentenceEncoderFactory } from '../types/plugin'
 
 import APB from './APB'
 import APBtrue from './APB-true'
+import BWC from './BWC'
 import DBK from './DBK'
 import DBS from './DBS'
 import DBT from './DBT'
@@ -67,6 +68,7 @@ export const sentenceFactories: Readonly<
 > = {
   APB,
   'APB-true': APBtrue,
+  BWC,
   DBK,
   DBS,
   DBT,
