@@ -7,17 +7,30 @@ import * as assert from 'assert'
 import pluginFactory from '../src/index'
 import type { SignalKPlugin } from '../src/types/plugin'
 
-// Live snapshot from openplotter (vessel sailing near Marsh Harbour,
-// Bahamas, 9° W magnetic variation, route active with a Location-type
-// destination so the waypoint name has no published delta source).
+// Live snapshot captured from openplotter's deltastream (vessel sailing
+// near Marsh Harbour, Bahamas, 9° W magnetic variation, 3-point route
+// "TO DELETE" active, currently heading to point 1 of 3).
 const LIVE_SNAPSHOT = {
-  datetime: '2026-05-08T16:38:51.000Z',
-  position: { latitude: 26.547522602871112, longitude: -77.0623540878296 },
-  bearingTrue: 5.003988233815001,
-  bearingMagnetic: 4.843169020404653,
-  distance: 331.7225852823217,
+  datetime: '2026-05-08T19:32:22.000Z',
+  nextPoint: {
+    type: 'RoutePoint',
+    position: {
+      latitude: 26.547617287650734,
+      longitude: -77.05992185300417
+    }
+  },
+  activeRoute: {
+    href: '/resources/routes/d12f9af7-8556-440c-984a-a9795693fc8d',
+    name: 'TO DELETE',
+    reverse: false,
+    pointIndex: 0,
+    pointTotal: 3
+  },
+  bearingTrue: 5.890679316509219,
+  bearingMagnetic: 5.729787364152641,
+  distance: 127.040711001917,
   expectedSentence:
-    '$IIBWC,163851.00,2632.8514,N,07703.7412,W,286.7,T,277.5,M,0.18,N,*1B'
+    '$IIBWC,193222.00,2632.8570,N,07703.5953,W,337.5,T,328.3,M,0.07,N,TO DELETE/1*24'
 } as const
 
 describe('BWC Integration', function () {
@@ -57,7 +70,8 @@ describe('BWC Integration', function () {
 
     const sentence = encoder.f(
       LIVE_SNAPSHOT.datetime,
-      LIVE_SNAPSHOT.position,
+      LIVE_SNAPSHOT.nextPoint,
+      LIVE_SNAPSHOT.activeRoute,
       LIVE_SNAPSHOT.bearingTrue,
       LIVE_SNAPSHOT.bearingMagnetic,
       LIVE_SNAPSHOT.distance
@@ -73,7 +87,8 @@ describe('BWC Integration', function () {
 
     const sentence = encoder.f(
       LIVE_SNAPSHOT.datetime,
-      LIVE_SNAPSHOT.position,
+      LIVE_SNAPSHOT.nextPoint,
+      LIVE_SNAPSHOT.activeRoute,
       LIVE_SNAPSHOT.bearingTrue,
       LIVE_SNAPSHOT.bearingMagnetic,
       LIVE_SNAPSHOT.distance
@@ -97,7 +112,11 @@ describe('BWC Integration', function () {
     assert.equal(fields[9], 'M')
     assert.match(fields[10]!, /^\d+\.\d{2}$/, 'distance in NM')
     assert.equal(fields[11], 'N')
-    assert.equal(fields[12], '')
+    assert.equal(
+      fields[12],
+      'TO DELETE/1',
+      'waypoint ID derived from active route'
+    )
   })
 
   it('omits magnetic bearing fields when server does not publish it', () => {
@@ -107,7 +126,8 @@ describe('BWC Integration', function () {
 
     const sentence = encoder.f(
       LIVE_SNAPSHOT.datetime,
-      LIVE_SNAPSHOT.position,
+      LIVE_SNAPSHOT.nextPoint,
+      LIVE_SNAPSHOT.activeRoute,
       LIVE_SNAPSHOT.bearingTrue,
       null,
       LIVE_SNAPSHOT.distance
@@ -125,7 +145,8 @@ describe('BWC Integration', function () {
 
     const sentence = encoder.f(
       LIVE_SNAPSHOT.datetime,
-      LIVE_SNAPSHOT.position,
+      LIVE_SNAPSHOT.nextPoint,
+      LIVE_SNAPSHOT.activeRoute,
       LIVE_SNAPSHOT.bearingTrue,
       LIVE_SNAPSHOT.bearingMagnetic,
       LIVE_SNAPSHOT.distance

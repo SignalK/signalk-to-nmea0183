@@ -43,7 +43,8 @@ const expectations: Expectation[] = [
     title: 'BWC - Bearing and distance to waypoint',
     keys: [
       'navigation.datetime',
-      'navigation.courseGreatCircle.nextPoint.position',
+      'navigation.course.nextPoint',
+      'navigation.course.activeRoute',
       'navigation.course.calcValues.bearingTrue',
       'navigation.course.calcValues.bearingMagnetic',
       'navigation.course.calcValues.distance'

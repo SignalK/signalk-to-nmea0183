@@ -1,5 +1,5 @@
 /*
-Bearing and Distance to Waypoint (Great Circle):
+Bearing and Distance to Waypoint:
                                                           12  13
      1       2       3 4        5 6         7 8    9 10 11|   |
      |       |       | |        | |         | |    | |  | |   |
@@ -23,27 +23,51 @@ Field Number:
 Signal K source paths verified by subscribing to the live deltastream of a
 running signalk-server (openplotter) with an active route:
 
-  - navigation.datetime                              -> ISO datetime
-  - navigation.courseGreatCircle.nextPoint.position  -> {latitude, longitude}
-  - navigation.course.calcValues.bearingTrue         -> bearing to waypoint, true (rad)
-  - navigation.course.calcValues.bearingMagnetic     -> bearing to waypoint, magnetic (rad, optional)
-  - navigation.course.calcValues.distance            -> distance to waypoint (m)
+  - navigation.datetime                            -> ISO datetime
+  - navigation.course.nextPoint                    -> {type, position, [name]}
+  - navigation.course.activeRoute                  -> {href, name, pointIndex, pointTotal}
+  - navigation.course.calcValues.bearingTrue       -> bearing to waypoint (rad)
+  - navigation.course.calcValues.bearingMagnetic   -> bearing to waypoint, magnetic (rad, optional)
+  - navigation.course.calcValues.distance          -> distance to waypoint (m)
 
-NB: the parent path 'navigation.courseGreatCircle.nextPoint' is silent on the
-deltastream (signalk-server only publishes its leaf children), so subscribe
-to '.position' directly. Waypoint name (field 12) currently has no published
-delta source; left empty until SignalK/signalk-server#2595 lands.
+`navigation.course.nextPoint` is the canonical waypoint path: it is published
+as a composite delta containing both `type` (RoutePoint / Location /
+VesselPosition) and `position` regardless of the active calculation method.
+The parallel `navigation.courseGreatCircle.nextPoint` is silent on the
+deltastream (only its leaf children emit) and is NOT what to subscribe to.
 
-The course-provider publishes calcValues with calcMethod="GreatCircle", so the
-'course' namespace carries the great-circle values that BWC requires.
+Waypoint name resolution (field 12):
+  1. nextPoint.name when SignalK/signalk-server#2595 lands
+  2. activeRoute.name with /pointIndex when a multi-point route is active
+  3. activeRoute.name alone for a single-point route
+  4. empty when the destination is a Location-type point with no route
+
+Bearing values reflect the calcMethod set in signalk-server (GreatCircle or
+Rhumbline). For typical sailing distances the difference is negligible; if
+you need strictly great-circle BWC, set the server's course calc method to
+GreatCircle.
 */
 import * as nmea from '../nmea'
 import type { SentenceEncoder, SignalKApp } from '../types/plugin'
 
-interface Position {
-  latitude?: number
-  longitude?: number
+interface NextPoint {
+  type?: string
+  position?: { latitude?: number; longitude?: number }
+  name?: string
 }
+
+interface ActiveRoute {
+  href?: string | null
+  name?: string | null
+  pointIndex?: number | null
+  pointTotal?: number | null
+}
+
+// NMEA0183 reserves these characters for sentence framing. A waypoint name
+// containing them would inject fields, forge a checksum boundary, or break
+// out of the sentence entirely.
+const NMEA_RESERVED = /[,*$\r\n]/g
+const MAX_WAYPOINT_ID_LEN = 20
 
 function inLatRange(v: unknown): v is number {
   return typeof v === 'number' && Number.isFinite(v) && v >= -90 && v <= 90
@@ -56,26 +80,50 @@ function inLonRange(v: unknown): v is number {
   return typeof v === 'number' && Number.isFinite(v) && v > -180 && v <= 180
 }
 
+function deriveWaypointId(
+  nextPoint: NextPoint,
+  activeRoute: ActiveRoute
+): string {
+  // Prefer the per-waypoint name once SignalK publishes it.
+  if (typeof nextPoint.name === 'string' && nextPoint.name.length > 0) {
+    return nextPoint.name
+  }
+  // Fall back to the active route's name. Append the 1-based point index
+  // when the route has more than one point so successive BWCs are distinct.
+  if (typeof activeRoute.name === 'string' && activeRoute.name.length > 0) {
+    if (
+      typeof activeRoute.pointIndex === 'number' &&
+      typeof activeRoute.pointTotal === 'number' &&
+      activeRoute.pointTotal > 1
+    ) {
+      return `${activeRoute.name}/${activeRoute.pointIndex + 1}`
+    }
+    return activeRoute.name
+  }
+  return ''
+}
+
 export default function (_app: SignalKApp): SentenceEncoder {
   return {
     sentence: 'BWC',
     title: 'BWC - Bearing and distance to waypoint',
     keys: [
       'navigation.datetime',
-      'navigation.courseGreatCircle.nextPoint.position',
+      'navigation.course.nextPoint',
+      'navigation.course.activeRoute',
       'navigation.course.calcValues.bearingTrue',
       'navigation.course.calcValues.bearingMagnetic',
       'navigation.course.calcValues.distance'
     ],
-    // bearingMagnetic seeds with null so the combined stream fires even when
-    // the server has not yet published it (older servers, or before the first
-    // recompute). The encoder treats a non-finite value as "magnetic unknown"
-    // and emits empty fields 8 and 9 per NMEA0183 convention.
-    // All other inputs are required (undefined default = wait for first delta).
-    defaults: ['', undefined, undefined, null, undefined],
+    // activeRoute defaults to {} so a Location-type destination (no route)
+    // still emits; bearingMagnetic seeds with null so older servers that
+    // don't publish it still let the combined stream fire (encoder emits
+    // empty fields 8/9 when magnetic is missing).
+    defaults: ['', undefined, {}, undefined, null, undefined],
     f: function (
       datetime8601: string,
-      position: Position | null | undefined,
+      nextPoint: NextPoint | null | undefined,
+      activeRoute: ActiveRoute | null | undefined,
       bearingTrue: number | undefined,
       bearingMagnetic: number | null | undefined,
       distance: number | undefined
@@ -86,8 +134,13 @@ export default function (_app: SignalKApp): SentenceEncoder {
         return undefined
       }
 
-      const wpLat = position?.latitude
-      const wpLon = position?.longitude
+      if (nextPoint == null) {
+        _app.debug('BWC: skipping emission - nextPoint is null')
+        return undefined
+      }
+
+      const wpLat = nextPoint.position?.latitude
+      const wpLon = nextPoint.position?.longitude
 
       if (
         !inLatRange(wpLat) ||
@@ -107,6 +160,14 @@ export default function (_app: SignalKApp): SentenceEncoder {
         ? nmea.radsToPositiveDeg(bearingMagnetic as number)
         : undefined
 
+      const rawId = deriveWaypointId(nextPoint, activeRoute ?? {})
+      const sanitized = rawId.replace(NMEA_RESERVED, '')
+      let waypointId = sanitized
+      if (waypointId.length > MAX_WAYPOINT_ID_LEN) {
+        waypointId = waypointId.slice(0, MAX_WAYPOINT_ID_LEN)
+        _app.debug('BWC: truncated waypoint name to 20 characters')
+      }
+
       return nmea.toSentence([
         '$IIBWC',
         datetime.time,
@@ -118,7 +179,7 @@ export default function (_app: SignalKApp): SentenceEncoder {
         bearingMagneticDeg !== undefined ? 'M' : '',
         nmea.mToNm(distance as number).toFixed(2),
         'N',
-        '' // waypoint name has no live delta source today; see file header
+        waypointId
       ])
     }
   }
