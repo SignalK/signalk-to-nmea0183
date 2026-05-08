@@ -49,7 +49,10 @@ function inLatRange(v: unknown): v is number {
 }
 
 function inLonRange(v: unknown): v is number {
-  return typeof v === 'number' && Number.isFinite(v) && v >= -180 && v <= 180
+  // Match nmea.toNmeaDegreesLongitude which rejects -180 (treats antimeridian
+  // as +180 only). Catching here rather than letting it throw downstream
+  // keeps emission failures uniform with the other validation paths.
+  return typeof v === 'number' && Number.isFinite(v) && v > -180 && v <= 180
 }
 
 export default function (_app: SignalKApp): SentenceEncoder {

@@ -1,12 +1,24 @@
 /**
  * Integration test for BWC encoder with the full plugin system.
  * Validates registration, factory wiring, and end-to-end sentence
- * structure when called with realistic Signal K values from a live
- * server snapshot.
+ * generation against a snapshot captured from a live signalk-server.
  */
 import * as assert from 'assert'
 import pluginFactory from '../src/index'
 import type { SignalKPlugin } from '../src/types/plugin'
+
+// Live snapshot from openplotter (vessel sailing near Marsh Harbour,
+// Bahamas, 9° W magnetic variation, route active with a Location-type
+// destination so nextPoint has no name field).
+const LIVE_SNAPSHOT = {
+  datetime: '2026-05-08T16:38:51.000Z',
+  position: { latitude: 26.547522602871112, longitude: -77.0623540878296 },
+  bearingTrue: 5.003988233815001,
+  bearingMagnetic: 4.843169020404653,
+  distance: 331.7225852823217,
+  expectedSentence:
+    '$IIBWC,163851.00,2632.8514,N,07703.7412,W,286.7,T,277.5,M,0.18,N,*1B'
+} as const
 
 describe('BWC Integration', function () {
   function makeStubApp() {
@@ -36,49 +48,52 @@ describe('BWC Integration', function () {
     assert.equal(typeof sentenceFactories.BWC, 'function')
   })
 
-  it('encoder produces structurally valid NMEA0183 sentence with live data', () => {
+  it('reproduces the exact sentence captured from live signalk-server', () => {
     // eslint-disable-next-line @typescript-eslint/no-var-requires
     const BWC = require('../src/sentences/BWC').default
     const encoder = BWC(makeStubApp())
 
-    // Live values sampled from openplotter signalk-server while a route
-    // was active near Marsh Harbour, Bahamas.
-    const datetime = '2026-05-08T16:09:11Z'
-    const nextPoint = {
-      position: {
-        latitude: 26.548128458856745,
-        longitude: -77.05918908119203
-      }
-    }
-    const bearingTrue = 4.823539078855837
-    const bearingMagnetic = 4.662719865445489
-    const distance = 361.05917210538576
-
     const sentence = encoder.f(
-      datetime,
-      nextPoint,
-      bearingTrue,
-      bearingMagnetic,
-      distance
+      LIVE_SNAPSHOT.datetime,
+      { position: LIVE_SNAPSHOT.position },
+      LIVE_SNAPSHOT.bearingTrue,
+      LIVE_SNAPSHOT.bearingMagnetic,
+      LIVE_SNAPSHOT.distance
     )
 
-    assert.ok(sentence, 'encoder should return a sentence')
-    assert.match(sentence, /^\$IIBWC,/)
-    assert.match(sentence, /\*[0-9A-F]{2}$/)
+    assert.equal(sentence, LIVE_SNAPSHOT.expectedSentence)
+  })
 
-    const fields = sentence.split('*')[0]!.split(',')
-    assert.equal(fields.length, 13, 'must have 13 comma-separated parts')
+  it('produces a structurally valid NMEA0183 sentence on live data', () => {
+    // eslint-disable-next-line @typescript-eslint/no-var-requires
+    const BWC = require('../src/sentences/BWC').default
+    const encoder = BWC(makeStubApp())
+
+    const sentence = encoder.f(
+      LIVE_SNAPSHOT.datetime,
+      { position: LIVE_SNAPSHOT.position },
+      LIVE_SNAPSHOT.bearingTrue,
+      LIVE_SNAPSHOT.bearingMagnetic,
+      LIVE_SNAPSHOT.distance
+    )
+
+    assert.ok(sentence)
+    assert.match(sentence!, /^\$IIBWC,/)
+    assert.match(sentence!, /\*[0-9A-F]{2}$/)
+
+    const fields = sentence!.split('*')[0]!.split(',')
+    assert.equal(fields.length, 13)
     assert.equal(fields[0], '$IIBWC')
     assert.match(fields[1]!, /^\d{6}\.\d{2}$/, 'UTC time HHMMSS.ss')
     assert.match(fields[2]!, /^\d{4}\.\d{4}$/, 'latitude DDMM.MMMM')
     assert.equal(fields[3], 'N')
     assert.match(fields[4]!, /^\d{5}\.\d{4}$/, 'longitude DDDMM.MMMM')
     assert.equal(fields[5], 'W')
-    assert.match(fields[6]!, /^\d+\.\d$/, 'true bearing')
+    assert.match(fields[6]!, /^\d+\.\d$/, 'true bearing in degrees')
     assert.equal(fields[7], 'T')
-    assert.match(fields[8]!, /^\d+\.\d$/, 'magnetic bearing')
+    assert.match(fields[8]!, /^\d+\.\d$/, 'magnetic bearing in degrees')
     assert.equal(fields[9], 'M')
-    assert.match(fields[10]!, /^\d+\.\d{2}$/, 'distance NM')
+    assert.match(fields[10]!, /^\d+\.\d{2}$/, 'distance in NM')
     assert.equal(fields[11], 'N')
     assert.equal(fields[12], '')
   })
@@ -89,11 +104,11 @@ describe('BWC Integration', function () {
     const encoder = BWC(makeStubApp())
 
     const sentence = encoder.f(
-      '2026-05-08T16:09:11Z',
-      { position: { latitude: 26.548128, longitude: -77.05918 } },
-      4.823539078855837,
-      undefined, // bearingMagnetic missing
-      361.05917
+      LIVE_SNAPSHOT.datetime,
+      { position: LIVE_SNAPSHOT.position },
+      LIVE_SNAPSHOT.bearingTrue,
+      undefined,
+      LIVE_SNAPSHOT.distance
     )
 
     const fields = sentence!.split('*')[0]!.split(',')
@@ -107,11 +122,11 @@ describe('BWC Integration', function () {
     const encoder = BWC(makeStubApp())
 
     const sentence = encoder.f(
-      '2025-04-27T14:34:56Z',
-      { position: { latitude: 40.7128, longitude: -74.006 } },
-      0.5236,
-      0.4189,
-      1852.0
+      LIVE_SNAPSHOT.datetime,
+      { position: LIVE_SNAPSHOT.position },
+      LIVE_SNAPSHOT.bearingTrue,
+      LIVE_SNAPSHOT.bearingMagnetic,
+      LIVE_SNAPSHOT.distance
     )
 
     const [body, checksum] = sentence!.split('*')
