@@ -30,7 +30,7 @@ const LIVE_SNAPSHOT = {
   bearingMagnetic: 5.729787364152641,
   distance: 127.040711001917,
   expectedSentence:
-    '$IIBWC,193222.00,2632.8570,N,07703.5953,W,337.5,T,328.3,M,0.07,N,TO DELETE/1*24'
+    '$IIBWC,193222.00,2632.8570,N,07703.5953,W,337.5,T,328.3,M,0.07,N,WP 1*0E'
 } as const
 
 describe('BWC Integration', function () {
@@ -114,8 +114,8 @@ describe('BWC Integration', function () {
     assert.equal(fields[11], 'N')
     assert.equal(
       fields[12],
-      'TO DELETE/1',
-      'waypoint ID derived from active route'
+      'WP 1',
+      'waypoint ID synthesized as "WP <pointIndex+1>"'
     )
   })
 
