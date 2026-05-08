@@ -37,10 +37,9 @@ The parallel `navigation.courseGreatCircle.nextPoint` is silent on the
 deltastream (only its leaf children emit) and is NOT what to subscribe to.
 
 Waypoint name resolution (field 12):
-  1. nextPoint.name when SignalK/signalk-server#2595 lands
-  2. activeRoute.name with /pointIndex when a multi-point route is active
-  3. activeRoute.name alone for a single-point route
-  4. empty when the destination is a Location-type point with no route
+  1. nextPoint.name when SignalK/signalk-server#2608 lands
+  2. "WP <pointIndex+1>" when a route is active (e.g. "WP 1", "WP 2")
+  3. empty when the destination is a Location-type point with no route
 
 Bearing values reflect the calcMethod set in signalk-server (GreatCircle or
 Rhumbline). For typical sailing distances the difference is negligible; if
@@ -88,17 +87,12 @@ function deriveWaypointId(
   if (typeof nextPoint.name === 'string' && nextPoint.name.length > 0) {
     return nextPoint.name
   }
-  // Fall back to the active route's name. Append the 1-based point index
-  // when the route has more than one point so successive BWCs are distinct.
-  if (typeof activeRoute.name === 'string' && activeRoute.name.length > 0) {
-    if (
-      typeof activeRoute.pointIndex === 'number' &&
-      typeof activeRoute.pointTotal === 'number' &&
-      activeRoute.pointTotal > 1
-    ) {
-      return `${activeRoute.name}/${activeRoute.pointIndex + 1}`
-    }
-    return activeRoute.name
+  // Synthesize "WP N" from the active route's 1-based point index. Works
+  // for both single- and multi-point routes; chartplotters use this field
+  // primarily to distinguish successive waypoints, which "WP 1" / "WP 2"
+  // does without leaking a potentially noisy route name into the sentence.
+  if (typeof activeRoute.pointIndex === 'number') {
+    return `WP ${activeRoute.pointIndex + 1}`
   }
   return ''
 }

@@ -34,7 +34,7 @@ const LIVE_SNAPSHOT_1 = {
   bearingMagnetic: 5.729787364152641, // 328.3° magnetic
   distance: 127.040711001917, // 0.07 NM
   expectedSentence:
-    '$IIBWC,193222.00,2632.8570,N,07703.5953,W,337.5,T,328.3,M,0.07,N,TO DELETE/1*24'
+    '$IIBWC,193222.00,2632.8570,N,07703.5953,W,337.5,T,328.3,M,0.07,N,WP 1*0E'
 } as const
 
 interface NextPointArg {
@@ -223,19 +223,30 @@ describe('BWC', function () {
   })
 
   describe('waypoint ID derivation (field 12)', function () {
-    it('uses route name + /pointIndex+1 for multi-point routes', (done) => {
+    it('emits "WP <pointIndex+1>" for the first point of a multi-point route', (done) => {
       const onEmit = (_event: string, value: unknown): void => {
-        // pointIndex=0 of pointTotal=3 → "TO DELETE/1"
-        assert.equal(parseBwc(value as string).fields.waypointId, 'TO DELETE/1')
+        // pointIndex=0 → "WP 1"
+        assert.equal(parseBwc(value as string).fields.waypointId, 'WP 1')
         done()
       }
       const app = createAppWithPlugin(onEmit, 'BWC')
       pushBwcStreams(app, {})
     })
 
-    it('uses route name alone for single-point routes', (done) => {
+    it('emits "WP 3" when pointIndex advances to the third leg', (done) => {
       const onEmit = (_event: string, value: unknown): void => {
-        assert.equal(parseBwc(value as string).fields.waypointId, 'SOLO')
+        assert.equal(parseBwc(value as string).fields.waypointId, 'WP 3')
+        done()
+      }
+      const app = createAppWithPlugin(onEmit, 'BWC')
+      pushBwcStreams(app, {
+        activeRoute: { ...LIVE_SNAPSHOT_1.activeRoute, pointIndex: 2 }
+      })
+    })
+
+    it('emits "WP 1" for a single-point route (does not use the route name)', (done) => {
+      const onEmit = (_event: string, value: unknown): void => {
+        assert.equal(parseBwc(value as string).fields.waypointId, 'WP 1')
         done()
       }
       const app = createAppWithPlugin(onEmit, 'BWC')
@@ -244,7 +255,7 @@ describe('BWC', function () {
       })
     })
 
-    it('prefers nextPoint.name when present (forward-compat with SignalK#2595)', (done) => {
+    it('prefers nextPoint.name when the server populates it (SignalK#2608)', (done) => {
       const onEmit = (_event: string, value: unknown): void => {
         assert.equal(parseBwc(value as string).fields.waypointId, 'WP-A')
         done()
