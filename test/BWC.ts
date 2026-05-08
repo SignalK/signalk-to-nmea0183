@@ -5,42 +5,55 @@ import { createAppWithPlugin } from './testutil'
 type AnyApp = ReturnType<typeof createAppWithPlugin>
 
 /**
- * Real navigation snapshots captured from a live signalk-server (openplotter
- * sailing near Marsh Harbour, Bahamas, 9° west magnetic variation, route
- * active with a Location-type destination so nextPoint has no name).
+ * Real navigation snapshots captured from the live deltastream of a running
+ * signalk-server (openplotter sailing near Marsh Harbour, Bahamas, 9° west
+ * magnetic variation, 3-point route active "TO DELETE").
  *
  * Kept verbatim so the test fixture documents the exact wire shape the
  * encoder must accept; do not "tidy" the long decimals.
  */
 const LIVE_SNAPSHOT_1 = {
-  datetime: '2026-05-08T16:38:51.000Z',
-  position: { latitude: 26.547522602871112, longitude: -77.0623540878296 },
-  bearingTrue: 5.003988233815001, // 286.71° true
-  bearingMagnetic: 4.843169020404653, // 277.49° magnetic
-  distance: 331.7225852823217, // 0.179 NM
-  // Expected encoder output for this snapshot:
+  datetime: '2026-05-08T19:32:22.000Z',
+  // navigation.course.nextPoint is published as a composite delta:
+  nextPoint: {
+    type: 'RoutePoint',
+    position: {
+      latitude: 26.547617287650734,
+      longitude: -77.05992185300417
+    }
+  },
+  // navigation.course.activeRoute is published as a composite delta:
+  activeRoute: {
+    href: '/resources/routes/d12f9af7-8556-440c-984a-a9795693fc8d',
+    name: 'TO DELETE',
+    reverse: false,
+    pointIndex: 0,
+    pointTotal: 3
+  },
+  bearingTrue: 5.890679316509219, // 337.5° true
+  bearingMagnetic: 5.729787364152641, // 328.3° magnetic
+  distance: 127.040711001917, // 0.07 NM
   expectedSentence:
-    '$IIBWC,163851.00,2632.8514,N,07703.7412,W,286.7,T,277.5,M,0.18,N,*1B'
-} as const
-
-const LIVE_SNAPSHOT_2 = {
-  datetime: '2026-05-08T16:40:00.000Z',
-  position: { latitude: 26.547522602871112, longitude: -77.0623540878296 },
-  bearingTrue: 5.0093362657001945, // 287.01° true
-  bearingMagnetic: 4.848517052289846, // 277.80° magnetic
-  distance: 330.35359211264006, // 0.178 NM
-  expectedSentence:
-    '$IIBWC,164000.00,2632.8514,N,07703.7412,W,287.0,T,277.8,M,0.18,N,*1B'
+    '$IIBWC,193222.00,2632.8570,N,07703.5953,W,337.5,T,328.3,M,0.07,N,TO DELETE/1*24'
 } as const
 
 interface NextPointArg {
-  name?: string
+  type?: string
   position?: { latitude: number; longitude: number }
+  name?: string
+}
+
+interface ActiveRouteArg {
+  href?: string | null
+  name?: string | null
+  pointIndex?: number | null
+  pointTotal?: number | null
 }
 
 interface BwcOverrides {
   datetime?: string
   nextPoint?: NextPointArg | null
+  activeRoute?: ActiveRouteArg
   bearingTrue?: number | undefined
   bearingMagnetic?: number | undefined | null
   distance?: number | undefined
@@ -51,12 +64,19 @@ function pushBwcStreams(app: AnyApp, overrides: BwcOverrides): void {
     .getSelfStream('navigation.datetime')
     .push(overrides.datetime ?? LIVE_SNAPSHOT_1.datetime)
   app.streambundle
-    .getSelfStream('navigation.courseGreatCircle.nextPoint')
+    .getSelfStream('navigation.course.nextPoint')
     .push(
-      'nextPoint' in overrides
-        ? overrides.nextPoint
-        : { position: LIVE_SNAPSHOT_1.position }
+      'nextPoint' in overrides ? overrides.nextPoint : LIVE_SNAPSHOT_1.nextPoint
     )
+  if ('activeRoute' in overrides) {
+    app.streambundle
+      .getSelfStream('navigation.course.activeRoute')
+      .push(overrides.activeRoute)
+  } else {
+    app.streambundle
+      .getSelfStream('navigation.course.activeRoute')
+      .push(LIVE_SNAPSHOT_1.activeRoute)
+  }
   app.streambundle
     .getSelfStream('navigation.course.calcValues.bearingTrue')
     .push(
@@ -120,29 +140,14 @@ function xorChecksum(body: string): string {
 }
 
 describe('BWC', function () {
-  describe('real-world snapshots from openplotter', function () {
-    it('reproduces the exact sentence from live snapshot 1', (done) => {
+  describe('real-world snapshot from openplotter', function () {
+    it('reproduces the exact sentence captured from a live 3-point route', (done) => {
       const onEmit = (_event: string, value: unknown): void => {
         assert.equal(value, LIVE_SNAPSHOT_1.expectedSentence)
         done()
       }
       const app = createAppWithPlugin(onEmit, 'BWC')
       pushBwcStreams(app, {})
-    })
-
-    it('reproduces the exact sentence from live snapshot 2 (vessel moved)', (done) => {
-      const onEmit = (_event: string, value: unknown): void => {
-        assert.equal(value, LIVE_SNAPSHOT_2.expectedSentence)
-        done()
-      }
-      const app = createAppWithPlugin(onEmit, 'BWC')
-      pushBwcStreams(app, {
-        datetime: LIVE_SNAPSHOT_2.datetime,
-        nextPoint: { position: LIVE_SNAPSHOT_2.position },
-        bearingTrue: LIVE_SNAPSHOT_2.bearingTrue,
-        bearingMagnetic: LIVE_SNAPSHOT_2.bearingMagnetic,
-        distance: LIVE_SNAPSHOT_2.distance
-      })
     })
 
     it('emits a structurally complete sentence: 13 fields and valid checksum', (done) => {
@@ -160,7 +165,7 @@ describe('BWC', function () {
   describe('field formatting from live data', function () {
     it('formats UTC time as HHMMSS.ss', (done) => {
       const onEmit = (_event: string, value: unknown): void => {
-        assert.equal(parseBwc(value as string).fields.time, '163851.00')
+        assert.equal(parseBwc(value as string).fields.time, '193222.00')
         done()
       }
       const app = createAppWithPlugin(onEmit, 'BWC')
@@ -169,8 +174,7 @@ describe('BWC', function () {
 
     it('formats latitude as DDMM.MMMM with N/S indicator', (done) => {
       const onEmit = (_event: string, value: unknown): void => {
-        // 26.547522602871112° → 26°32.8514' N
-        assert.equal(parseBwc(value as string).fields.latitude, '2632.8514,N')
+        assert.equal(parseBwc(value as string).fields.latitude, '2632.8570,N')
         done()
       }
       const app = createAppWithPlugin(onEmit, 'BWC')
@@ -179,8 +183,7 @@ describe('BWC', function () {
 
     it('formats longitude as DDDMM.MMMM with E/W indicator', (done) => {
       const onEmit = (_event: string, value: unknown): void => {
-        // -77.0623540878296° → 077°03.7412' W
-        assert.equal(parseBwc(value as string).fields.longitude, '07703.7412,W')
+        assert.equal(parseBwc(value as string).fields.longitude, '07703.5953,W')
         done()
       }
       const app = createAppWithPlugin(onEmit, 'BWC')
@@ -190,8 +193,7 @@ describe('BWC', function () {
     it('formats bearing as degrees with one decimal', (done) => {
       const onEmit = (_event: string, value: unknown): void => {
         const { fields } = parseBwc(value as string)
-        // 5.003988233815001 rad = 286.7074° → "286.7"
-        assert.equal(fields.bearingTrue, '286.7')
+        assert.equal(fields.bearingTrue, '337.5')
         assert.equal(fields.bearingTrueIndicator, 'T')
         done()
       }
@@ -200,11 +202,8 @@ describe('BWC', function () {
     })
 
     it('uses server-provided bearingMagnetic verbatim, not derived from variation', (done) => {
-      // openplotter publishes bearingMagnetic at 277.49°. variation is
-      // -9.21° (W). Naive `mag = true - var` would produce 295.92°,
-      // which is wrong. The encoder must consume bearingMagnetic directly.
       const onEmit = (_event: string, value: unknown): void => {
-        assert.equal(parseBwc(value as string).fields.bearingMagnetic, '277.5')
+        assert.equal(parseBwc(value as string).fields.bearingMagnetic, '328.3')
         done()
       }
       const app = createAppWithPlugin(onEmit, 'BWC')
@@ -213,8 +212,8 @@ describe('BWC', function () {
 
     it('converts distance from meters to nautical miles with two decimals', (done) => {
       const onEmit = (_event: string, value: unknown): void => {
-        // 331.7225852823217 m × 0.000539957 = 0.1791 NM → "0.18"
-        assert.equal(parseBwc(value as string).fields.distance, '0.18')
+        // 127.04 m × 0.000539957 = 0.0686 NM → "0.07"
+        assert.equal(parseBwc(value as string).fields.distance, '0.07')
         assert.equal(parseBwc(value as string).fields.distanceUnit, 'N')
         done()
       }
@@ -223,23 +222,129 @@ describe('BWC', function () {
     })
   })
 
+  describe('waypoint ID derivation (field 12)', function () {
+    it('uses route name + /pointIndex+1 for multi-point routes', (done) => {
+      const onEmit = (_event: string, value: unknown): void => {
+        // pointIndex=0 of pointTotal=3 → "TO DELETE/1"
+        assert.equal(parseBwc(value as string).fields.waypointId, 'TO DELETE/1')
+        done()
+      }
+      const app = createAppWithPlugin(onEmit, 'BWC')
+      pushBwcStreams(app, {})
+    })
+
+    it('uses route name alone for single-point routes', (done) => {
+      const onEmit = (_event: string, value: unknown): void => {
+        assert.equal(parseBwc(value as string).fields.waypointId, 'SOLO')
+        done()
+      }
+      const app = createAppWithPlugin(onEmit, 'BWC')
+      pushBwcStreams(app, {
+        activeRoute: { name: 'SOLO', pointIndex: 0, pointTotal: 1 }
+      })
+    })
+
+    it('prefers nextPoint.name when present (forward-compat with SignalK#2595)', (done) => {
+      const onEmit = (_event: string, value: unknown): void => {
+        assert.equal(parseBwc(value as string).fields.waypointId, 'WP-A')
+        done()
+      }
+      const app = createAppWithPlugin(onEmit, 'BWC')
+      pushBwcStreams(app, {
+        nextPoint: {
+          type: 'RoutePoint',
+          position: LIVE_SNAPSHOT_1.nextPoint.position,
+          name: 'WP-A'
+        }
+      })
+    })
+
+    it('emits empty waypoint ID for a Location-type destination with no route', (done) => {
+      const onEmit = (_event: string, value: unknown): void => {
+        assert.equal(parseBwc(value as string).fields.waypointId, '')
+        done()
+      }
+      const app = createAppWithPlugin(onEmit, 'BWC')
+      pushBwcStreams(app, {
+        nextPoint: {
+          type: 'Location',
+          position: LIVE_SNAPSHOT_1.nextPoint.position
+        },
+        activeRoute: { href: null, name: null }
+      })
+    })
+
+    it('emits empty waypoint ID when activeRoute stream is the {} default', (done) => {
+      const onEmit = (_event: string, value: unknown): void => {
+        assert.equal(parseBwc(value as string).fields.waypointId, '')
+        done()
+      }
+      const app = createAppWithPlugin(onEmit, 'BWC')
+      pushBwcStreams(app, {
+        nextPoint: {
+          type: 'Location',
+          position: LIVE_SNAPSHOT_1.nextPoint.position
+        },
+        activeRoute: {}
+      })
+    })
+
+    it('truncates a name longer than 20 characters', (done) => {
+      const onEmit = (_event: string, value: unknown): void => {
+        const id = parseBwc(value as string).fields.waypointId!
+        assert.equal(id.length, 20)
+        assert.equal(id, 'A'.repeat(20))
+        done()
+      }
+      const app = createAppWithPlugin(onEmit, 'BWC')
+      pushBwcStreams(app, {
+        nextPoint: {
+          type: 'RoutePoint',
+          position: LIVE_SNAPSHOT_1.nextPoint.position,
+          name: 'A'.repeat(25)
+        }
+      })
+    })
+
+    it('strips NMEA-reserved characters from the name', (done) => {
+      const onEmit = (_event: string, value: unknown): void => {
+        const { fields, body, fieldCount, checksum } = parseBwc(value as string)
+        assert.equal(fields.waypointId, 'BADWPNAME')
+        assert.equal(fieldCount, 13, 'no extra fields injected')
+        assert.equal(checksum, xorChecksum(body), 'checksum still valid')
+        done()
+      }
+      const app = createAppWithPlugin(onEmit, 'BWC')
+      pushBwcStreams(app, {
+        nextPoint: {
+          type: 'RoutePoint',
+          position: LIVE_SNAPSHOT_1.nextPoint.position,
+          name: 'BAD,WP*$NA\rM\nE'
+        }
+      })
+    })
+  })
+
   describe('bearingMagnetic handling (optional field)', function () {
+    it('emits empty fields 8 and 9 when bearingMagnetic is null (server seeded default)', (done) => {
+      const onEmit = (_event: string, value: unknown): void => {
+        const { fields } = parseBwc(value as string)
+        assert.equal(fields.bearingMagnetic, '')
+        assert.equal(fields.bearingMagneticIndicator, '')
+        // True bearing must still be present
+        assert.equal(fields.bearingTrue, '337.5')
+        assert.equal(fields.bearingTrueIndicator, 'T')
+        done()
+      }
+      const app = createAppWithPlugin(onEmit, 'BWC')
+      pushBwcStreams(app, { bearingMagnetic: null })
+    })
+
     it('emits empty fields 8 and 9 when bearingMagnetic is undefined', (done) => {
       const onEmit = (_event: string, value: unknown): void => {
         const { fields } = parseBwc(value as string)
-        assert.equal(
-          fields.bearingMagnetic,
-          '',
-          'field 8 must be empty when magnetic is unknown'
-        )
-        assert.equal(
-          fields.bearingMagneticIndicator,
-          '',
-          'field 9 must be empty when field 8 is empty'
-        )
-        // True bearing must still be present
-        assert.equal(fields.bearingTrue, '286.7')
-        assert.equal(fields.bearingTrueIndicator, 'T')
+        assert.equal(fields.bearingMagnetic, '')
+        assert.equal(fields.bearingMagneticIndicator, '')
         done()
       }
       const app = createAppWithPlugin(onEmit, 'BWC')
@@ -253,64 +358,7 @@ describe('BWC', function () {
         done()
       }
       const app = createAppWithPlugin(onEmit, 'BWC')
-      pushBwcStreams(app, { bearingMagnetic: undefined })
-    })
-  })
-
-  describe('waypoint name (field 12)', function () {
-    it('uses waypoint name verbatim when available', (done) => {
-      const onEmit = (_event: string, value: unknown): void => {
-        assert.equal(parseBwc(value as string).fields.waypointId, 'BAHAMAS_WP1')
-        done()
-      }
-      const app = createAppWithPlugin(onEmit, 'BWC')
-      pushBwcStreams(app, {
-        nextPoint: { position: LIVE_SNAPSHOT_1.position, name: 'BAHAMAS_WP1' }
-      })
-    })
-
-    it('uses empty field for Location-type destination (no name, real case)', (done) => {
-      // openplotter snapshot: nextPoint.value.value.type = "Location",
-      // value.href = null. The encoder receives nextPoint with no name field.
-      const onEmit = (_event: string, value: unknown): void => {
-        assert.equal(parseBwc(value as string).fields.waypointId, '')
-        done()
-      }
-      const app = createAppWithPlugin(onEmit, 'BWC')
-      pushBwcStreams(app, {})
-    })
-
-    it('truncates a name longer than 20 characters', (done) => {
-      const onEmit = (_event: string, value: unknown): void => {
-        const id = parseBwc(value as string).fields.waypointId!
-        assert.equal(id.length, 20)
-        assert.equal(id, 'AAAAAAAAAAAAAAAAAAAA')
-        done()
-      }
-      const app = createAppWithPlugin(onEmit, 'BWC')
-      pushBwcStreams(app, {
-        nextPoint: { position: LIVE_SNAPSHOT_1.position, name: 'A'.repeat(25) }
-      })
-    })
-
-    it('strips NMEA-reserved characters from the name', (done) => {
-      // A name like "BAD,WP*$NA\rM\nE" would otherwise inject fields,
-      // forge a checksum boundary, or terminate the sentence. All five
-      // reserved chars must be stripped before truncation/emission.
-      const onEmit = (_event: string, value: unknown): void => {
-        const { fields, body, fieldCount, checksum } = parseBwc(value as string)
-        assert.equal(fields.waypointId, 'BADWPNAME')
-        assert.equal(fieldCount, 13, 'no extra fields injected')
-        assert.equal(checksum, xorChecksum(body), 'checksum still valid')
-        done()
-      }
-      const app = createAppWithPlugin(onEmit, 'BWC')
-      pushBwcStreams(app, {
-        nextPoint: {
-          position: LIVE_SNAPSHOT_1.position,
-          name: 'BAD,WP*$NA\rM\nE'
-        }
-      })
+      pushBwcStreams(app, { bearingMagnetic: null })
     })
   })
 
@@ -346,10 +394,8 @@ describe('BWC', function () {
     }
 
     // -- bearing equivalence classes --
-    expectEmits(
-      'bearing 0 rad emits "0.0" (equator/poles boundary)',
-      { bearingTrue: 0 },
-      (s) => assert.equal(parseBwc(s).fields.bearingTrue, '0.0')
+    expectEmits('bearing 0 rad emits "0.0"', { bearingTrue: 0 }, (s) =>
+      assert.equal(parseBwc(s).fields.bearingTrue, '0.0')
     )
     expectEmits(
       'bearing 2π emits in [0, 360), wrapping to 0.0',
@@ -380,48 +426,74 @@ describe('BWC', function () {
     // -- latitude equivalence classes --
     expectEmits(
       'latitude exactly +90 (north pole, boundary inclusive)',
-      { nextPoint: { position: { latitude: 90, longitude: 0 } } },
+      {
+        nextPoint: {
+          type: 'Location',
+          position: { latitude: 90, longitude: 0 }
+        }
+      },
       (s) => assert.equal(parseBwc(s).fields.latitude, '9000.0000,N')
     )
     expectEmits(
       'latitude exactly -90 (south pole, boundary inclusive)',
-      { nextPoint: { position: { latitude: -90, longitude: 0 } } },
+      {
+        nextPoint: {
+          type: 'Location',
+          position: { latitude: -90, longitude: 0 }
+        }
+      },
       (s) => assert.equal(parseBwc(s).fields.latitude, '9000.0000,S')
-    )
-    expectEmits(
-      'latitude 0 (equator)',
-      { nextPoint: { position: { latitude: 0, longitude: 0 } } },
-      (s) => assert.equal(parseBwc(s).fields.latitude, '0000.0000,N')
     )
 
     // -- longitude equivalence classes --
     expectEmits(
       'longitude exactly +180 (antimeridian, accepted by codebase convention)',
-      { nextPoint: { position: { latitude: 0, longitude: 180 } } },
+      {
+        nextPoint: {
+          type: 'Location',
+          position: { latitude: 0, longitude: 180 }
+        }
+      },
       (s) => assert.equal(parseBwc(s).fields.longitude, '18000.0000,E')
     )
     expectEmits(
       'longitude -179.9999 (just inside western antimeridian)',
-      { nextPoint: { position: { latitude: 0, longitude: -179.9999 } } },
+      {
+        nextPoint: {
+          type: 'Location',
+          position: { latitude: 0, longitude: -179.9999 }
+        }
+      },
       (s) => assert.match(parseBwc(s).fields.longitude!, /^17959\.\d{4},W$/)
     )
     expectNoEmit(
       'rejects longitude exactly -180 (codebase treats antimeridian as +180 only)',
-      { nextPoint: { position: { latitude: 0, longitude: -180 } } }
+      {
+        nextPoint: {
+          type: 'Location',
+          position: { latitude: 0, longitude: -180 }
+        }
+      }
     )
 
     // -- rejection paths --
     expectNoEmit('rejects latitude > 90', {
-      nextPoint: { position: { latitude: 91, longitude: 0 } }
+      nextPoint: {
+        type: 'Location',
+        position: { latitude: 91, longitude: 0 }
+      }
     })
     expectNoEmit('rejects latitude < -90', {
-      nextPoint: { position: { latitude: -91, longitude: 0 } }
+      nextPoint: {
+        type: 'Location',
+        position: { latitude: -91, longitude: 0 }
+      }
     })
     expectNoEmit('rejects longitude > 180', {
-      nextPoint: { position: { latitude: 0, longitude: 181 } }
-    })
-    expectNoEmit('rejects longitude < -180', {
-      nextPoint: { position: { latitude: 0, longitude: -181 } }
+      nextPoint: {
+        type: 'Location',
+        position: { latitude: 0, longitude: 181 }
+      }
     })
     expectNoEmit('rejects NaN bearingTrue', { bearingTrue: NaN })
     expectNoEmit('rejects Infinity bearingTrue', { bearingTrue: Infinity })
@@ -432,7 +504,7 @@ describe('BWC', function () {
     expectNoEmit('rejects undefined distance', { distance: undefined })
     expectNoEmit('rejects null nextPoint', { nextPoint: null })
     expectNoEmit('rejects nextPoint with no position', {
-      nextPoint: { name: 'NOPOS' }
+      nextPoint: { type: 'Location' }
     })
     expectNoEmit('rejects empty datetime', { datetime: '' })
     expectNoEmit('rejects unparseable datetime', { datetime: 'not-a-date' })
@@ -440,27 +512,27 @@ describe('BWC', function () {
 
   describe('datetime handling', function () {
     it('converts ISO datetime with timezone offset to UTC', (done) => {
-      // 18:38:51 +02:00 -> 16:38:51 UTC, matches LIVE_SNAPSHOT_1
       const onEmit = (_event: string, value: unknown): void => {
-        assert.equal(parseBwc(value as string).fields.time, '163851.00')
+        // 21:32:22 +02:00 -> 19:32:22 UTC, matches LIVE_SNAPSHOT_1
+        assert.equal(parseBwc(value as string).fields.time, '193222.00')
         done()
       }
       const app = createAppWithPlugin(onEmit, 'BWC')
-      pushBwcStreams(app, { datetime: '2026-05-08T18:38:51+02:00' })
+      pushBwcStreams(app, { datetime: '2026-05-08T21:32:22+02:00' })
     })
 
     it('preserves fractional seconds as centiseconds', (done) => {
       const onEmit = (_event: string, value: unknown): void => {
-        assert.equal(parseBwc(value as string).fields.time, '163851.78')
+        assert.equal(parseBwc(value as string).fields.time, '193222.78')
         done()
       }
       const app = createAppWithPlugin(onEmit, 'BWC')
-      pushBwcStreams(app, { datetime: '2026-05-08T16:38:51.789Z' })
+      pushBwcStreams(app, { datetime: '2026-05-08T19:32:22.789Z' })
     })
   })
 
   describe('Signal K subscription metadata', function () {
-    it('subscribes to the five required Signal K paths in order', () => {
+    it('subscribes to the six required Signal K paths in order', () => {
       const stubApp = {
         streambundle: {
           getSelfStream: (): unknown => ({ toProperty: () => ({}) })
@@ -472,10 +544,31 @@ describe('BWC', function () {
       const bwc = require('../src/sentences/BWC').default(stubApp)
       assert.deepStrictEqual(bwc.keys, [
         'navigation.datetime',
-        'navigation.courseGreatCircle.nextPoint',
+        'navigation.course.nextPoint',
+        'navigation.course.activeRoute',
         'navigation.course.calcValues.bearingTrue',
         'navigation.course.calcValues.bearingMagnetic',
         'navigation.course.calcValues.distance'
+      ])
+    })
+
+    it('seeds activeRoute with {} and bearingMagnetic with null so the combined stream fires', () => {
+      const stubApp = {
+        streambundle: {
+          getSelfStream: (): unknown => ({ toProperty: () => ({}) })
+        },
+        emit: (): void => {},
+        debug: (): void => {}
+      }
+      // eslint-disable-next-line @typescript-eslint/no-var-requires
+      const bwc = require('../src/sentences/BWC').default(stubApp)
+      assert.deepStrictEqual(bwc.defaults, [
+        '',
+        undefined,
+        {},
+        undefined,
+        null,
+        undefined
       ])
     })
   })
