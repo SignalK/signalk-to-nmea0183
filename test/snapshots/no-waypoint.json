@@ -1,0 +1,119 @@
+{
+  "scenario": "navigate-to-point (no waypoint, no route)",
+  "calcMethod": "Rhumbline",
+  "capturedAt": "2026-05-08T22:07:43.178Z",
+  "paths": {
+    "navigation.log": 0,
+    "navigation.courseGreatCircle.activeRoute.href": null,
+    "navigation.courseGreatCircle.activeRoute.startTime": "2026-05-08T21:26:55.881Z",
+    "navigation.courseGreatCircle.nextPoint.value.href": null,
+    "navigation.courseGreatCircle.nextPoint.value.type": "Location",
+    "navigation.courseGreatCircle.nextPoint.position": {
+      "latitude": 26.54696714586578,
+      "longitude": -77.06287980079651
+    },
+    "navigation.courseGreatCircle.nextPoint.arrivalCircle": 100,
+    "navigation.courseGreatCircle.previousPoint.position": {
+      "latitude": 26.546606666666666,
+      "longitude": -77.05950333333334
+    },
+    "navigation.courseGreatCircle.previousPoint.value.type": "VesselPosition",
+    "navigation.courseRhumbline.activeRoute.href": null,
+    "navigation.courseRhumbline.activeRoute.startTime": "2026-05-08T21:26:55.881Z",
+    "navigation.courseRhumbline.nextPoint.value.href": null,
+    "navigation.courseRhumbline.nextPoint.value.type": "Location",
+    "navigation.courseRhumbline.nextPoint.position": {
+      "latitude": 26.54696714586578,
+      "longitude": -77.06287980079651
+    },
+    "navigation.courseRhumbline.nextPoint.arrivalCircle": 100,
+    "navigation.courseRhumbline.previousPoint.position": {
+      "latitude": 26.546606666666666,
+      "longitude": -77.05950333333334
+    },
+    "navigation.courseRhumbline.previousPoint.value.type": "VesselPosition",
+    "navigation.course.startTime": "2026-05-08T21:26:55.881Z",
+    "navigation.course.targetArrivalTime": null,
+    "navigation.course.activeRoute": null,
+    "navigation.course.arrivalCircle": 100,
+    "navigation.course.previousPoint": {
+      "position": {
+        "latitude": 26.546606666666666,
+        "longitude": -77.05950333333334
+      },
+      "type": "VesselPosition"
+    },
+    "navigation.course.nextPoint": {
+      "position": {
+        "latitude": 26.54696714586578,
+        "longitude": -77.06287980079651
+      },
+      "type": "Location"
+    },
+    "navigation.headingMagnetic": 1.2915436467707015,
+    "environment.sun": "day",
+    "environment.mode": "day",
+    "navigation.magneticVariation": -0.16089135395421264,
+    "navigation.magneticVariation.source": "WMM 2025",
+    "navigation.courseOverGroundTrue": 0.7930776122873063,
+    "navigation.courseOverGroundMagnetic": 0.953968966241519,
+    "navigation.courseGreatCircle.nextPoint.steerError": 2.2526603856373573,
+    "navigation.courseGreatCircle.nextPoint.leftSteerError": 2.2526603856373573,
+    "navigation.courseGreatCircle.nextPoint.rightSteerError": 0,
+    "navigation.headingTrue": 0.9404253969801876,
+    "navigation.leewayAngle": -0.14734778469288126,
+    "environment.wind.directionTrue": 1.3665894218146333,
+    "environment.wind.angleTrueGround": 0.4276056668362458,
+    "environment.wind.speedOverGround": 3.1381119060994607,
+    "environment.current.drift": 0,
+    "environment.current.setTrue": null,
+    "environment.current.setMagnetic": null,
+    "environment.current.driftImpact": 0,
+    "steering.rudderAngle": 0.0174532925239284,
+    "steering.autopilot.state": "standby",
+    "environment.wind.speedApparent": 3.1381119060994607,
+    "environment.wind.angleTrueWater": 0.4276056668362458,
+    "environment.wind.speedTrue": 3.1381119060994607,
+    "environment.depth.belowTransducer": 1.00584,
+    "environment.depth.belowKeel": 1.00584,
+    "environment.depth.belowSurface": 2.25584,
+    "navigation.speedThroughWater": 0,
+    "navigation.averageSpeedThroughWater": 0,
+    "navigation.gnss.methodQuality": "GNSS Fix",
+    "navigation.gnss.satellites": 8,
+    "navigation.gnss.antennaAltitude": 8.1,
+    "navigation.gnss.horizontalDilution": 1,
+    "navigation.gnss.geoidalSeparation": -33,
+    "navigation.gnss.differentialAge": 0,
+    "navigation.gnss.differentialReference": 0,
+    "environment.water.temperature": 309.15,
+    "navigation.position": {
+      "latitude": 26.546631666666666,
+      "longitude": -77.05952166666667
+    },
+    "navigation.speedOverGround": 0,
+    "navigation.magneticVariationAgeOfService": 1778278056,
+    "navigation.datetime": "2026-05-08T22:07:36.000Z",
+    "environment.wind.angleApparent": 0.42760566683624573,
+    "navigation.attitude": {
+      "roll": 0.00018849556440000002,
+      "pitch": 0.019057250626700002,
+      "yaw": 1.1013167509344002
+    },
+    "navigation.course.calcValues.calcMethod": "Rhumbline",
+    "navigation.course.calcValues.bearingTrackTrue": 4.831171944671482,
+    "navigation.course.calcValues.bearingTrackMagnetic": 4.670280590717269,
+    "navigation.course.calcValues.crossTrackError": 2.5441476328008386,
+    "navigation.course.calcValues.previousPoint.distance": 3.3246639121881345,
+    "navigation.course.calcValues.distance": 336.1154538639113,
+    "navigation.course.calcValues.bearingTrue": 4.823602533829535,
+    "navigation.course.calcValues.bearingMagnetic": 4.6627111798753225,
+    "navigation.course.calcValues.velocityMadeGood": 0,
+    "navigation.course.calcValues.timeToGo": null,
+    "navigation.course.calcValues.estimatedTimeOfArrival": null,
+    "navigation.course.calcValues.route.timeToGo": null,
+    "navigation.course.calcValues.route.estimatedTimeOfArrival": null,
+    "navigation.course.calcValues.route.distance": null,
+    "navigation.course.calcValues.targetSpeed": null
+  }
+}

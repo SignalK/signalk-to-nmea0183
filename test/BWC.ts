@@ -6,7 +6,7 @@ type AnyApp = ReturnType<typeof createAppWithPlugin>
 
 /**
  * Real navigation snapshots captured from the live deltastream of a running
- * signalk-server (openplotter sailing near Marsh Harbour, Bahamas, 9° west
+ * signalk-server (sailing near Marsh Harbour, Bahamas, 9° west
  * magnetic variation, 3-point route active "TO DELETE").
  *
  * Kept verbatim so the test fixture documents the exact wire shape the
@@ -34,7 +34,7 @@ const LIVE_SNAPSHOT_1 = {
   bearingMagnetic: 5.729787364152641, // 328.3° magnetic
   distance: 127.040711001917, // 0.07 NM
   expectedSentence:
-    '$IIBWC,193222.00,2632.8570,N,07703.5953,W,337.5,T,328.3,M,0.07,N,WP 1*0E'
+    '$IIBWC,193222.00,2632.8570,N,07703.5953,W,337.5,T,328.3,M,0.07,N,WP1*2E'
 } as const
 
 interface NextPointArg {
@@ -140,7 +140,7 @@ function xorChecksum(body: string): string {
 }
 
 describe('BWC', function () {
-  describe('real-world snapshot from openplotter', function () {
+  describe('real-world snapshot from signalk-server', function () {
     it('reproduces the exact sentence captured from a live 3-point route', (done) => {
       const onEmit = (_event: string, value: unknown): void => {
         assert.equal(value, LIVE_SNAPSHOT_1.expectedSentence)
@@ -225,17 +225,17 @@ describe('BWC', function () {
   describe('waypoint ID derivation (field 12)', function () {
     it('emits "WP <pointIndex+1>" for the first point of a multi-point route', (done) => {
       const onEmit = (_event: string, value: unknown): void => {
-        // pointIndex=0 → "WP 1"
-        assert.equal(parseBwc(value as string).fields.waypointId, 'WP 1')
+        // pointIndex=0 → "WP1"
+        assert.equal(parseBwc(value as string).fields.waypointId, 'WP1')
         done()
       }
       const app = createAppWithPlugin(onEmit, 'BWC')
       pushBwcStreams(app, {})
     })
 
-    it('emits "WP 3" when pointIndex advances to the third leg', (done) => {
+    it('emits "WP3" when pointIndex advances to the third leg', (done) => {
       const onEmit = (_event: string, value: unknown): void => {
-        assert.equal(parseBwc(value as string).fields.waypointId, 'WP 3')
+        assert.equal(parseBwc(value as string).fields.waypointId, 'WP3')
         done()
       }
       const app = createAppWithPlugin(onEmit, 'BWC')
@@ -244,9 +244,9 @@ describe('BWC', function () {
       })
     })
 
-    it('emits "WP 1" for a single-point route (does not use the route name)', (done) => {
+    it('emits "WP1" for a single-point route (does not use the route name)', (done) => {
       const onEmit = (_event: string, value: unknown): void => {
-        assert.equal(parseBwc(value as string).fields.waypointId, 'WP 1')
+        assert.equal(parseBwc(value as string).fields.waypointId, 'WP1')
         done()
       }
       const app = createAppWithPlugin(onEmit, 'BWC')
@@ -270,9 +270,9 @@ describe('BWC', function () {
       })
     })
 
-    it('emits empty waypoint ID for a Location-type destination with no route', (done) => {
+    it('emits "DP" for a Location-type destination with no route (goto navigation)', (done) => {
       const onEmit = (_event: string, value: unknown): void => {
-        assert.equal(parseBwc(value as string).fields.waypointId, '')
+        assert.equal(parseBwc(value as string).fields.waypointId, 'DP')
         done()
       }
       const app = createAppWithPlugin(onEmit, 'BWC')
@@ -285,9 +285,9 @@ describe('BWC', function () {
       })
     })
 
-    it('emits empty waypoint ID when activeRoute stream is the {} default', (done) => {
+    it('emits "DP" when activeRoute stream is the {} default and nextPoint is a Location', (done) => {
       const onEmit = (_event: string, value: unknown): void => {
-        assert.equal(parseBwc(value as string).fields.waypointId, '')
+        assert.equal(parseBwc(value as string).fields.waypointId, 'DP')
         done()
       }
       const app = createAppWithPlugin(onEmit, 'BWC')

@@ -1,48 +1,32 @@
 /*
-      ------------------------------------------------------------------------------
-                                       13    15
-      1 2 3   4 5 6 7 8   9 10   11  12|   14|
-      | | |   | | | | |   | |    |   | |   | |
-      $--APB,A,A,x.x,a,N,A,A,x.x,a,c--c,x.x,a,x.x,a*hh<CR><LF>
-      ------------------------------------------------------------------------------
+$--APB,A,A,x.x,a,N,A,A,x.x,a,c--c,x.x,a,x.x,a*hh
 
-      Field Number:
+Field 1:  Status (A = OK, V = warning)
+Field 2:  Status (A = OK, V = LORAN-C cycle-lock warning)
+Field 3:  Cross Track Error magnitude (NM)
+Field 4:  Direction to steer (L or R)
+Field 5:  Cross-track units (N = nautical miles)
+Field 6:  Status: A = Arrival Circle Entered
+Field 7:  Status: A = Perpendicular passed at waypoint
+Field 8:  Bearing origin to destination
+Field 9:  M = Magnetic, T = True
+Field 10: Destination Waypoint ID
+Field 11: Bearing, present position to destination
+Field 12: M = Magnetic, T = True
+Field 13: Heading-to-steer to destination waypoint
+Field 14: M = Magnetic, T = True
 
-      1. Status
-      V = LORAN-C Blink or SNR warning
-      V = general warning flag or other navigation systems when a reliable
-      fix is not available
-      2. Status
-      V = Loran-C Cycle Lock warning flag
-      A = OK or not used
-      3. Cross Track Error Magnitude
-      4. Direction to steer, L or R
-      5. Cross Track Units, N = Nautical Miles
-      6. Status
-      A = Arrival Circle Entered
-      7. Status
-      A = Perpendicular passed at waypoint
-      8. Bearing origin to destination
-      9. M = Magnetic, T = True
-      10. Destination Waypoint ID
-      11. Bearing, present position to Destination
-      12. M = Magnetic, T = True
-      13. Heading to steer to destination waypoint
-      14. M = Magnetic, T = True
-      15. Checksum
+All three bearing pairs are reported Magnetic, computed from the True bearings
+and `navigation.magneticVariation`. For autopilots that require True bearings
+use APB-true.
 
-      All three bearing pairs use Magnetic, computed from True bearings
-      and magneticVariation.  For autopilots that require True bearings
-      use APB-true instead.
-
-      Example: $GPAPB,A,A,0.10,R,N,V,V,011,M,DEST,011,M,011,M*82
-    */
+Waypoint ID (field 10) follows the BWC pattern: prefer `nextPoint.name`, then
+synthesize "WP <pointIndex+1>" from `activeRoute.pointIndex`, else empty.
+*/
 import * as nmea from '../nmea'
+import { generateWaypointName } from '../waypointNameGenerator'
+import type { ActiveRoute, NextPoint } from '../waypointNameGenerator'
 import type { SentenceEncoder, SignalKApp } from '../types/plugin'
-
-interface NextPoint {
-  name?: string
-}
 
 export default function (_app: SignalKApp): SentenceEncoder {
   return {
@@ -53,17 +37,19 @@ export default function (_app: SignalKApp): SentenceEncoder {
       'navigation.course.calcValues.bearingTrackTrue',
       'navigation.course.calcValues.bearingTrue',
       'navigation.course.nextPoint',
-      'navigation.magneticVariation'
+      'navigation.magneticVariation',
+      'navigation.course.activeRoute'
     ],
-    defaults: [undefined, undefined, undefined, {}, undefined],
+    defaults: [undefined, undefined, undefined, {}, undefined, {}],
     f: function (
       xte: number,
       originToDest: number,
       bearingTrue: number,
       nextPoint: NextPoint | null | undefined,
-      magneticVariation: number
+      magneticVariation: number,
+      activeRoute: ActiveRoute | null | undefined
     ): string {
-      const waypointId = (nextPoint && nextPoint.name) || ''
+      const waypointId = generateWaypointName(nextPoint, activeRoute)
       const bearingOriginToDestMag = nmea.radsToPositiveDeg(
         nmea.fixAngle(originToDest - magneticVariation)
       )

@@ -130,18 +130,22 @@ describe('RMB', function () {
     })
   })
 
-  it('uses empty fields when waypoint objects have no name', (done) => {
+  it('synthesizes type-specific defaults when names are missing (DP/VP/WP1)', (done) => {
+    // Mirrors signalk-server #2608's defaults so behavior is consistent
+    // before and after that PR ships:
+    //   nextPoint type=Location, no name      -> "DP" (Destination Position)
+    //   previousPoint type=VesselPosition     -> "VP"
     const onEmit = (_event: string, value: unknown): void => {
       const fields = parseRmb(value as string)
       assert.equal(
         fields.destinationId,
-        '',
-        'field 4 should be empty when no waypoint name is available'
+        'DP',
+        'field 4 should be "DP" for a Location-type destination'
       )
       assert.equal(
         fields.originId,
-        '',
-        'field 5 should be empty when no waypoint name is available'
+        'VP',
+        'field 5 should be "VP" for a VesselPosition origin'
       )
       done()
     }
@@ -149,11 +153,11 @@ describe('RMB', function () {
     pushRmbStreams(app, {
       nextPoint: {
         position: { latitude: 48.1173, longitude: 11.5167 },
-        type: 'RoutePoint'
+        type: 'Location'
       },
       previousPoint: {
         position: { latitude: 47.3769, longitude: 8.5417 },
-        type: 'RoutePoint'
+        type: 'VesselPosition'
       }
     })
   })

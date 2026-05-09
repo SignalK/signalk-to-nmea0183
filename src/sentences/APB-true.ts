@@ -1,47 +1,16 @@
 /*
-      ------------------------------------------------------------------------------
-                                       13    15
-      1 2 3   4 5 6 7 8   9 10   11  12|   14|
-      | | |   | | | | |   | |    |   | |   | |
-      $--APB,A,A,x.x,a,N,A,A,x.x,a,c--c,x.x,a,x.x,a*hh<CR><LF>
-      ------------------------------------------------------------------------------
+$--APB,A,A,x.x,a,N,A,A,x.x,a,c--c,x.x,a,x.x,a*hh
 
-      Field Number:
+Same field layout as APB but all three bearing pairs are reported True. For
+autopilots that require Magnetic bearings use APB.
 
-      1. Status
-      V = LORAN-C Blink or SNR warning
-      V = general warning flag or other navigation systems when a reliable
-      fix is not available
-      2. Status
-      V = Loran-C Cycle Lock warning flag
-      A = OK or not used
-      3. Cross Track Error Magnitude
-      4. Direction to steer, L or R
-      5. Cross Track Units, N = Nautical Miles
-      6. Status
-      A = Arrival Circle Entered
-      7. Status
-      A = Perpendicular passed at waypoint
-      8. Bearing origin to destination
-      9. M = Magnetic, T = True
-      10. Destination Waypoint ID
-      11. Bearing, present position to Destination
-      12. M = Magnetic, T = True
-      13. Heading to steer to destination waypoint
-      14. M = Magnetic, T = True
-      15. Checksum
-
-      All three bearing pairs use True.  For autopilots that require
-      Magnetic bearings use APB instead.
-
-      Example: $GPAPB,A,A,0.10,R,N,V,V,011,T,DEST,011,T,011,T*82
-    */
+Waypoint ID (field 10) follows the BWC pattern: prefer `nextPoint.name`, then
+synthesize "WP <pointIndex+1>" from `activeRoute.pointIndex`, else empty.
+*/
 import * as nmea from '../nmea'
+import { generateWaypointName } from '../waypointNameGenerator'
+import type { ActiveRoute, NextPoint } from '../waypointNameGenerator'
 import type { SentenceEncoder, SignalKApp } from '../types/plugin'
-
-interface NextPoint {
-  name?: string
-}
 
 export default function (_app: SignalKApp): SentenceEncoder {
   return {
@@ -51,20 +20,18 @@ export default function (_app: SignalKApp): SentenceEncoder {
       'navigation.course.calcValues.crossTrackError',
       'navigation.course.calcValues.bearingTrackTrue',
       'navigation.course.calcValues.bearingTrue',
-      'navigation.course.nextPoint'
+      'navigation.course.nextPoint',
+      'navigation.course.activeRoute'
     ],
-    // nextPoint defaults to {} so APB still fires when only calcValues are
-    // available (the common case today). Once signalk-server populates
-    // nextPoint.name (see SignalK/signalk-server#2595, SignalK/specification#676),
-    // the waypoint identifier will flow through automatically.
-    defaults: [undefined, undefined, undefined, {}],
+    defaults: [undefined, undefined, undefined, {}, {}],
     f: function (
       xte: number,
       originToDest: number,
       bearingTrue: number,
-      nextPoint: NextPoint | null | undefined
+      nextPoint: NextPoint | null | undefined,
+      activeRoute: ActiveRoute | null | undefined
     ): string {
-      const waypointId = (nextPoint && nextPoint.name) || ''
+      const waypointId = generateWaypointName(nextPoint, activeRoute)
       return nmea.toSentence([
         '$IIAPB',
         'A',
