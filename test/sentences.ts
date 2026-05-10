@@ -238,7 +238,7 @@ describe('sentence encoders', function () {
     })
   })
 
-  describe('XTE-GC - cross-track error (great circle)', function () {
+  describe('XTE-GC - cross-track error (server-configured calcMethod)', function () {
     const enc = load('XTE-GC')
     it('emits L when xte is positive', function () {
       const s = mustEncode(enc, 100)

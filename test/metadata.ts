@@ -23,7 +23,8 @@ const expectations: Expectation[] = [
       'navigation.course.calcValues.bearingTrackTrue',
       'navigation.course.calcValues.bearingTrue',
       'navigation.course.nextPoint',
-      'navigation.magneticVariation'
+      'navigation.magneticVariation',
+      'navigation.course.activeRoute'
     ]
   },
   {
@@ -34,7 +35,8 @@ const expectations: Expectation[] = [
       'navigation.course.calcValues.crossTrackError',
       'navigation.course.calcValues.bearingTrackTrue',
       'navigation.course.calcValues.bearingTrue',
-      'navigation.course.nextPoint'
+      'navigation.course.nextPoint',
+      'navigation.course.activeRoute'
     ]
   },
   {
@@ -231,7 +233,8 @@ const expectations: Expectation[] = [
       'navigation.course.calcValues.distance',
       'navigation.course.calcValues.bearingTrue',
       'navigation.course.calcValues.velocityMadeGood',
-      'navigation.course.previousPoint'
+      'navigation.course.previousPoint',
+      'navigation.course.activeRoute'
     ]
   },
   {
@@ -318,13 +321,13 @@ const expectations: Expectation[] = [
     keys: ['environment.outside.temperature']
   },
   {
-    name: 'XTE-GC',
-    title: 'XTE - Cross-track error (w.r.t. Great Circle)',
-    keys: ['navigation.courseGreatCircle.crossTrackError']
-  },
-  {
     name: 'XTE',
     title: 'XTE - Cross-track error (w.r.t. Rhumb line)',
+    keys: ['navigation.course.calcValues.crossTrackError']
+  },
+  {
+    name: 'XTE-GC',
+    title: 'XTE - Cross-track error (w.r.t. server-configured calcMethod)',
     keys: ['navigation.course.calcValues.crossTrackError']
   },
   {

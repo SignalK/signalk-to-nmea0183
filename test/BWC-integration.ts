@@ -7,7 +7,7 @@ import * as assert from 'assert'
 import pluginFactory from '../src/index'
 import type { SignalKPlugin } from '../src/types/plugin'
 
-// Live snapshot captured from openplotter's deltastream (vessel sailing
+// Live snapshot captured from signalk-server's deltastream (vessel sailing
 // near Marsh Harbour, Bahamas, 9° W magnetic variation, 3-point route
 // "TO DELETE" active, currently heading to point 1 of 3).
 const LIVE_SNAPSHOT = {
@@ -30,7 +30,7 @@ const LIVE_SNAPSHOT = {
   bearingMagnetic: 5.729787364152641,
   distance: 127.040711001917,
   expectedSentence:
-    '$IIBWC,193222.00,2632.8570,N,07703.5953,W,337.5,T,328.3,M,0.07,N,WP 1*0E'
+    '$IIBWC,193222.00,2632.8570,N,07703.5953,W,337.5,T,328.3,M,0.07,N,WP1*2E'
 } as const
 
 describe('BWC Integration', function () {
@@ -114,7 +114,7 @@ describe('BWC Integration', function () {
     assert.equal(fields[11], 'N')
     assert.equal(
       fields[12],
-      'WP 1',
+      'WP1',
       'waypoint ID synthesized as "WP <pointIndex+1>"'
     )
   })

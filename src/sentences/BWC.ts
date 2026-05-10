@@ -21,7 +21,7 @@ Field Number:
 13. Checksum
 
 Signal K source paths verified by subscribing to the live deltastream of a
-running signalk-server (openplotter) with an active route:
+running signalk-server with an active route:
 
   - navigation.datetime                            -> ISO datetime
   - navigation.course.nextPoint                    -> {type, position, [name]}
@@ -36,10 +36,13 @@ VesselPosition) and `position` regardless of the active calculation method.
 The parallel `navigation.courseGreatCircle.nextPoint` is silent on the
 deltastream (only its leaf children emit) and is NOT what to subscribe to.
 
-Waypoint name resolution (field 12):
+Waypoint name (field 12) is resolved by `generateWaypointName`, shared with
+RMB/APB/APB-true:
   1. nextPoint.name when SignalK/signalk-server#2608 lands
   2. "WP <pointIndex+1>" when a route is active (e.g. "WP 1", "WP 2")
-  3. empty when the destination is a Location-type point with no route
+  3. "WP 1" as a single-point default. BWC is used for both active-route
+     and "goto" navigation, so a sensible identifier is preferred over an
+     empty field that some chartplotters reject.
 
 Bearing values reflect the calcMethod set in signalk-server (GreatCircle or
 Rhumbline). For typical sailing distances the difference is negligible; if
@@ -47,26 +50,9 @@ you need strictly great-circle BWC, set the server's course calc method to
 GreatCircle.
 */
 import * as nmea from '../nmea'
+import { generateWaypointName } from '../waypointNameGenerator'
+import type { ActiveRoute, NextPoint } from '../waypointNameGenerator'
 import type { SentenceEncoder, SignalKApp } from '../types/plugin'
-
-interface NextPoint {
-  type?: string
-  position?: { latitude?: number; longitude?: number }
-  name?: string
-}
-
-interface ActiveRoute {
-  href?: string | null
-  name?: string | null
-  pointIndex?: number | null
-  pointTotal?: number | null
-}
-
-// NMEA0183 reserves these characters for sentence framing. A waypoint name
-// containing them would inject fields, forge a checksum boundary, or break
-// out of the sentence entirely.
-const NMEA_RESERVED = /[,*$\r\n]/g
-const MAX_WAYPOINT_ID_LEN = 20
 
 function inLatRange(v: unknown): v is number {
   return typeof v === 'number' && Number.isFinite(v) && v >= -90 && v <= 90
@@ -77,24 +63,6 @@ function inLonRange(v: unknown): v is number {
   // as +180 only). Catching here rather than letting it throw downstream
   // keeps emission failures uniform with the other validation paths.
   return typeof v === 'number' && Number.isFinite(v) && v > -180 && v <= 180
-}
-
-function deriveWaypointId(
-  nextPoint: NextPoint,
-  activeRoute: ActiveRoute
-): string {
-  // Prefer the per-waypoint name once SignalK publishes it.
-  if (typeof nextPoint.name === 'string' && nextPoint.name.length > 0) {
-    return nextPoint.name
-  }
-  // Synthesize "WP N" from the active route's 1-based point index. Works
-  // for both single- and multi-point routes; chartplotters use this field
-  // primarily to distinguish successive waypoints, which "WP 1" / "WP 2"
-  // does without leaking a potentially noisy route name into the sentence.
-  if (typeof activeRoute.pointIndex === 'number') {
-    return `WP ${activeRoute.pointIndex + 1}`
-  }
-  return ''
 }
 
 export default function (_app: SignalKApp): SentenceEncoder {
@@ -154,13 +122,7 @@ export default function (_app: SignalKApp): SentenceEncoder {
         ? nmea.radsToPositiveDeg(bearingMagnetic as number)
         : undefined
 
-      const rawId = deriveWaypointId(nextPoint, activeRoute ?? {})
-      const sanitized = rawId.replace(NMEA_RESERVED, '')
-      let waypointId = sanitized
-      if (waypointId.length > MAX_WAYPOINT_ID_LEN) {
-        waypointId = waypointId.slice(0, MAX_WAYPOINT_ID_LEN)
-        _app.debug('BWC: truncated waypoint name to 20 characters')
-      }
+      const waypointId = generateWaypointName(nextPoint, activeRoute)
 
       return nmea.toSentence([
         '$IIBWC',

@@ -128,16 +128,17 @@ describe('APB-true', function () {
     })
   })
 
-  it('uses empty field 10 when nextPoint has no name', (done) => {
-    // Route points typically have no name (just type: "RoutePoint" and a
-    // position). NMEA allows empty fields, so field 10 should be empty rather
-    // than a meaningless placeholder like "00".
+  it('falls back to "WP1" when nextPoint has no name and no route is active', (done) => {
+    // Route points and direct-to-position both arrive without a name (just a
+    // type and position). Empty field 10 confuses some chartplotters, so the
+    // generator emits "WP1" as a sensible single-point default. With an
+    // active multi-point route, "WP <pointIndex+1>" is used instead.
     const onEmit = (_event: string, value: unknown): void => {
       const fields = parseApb(value as string)
       assert.equal(
         fields.waypointId,
-        '',
-        'field 10 should be empty when no waypoint name is available'
+        'WP1',
+        'field 10 should default to "WP1" when no waypoint name is available'
       )
       done()
     }

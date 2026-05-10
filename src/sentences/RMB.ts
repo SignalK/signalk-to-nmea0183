@@ -23,14 +23,19 @@ Field Number:
 13. Arrival Status, A = Arrival Circle Entered
 14. FAA mode indicator (NMEA 2.3 and later)
 15. Checksum
+
+Field 4 (TO Waypoint ID) is derived via generateWaypointName: prefer nextPoint.name,
+synthesize "WP <pointIndex+1>" from activeRoute.pointIndex, else empty. Field 5
+(FROM) uses previousPoint.name when available -- in practice signalk-server
+emits previousPoint as a VesselPosition without a name, so this falls back to
+empty in direct-to-point and route-by-name cases.
 */
 import * as nmea from '../nmea'
+import { generateWaypointName } from '../waypointNameGenerator'
+import type { ActiveRoute, NextPoint } from '../waypointNameGenerator'
 import type { SentenceEncoder, SignalKApp } from '../types/plugin'
 
-interface Waypoint {
-  name?: string
-  position?: { latitude?: number; longitude?: number }
-}
+type PreviousPoint = NextPoint
 
 export default function (_app: SignalKApp): SentenceEncoder {
   return {
@@ -42,29 +47,26 @@ export default function (_app: SignalKApp): SentenceEncoder {
       'navigation.course.calcValues.distance',
       'navigation.course.calcValues.bearingTrue',
       'navigation.course.calcValues.velocityMadeGood',
-      'navigation.course.previousPoint'
+      'navigation.course.previousPoint',
+      'navigation.course.activeRoute'
     ],
-    // nextPoint and previousPoint default to {} so RMB still fires when only
-    // calcValues are available (the common case today). Once signalk-server
-    // populates nextPoint.name / previousPoint.name (see
-    // SignalK/signalk-server#2595, SignalK/specification#676), the waypoint
-    // identifiers will flow through automatically.
-    defaults: [undefined, {}, undefined, undefined, undefined, {}],
+    defaults: [undefined, {}, undefined, undefined, undefined, {}, {}],
     f: function (
       crossTrackError: number,
-      wp: Waypoint,
+      wp: NextPoint,
       wpDistance: number,
       bearingTrue: number,
       vmg: number,
-      prevWp: Waypoint | null | undefined
+      prevWp: PreviousPoint | null | undefined,
+      activeRoute: ActiveRoute | null | undefined
     ): string | undefined {
-      const destinationId = (wp && wp.name) || ''
-      const originId = (prevWp && prevWp.name) || ''
-      const wpLat = wp.position?.latitude
-      const wpLon = wp.position?.longitude
+      const wpLat = wp?.position?.latitude
+      const wpLon = wp?.position?.longitude
       if (typeof wpLat !== 'number' || typeof wpLon !== 'number') {
         return undefined
       }
+      const destinationId = generateWaypointName(wp, activeRoute)
+      const originId = generateWaypointName(prevWp, activeRoute)
       return nmea.toSentence([
         '$IIRMB',
         'A',
