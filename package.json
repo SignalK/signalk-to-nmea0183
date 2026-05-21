@@ -23,9 +23,20 @@
   "files": [
     "dist",
     "public",
+    "logo.svg",
+    "docs/screenshots",
     "README.md",
     "LICENSE"
   ],
+  "signalk": {
+    "displayName": "SK to NMEA0183",
+    "appIcon": "./logo.svg",
+    "screenshots": [
+      "./docs/screenshots/01-empty-config.png",
+      "./docs/screenshots/02-table-configured.png",
+      "./docs/screenshots/03-mobile.png"
+    ]
+  },
   "scripts": {
     "build": "tsc -p tsconfig.build.json",
     "build:config": "webpack",
