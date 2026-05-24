@@ -44,3 +44,6 @@ public
 # Stryker mutation testing
 reports
 .stryker-tmp
+
+# Local docker-based test harness
+docker-test
