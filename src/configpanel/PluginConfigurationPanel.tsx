@@ -50,11 +50,24 @@ interface SentenceInfo {
   paths: string[]
 }
 
-// Path-status values mirror the schema indicators:
-//   'ok'      -> path has data         (\uD83D\uDC4D)
-//   'null'    -> path exists, null     (\u274E)
-//   'missing' -> path absent from tree (\u274C)
+// Path-status values mirror the README's icon legend so the UI and the
+// docs use exactly the same vocabulary:
+//   'ok'      -> path has data         (✅ White Heavy Check Mark)
+//   'null'    -> path exists, null     (❓ Black Question Mark Ornament)
+//   'missing' -> path absent from tree (❌ Cross Mark)
 type PathStatus = 'ok' | 'null' | 'missing'
+
+const STATUS_ICON: Record<PathStatus, string> = {
+  ok: '✅',
+  null: '❓',
+  missing: '❌'
+}
+
+const STATUS_LABEL: Record<PathStatus, string> = {
+  ok: 'has data',
+  null: 'value is null',
+  missing: 'not present'
+}
 
 // ---------------------------------------------------------------------------
 // Styles
@@ -109,13 +122,17 @@ const S: Record<string, CSSProperties> = {
     background: '#fff'
   },
   removeBtn: {
-    background: 'transparent',
-    border: 'none',
-    color: '#dc3545',
+    display: 'inline-flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    width: 34,
+    height: 34,
+    padding: 0,
+    background: '#fff',
+    border: '1.5px solid #ef6b6b',
+    borderRadius: 8,
+    color: '#ef6b6b',
     cursor: 'pointer',
-    fontSize: 18,
-    padding: '2px 8px',
-    lineHeight: 1,
     flexShrink: 0
   },
   pathBox: {
@@ -142,15 +159,11 @@ const S: Record<string, CSSProperties> = {
     fontFamily: 'SFMono-Regular, Consolas, monospace',
     wordBreak: 'break-all'
   },
-  dot: {
-    width: 8,
-    height: 8,
-    borderRadius: '50%',
-    flexShrink: 0
+  statusIcon: {
+    fontSize: 12,
+    flexShrink: 0,
+    lineHeight: 1
   },
-  dotOk: { background: '#28a745' },
-  dotNull: { background: '#ffc107' },
-  dotMissing: { background: '#dc3545' },
   fields: {
     display: 'flex',
     flexWrap: 'wrap',
@@ -270,13 +283,9 @@ export default function PluginConfigurationPanel({
   const getSentenceInfo = (key: string): SentenceInfo | undefined =>
     sentences.find((s) => s.key === key)
 
-  const dotStyleFor = (p: string): CSSProperties => {
-    const s = pathStatus[p]
-    return {
-      ...S.dot,
-      ...(s === 'ok' ? S.dotOk : s === 'null' ? S.dotNull : S.dotMissing)
-    }
-  }
+  // Default missing entries to 'missing' so the icon stays meaningful before
+  // the first vessel fetch resolves and for paths the tree never carries.
+  const statusFor = (p: string): PathStatus => pathStatus[p] ?? 'missing'
 
   return (
     <div style={S.root}>
@@ -286,15 +295,14 @@ export default function PluginConfigurationPanel({
       </div>
 
       <div style={S.legend}>
-        <span style={S.legendItem}>
-          <span style={{ ...S.dot, ...S.dotOk }} /> has data
-        </span>
-        <span style={S.legendItem}>
-          <span style={{ ...S.dot, ...S.dotNull }} /> value is null
-        </span>
-        <span style={S.legendItem}>
-          <span style={{ ...S.dot, ...S.dotMissing }} /> not present
-        </span>
+        {(['ok', 'null', 'missing'] as const).map((s) => (
+          <span key={s} style={S.legendItem}>
+            <span style={S.statusIcon} aria-hidden="true">
+              {STATUS_ICON[s]}
+            </span>{' '}
+            {STATUS_LABEL[s]}
+          </span>
+        ))}
       </div>
 
       {conversions.length === 0 ? (
@@ -323,10 +331,10 @@ export default function PluginConfigurationPanel({
                 <button
                   style={S.removeBtn}
                   onClick={() => removeRow(i)}
-                  title="Remove"
+                  title="Remove conversion"
                   aria-label="Remove conversion"
                 >
-                  {'\u2715'}
+                  <TrashIcon />
                 </button>
               </div>
 
@@ -334,12 +342,17 @@ export default function PluginConfigurationPanel({
                 <div style={S.pathBox}>
                   <div style={S.pathLabel}>Required Signal K paths</div>
                   <ul style={S.pathList}>
-                    {info.paths.map((p) => (
-                      <li key={p} style={S.pathItem}>
-                        <span style={dotStyleFor(p)} />
-                        {p}
-                      </li>
-                    ))}
+                    {info.paths.map((p) => {
+                      const s = statusFor(p)
+                      return (
+                        <li key={p} style={S.pathItem}>
+                          <span style={S.statusIcon} title={STATUS_LABEL[s]}>
+                            {STATUS_ICON[s]}
+                          </span>
+                          {p}
+                        </li>
+                      )
+                    })}
                   </ul>
                 </div>
               )}
@@ -389,6 +402,33 @@ export default function PluginConfigurationPanel({
         )}
       </div>
     </div>
+  )
+}
+
+// ---------------------------------------------------------------------------
+// Icons
+// ---------------------------------------------------------------------------
+
+// Inline trashcan glyph. Kept inline (rather than emoji or a font dep) so the
+// button can be styled to read as a button rather than as decoration: the
+// stroke picks up `currentColor` from the surrounding button.
+function TrashIcon(): React.ReactElement {
+  return (
+    <svg
+      width="16"
+      height="16"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth={2}
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden="true"
+    >
+      <path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2m3 0v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6" />
+      <line x1="10" y1="11" x2="10" y2="17" />
+      <line x1="14" y1="11" x2="14" y2="17" />
+    </svg>
   )
 }
 

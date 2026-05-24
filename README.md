@@ -32,8 +32,8 @@ with Node `>=22`.
 1. Enable the plugin in the server admin UI (_Server → Plugin Config →
    Convert Signal K to NMEA0183_) and add a row per sentence you want
    emitted. Each row shows the required Signal K paths with live
-   availability indicators (green = has data, yellow = null, red =
-   missing) so you can see at a glance what is wired up.
+   availability icons (✅ has data, ❓ value is null, ❌ not present)
+   so you can see at a glance what is wired up.
 2. Connect any NMEA 0183 client (OpenCPN, kplex, netcat, ...) to
    `localhost:10110` — the server's built-in TCP NMEA 0183 server.
 
