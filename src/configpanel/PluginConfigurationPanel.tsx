@@ -11,8 +11,13 @@ interface Conversion {
   event?: string
 }
 
+// Configuration is loose because pre-1.17 setups still ship the
+// legacy flat-boolean shape (`{ DBT: true, DBT_throttle: 500 }`).
+// The unknown index signature lets the migration in `migrateConversions`
+// reach into those keys without `as` casts in the call site.
 interface Configuration {
   conversions?: Conversion[]
+  [legacyKey: string]: unknown
 }
 
 interface Props {
@@ -237,17 +242,35 @@ export default function PluginConfigurationPanel({
           const schema = typeof p.schema === 'function' ? p.schema() : p.schema
           const oneOf =
             schema.properties.conversions.items.properties.sentence.oneOf ?? []
-          setSentences(
-            oneOf.map((o) => ({
-              key: o.const,
-              title: o.title.replace(/\s*\[.*\]$/, ''),
-              paths: parsePaths(o)
-            }))
-          )
+          const loadedSentences: SentenceInfo[] = oneOf.map((o) => ({
+            key: o.const,
+            title: o.title.replace(/\s*\[.*\]$/, ''),
+            paths: parsePaths(o)
+          }))
+          setSentences(loadedSentences)
+          // Mirror `resolveConversions` in src/index.ts: if the saved
+          // config is in the pre-1.17 flat-boolean shape, lift those
+          // keys into the array form so the UI shows the user's old
+          // selections instead of an empty list. The user still has to
+          // click Save to persist the migrated shape to disk.
+          if (!cfg.conversions) {
+            const migrated = migrateLegacyConversions(cfg, loadedSentences)
+            if (migrated.length > 0) {
+              // Guard against clobbering in-progress edits: only seed
+              // the list if it is still empty when the fetch resolves.
+              setConversions((current) =>
+                current.length === 0 ? migrated : current
+              )
+            }
+          }
         }
         setPathStatus(flattenVessel(vessel))
       })
       .catch(() => {})
+    // `cfg` comes from props; we only want this to run on mount so a
+    // re-render with a different `configuration` reference does not
+    // overwrite in-progress edits.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
   useEffect(() => {
@@ -440,6 +463,29 @@ function parsePaths(oneOfEntry: OneOfEntry): string[] {
   const match = /\[(.+)\]$/.exec(oneOfEntry.title)
   if (!match) return []
   return match[1]!.split(', ').map((p) => p.replace(/\([^)]*\)$/, ''))
+}
+
+// Lift a legacy flat-boolean options object into the array shape so
+// pre-1.17 users see their existing selections after upgrading.
+// Mirrors the runtime migration in `resolveConversions` (src/index.ts);
+// kept in lockstep with it so the UI and the plugin agree on which
+// sentences were active.
+//
+// Input:  { DBT: true, DBT_throttle: 500, foo: 'bar' }
+// Output: [{ sentence: 'DBT', throttle: 500 }]
+function migrateLegacyConversions(
+  cfg: Configuration,
+  sentences: SentenceInfo[]
+): Conversion[] {
+  const out: Conversion[] = []
+  for (const s of sentences) {
+    if (cfg[s.key]) {
+      const throttleRaw = cfg[`${s.key}_throttle`]
+      const throttle = typeof throttleRaw === 'number' ? throttleRaw : 0
+      out.push({ sentence: s.key, throttle })
+    }
+  }
+  return out
 }
 
 // Vessel tree → flat `{ 'a.b.c': 'ok' | 'null' | 'missing' }` lookup.
