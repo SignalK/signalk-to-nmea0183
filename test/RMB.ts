@@ -130,11 +130,11 @@ describe('RMB', function () {
     })
   })
 
-  it('synthesizes type-specific defaults when names are missing (DP/VP/WP1)', (done) => {
-    // Mirrors signalk-server #2608's defaults so behavior is consistent
-    // before and after that PR ships:
-    //   nextPoint type=Location, no name      -> "DP" (Destination Position)
-    //   previousPoint type=VesselPosition     -> "VP"
+  it('forwards the server-provided defaults for a goto (DP destination, VP origin)', (done) => {
+    // signalk-server fills nextPoint.name / previousPoint.name with its own
+    // defaults for a direct-to-position goto:
+    //   nextPoint type=Location          -> "DP" (Destination Position)
+    //   previousPoint type=VesselPosition -> "VP"
     const onEmit = (_event: string, value: unknown): void => {
       const fields = parseRmb(value as string)
       assert.equal(
@@ -153,7 +153,32 @@ describe('RMB', function () {
     pushRmbStreams(app, {
       nextPoint: {
         position: { latitude: 48.1173, longitude: 11.5167 },
-        type: 'Location'
+        type: 'Location',
+        name: 'DP'
+      },
+      previousPoint: {
+        position: { latitude: 47.3769, longitude: 8.5417 },
+        type: 'VesselPosition',
+        name: 'VP'
+      }
+    })
+  })
+
+  it('leaves the origin field empty when previousPoint has no name', (done) => {
+    // An unnamed previousPoint (e.g. from an older server) yields an empty
+    // FROM field: the plugin forwards names but does not fabricate one.
+    const onEmit = (_event: string, value: unknown): void => {
+      const fields = parseRmb(value as string)
+      assert.equal(fields.destinationId, 'DEST')
+      assert.equal(fields.originId, '', 'field 5 should be empty')
+      done()
+    }
+    const app = createAppWithPlugin(onEmit, 'RMB')
+    pushRmbStreams(app, {
+      nextPoint: {
+        position: { latitude: 48.1173, longitude: 11.5167 },
+        type: 'Waypoint',
+        name: 'DEST'
       },
       previousPoint: {
         position: { latitude: 47.3769, longitude: 8.5417 },

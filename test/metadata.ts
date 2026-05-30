@@ -23,8 +23,7 @@ const expectations: Expectation[] = [
       'navigation.course.calcValues.bearingTrackTrue',
       'navigation.course.calcValues.bearingTrue',
       'navigation.course.nextPoint',
-      'navigation.magneticVariation',
-      'navigation.course.activeRoute'
+      'navigation.magneticVariation'
     ]
   },
   {
@@ -35,8 +34,7 @@ const expectations: Expectation[] = [
       'navigation.course.calcValues.crossTrackError',
       'navigation.course.calcValues.bearingTrackTrue',
       'navigation.course.calcValues.bearingTrue',
-      'navigation.course.nextPoint',
-      'navigation.course.activeRoute'
+      'navigation.course.nextPoint'
     ]
   },
   {
@@ -46,7 +44,6 @@ const expectations: Expectation[] = [
     keys: [
       'navigation.datetime',
       'navigation.course.nextPoint',
-      'navigation.course.activeRoute',
       'navigation.course.calcValues.bearingTrue',
       'navigation.course.calcValues.bearingMagnetic',
       'navigation.course.calcValues.distance'
@@ -233,8 +230,7 @@ const expectations: Expectation[] = [
       'navigation.course.calcValues.distance',
       'navigation.course.calcValues.bearingTrue',
       'navigation.course.calcValues.velocityMadeGood',
-      'navigation.course.previousPoint',
-      'navigation.course.activeRoute'
+      'navigation.course.previousPoint'
     ]
   },
   {

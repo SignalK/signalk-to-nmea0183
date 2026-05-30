@@ -4,12 +4,12 @@ $--APB,A,A,x.x,a,N,A,A,x.x,a,c--c,x.x,a,x.x,a*hh
 Same field layout as APB but all three bearing pairs are reported True. For
 autopilots that require Magnetic bearings use APB.
 
-Waypoint ID (field 10) follows the BWC pattern: prefer `nextPoint.name`, then
-synthesize "WP <pointIndex+1>" from `activeRoute.pointIndex`, else empty.
+Field 10 (Destination Waypoint ID) is nextPoint.name, forwarded by
+generateWaypointName; it is emitted empty when the server sends no name.
 */
 import * as nmea from '../nmea'
 import { generateWaypointName } from '../waypointNameGenerator'
-import type { ActiveRoute, NextPoint } from '../waypointNameGenerator'
+import type { NextPoint } from '../waypointNameGenerator'
 import type { SentenceEncoder, SignalKApp } from '../types/plugin'
 
 export default function (_app: SignalKApp): SentenceEncoder {
@@ -20,18 +20,16 @@ export default function (_app: SignalKApp): SentenceEncoder {
       'navigation.course.calcValues.crossTrackError',
       'navigation.course.calcValues.bearingTrackTrue',
       'navigation.course.calcValues.bearingTrue',
-      'navigation.course.nextPoint',
-      'navigation.course.activeRoute'
+      'navigation.course.nextPoint'
     ],
-    defaults: [undefined, undefined, undefined, {}, {}],
+    defaults: [undefined, undefined, undefined, {}],
     f: function (
       xte: number,
       originToDest: number,
       bearingTrue: number,
-      nextPoint: NextPoint | null | undefined,
-      activeRoute: ActiveRoute | null | undefined
+      nextPoint: NextPoint | null | undefined
     ): string {
-      const waypointId = generateWaypointName(nextPoint, activeRoute)
+      const waypointId = generateWaypointName(nextPoint)
       return nmea.toSentence([
         '$IIAPB',
         'A',

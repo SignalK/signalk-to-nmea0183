@@ -1,18 +1,19 @@
 /**
- * Generates a NMEA0183 waypoint identifier from Signal K's `nextPoint` /
- * `previousPoint` and `activeRoute` deltas. Used by RMB (fields 4 and 5),
- * APB (field 10), APB-true (field 10), and BWC (field 12).
+ * Resolves the NMEA0183 waypoint identifier (the "c--c" Waypoint ID field)
+ * from a Signal K course point. Shared by RMB (fields 4/5), APB and APB-true
+ * (field 10), and BWC (field 12).
  *
- * Resolution order:
- *   1. `point.name`              -- once signalk-server populates this
- *      in the delta stream (see SignalK/signalk-server#2608).
- *   2. `synthesizeFallbackName()` -- pre-2608 fallback that mirrors the
- *      defaults the upstream PR applies, so behavior is consistent both
- *      before and after that PR ships. REMOVE the fallback once #2608
- *      is released and we can rely on `point.name` always being set.
+ * The Signal K server owns waypoint naming. When a destination is set it
+ * publishes `nextPoint.name` / `previousPoint.name`, using the route point or
+ * waypoint resource name where the operator gave one and otherwise a generated
+ * default ("WP1", "WP2", ... along a route, "DP" for a go-to position, "VP" for
+ * the vessel's starting point). This function forwards that name verbatim so
+ * the NMEA identifier always matches what the rest of Signal K displays; it
+ * never invents one. If the server supplies no name (an older server, or a
+ * route point with no metadata) the field is emitted empty rather than guessed.
  *
- * NMEA0183 reserves a few framing characters; we strip them defensively
- * in case `point.name` ever contains them.
+ * Names can be operator-defined, so they are sanitised before going on the
+ * wire. See `sanitize` below.
  */
 
 export interface CoursePoint {
@@ -22,65 +23,29 @@ export interface CoursePoint {
   href?: string | null
 }
 
-export interface ActiveRoute {
-  href?: string | null
-  name?: string | null
-  pointIndex?: number | null
-  pointTotal?: number | null
-}
-
-// Preserved for backward compatibility with callers that imported the
-// original `NextPoint` name; the shape is identical to CoursePoint.
+// `CoursePoint` is the shared shape of both course points; the sentence
+// encoders import it under the `NextPoint` alias (RMB re-aliases it again to
+// `PreviousPoint`) so each call site reads as the point it handles.
 export type NextPoint = CoursePoint
 
 const NMEA_RESERVED = /[,*$\r\n]/g
 const MAX_WAYPOINT_NAME_LEN = 20
 
 export function generateWaypointName(
-  point: CoursePoint | null | undefined,
-  activeRoute: ActiveRoute | null | undefined
+  point: CoursePoint | null | undefined
 ): string {
-  const p = point ?? {}
-  if (typeof p.name === 'string' && p.name.length > 0) {
-    return sanitize(p.name)
+  const name = point?.name
+  if (typeof name !== 'string') {
+    return ''
   }
-  return sanitize(synthesizeFallbackName(p, activeRoute ?? {}))
+  return sanitize(name)
 }
 
-/**
- * Pre-#2608 fallback: synthesize a default name from the point type.
- * Mirrors signalk-server's CourseAPI defaults so the NMEA output stays
- * consistent before and after #2608 lands:
- *
- *   RoutePoint     -> "WP<pointIndex+1>" (e.g. "WP1", "WP2", ...)
- *   Waypoint       -> "WP1"   (single-point goto-waypoint)
- *   Location       -> "DP"    (direct-to-position)
- *   VesselPosition -> "VP"    (previousPoint at start of any goto)
- *   (anything else)-> "WP1"   (last-ditch default matching upstream)
- *
- * REMOVE this function once SignalK/signalk-server#2608 is released and
- * point.name is reliably populated in the delta stream.
- */
-function synthesizeFallbackName(
-  point: CoursePoint,
-  activeRoute: ActiveRoute
-): string {
-  if (point.type === 'RoutePoint') {
-    if (typeof activeRoute.pointIndex === 'number') {
-      return `WP${activeRoute.pointIndex + 1}`
-    }
-    return 'WP1'
-  }
-  if (point.type === 'Location') {
-    return 'DP'
-  }
-  if (point.type === 'VesselPosition') {
-    return 'VP'
-  }
-  // Waypoint or unknown type
-  return 'WP1'
-}
-
+// NMEA0183 reserves ',', '*' and '$' for field/checksum framing and CR/LF as
+// the line terminator, so an operator-defined name containing any of them would
+// corrupt the sentence; strip those, then cap the length so a long name can't
+// overflow a receiver's fixed-width waypoint-ID field.
+// Example: "St *Tropez,1$" -> "St Tropez1"
 function sanitize(name: string): string {
   const stripped = name.replace(NMEA_RESERVED, '')
   return stripped.length > MAX_WAYPOINT_NAME_LEN

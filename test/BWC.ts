@@ -14,21 +14,15 @@ type AnyApp = ReturnType<typeof createAppWithPlugin>
  */
 const LIVE_SNAPSHOT_1 = {
   datetime: '2026-05-08T19:32:22.000Z',
-  // navigation.course.nextPoint is published as a composite delta:
+  // navigation.course.nextPoint is published as a composite delta; the server
+  // fills `name` ("WP1" for the first route point) which BWC forwards.
   nextPoint: {
     type: 'RoutePoint',
     position: {
       latitude: 26.547617287650734,
       longitude: -77.05992185300417
-    }
-  },
-  // navigation.course.activeRoute is published as a composite delta:
-  activeRoute: {
-    href: '/resources/routes/d12f9af7-8556-440c-984a-a9795693fc8d',
-    name: 'TO DELETE',
-    reverse: false,
-    pointIndex: 0,
-    pointTotal: 3
+    },
+    name: 'WP1'
   },
   bearingTrue: 5.890679316509219, // 337.5° true
   bearingMagnetic: 5.729787364152641, // 328.3° magnetic
@@ -43,17 +37,9 @@ interface NextPointArg {
   name?: string
 }
 
-interface ActiveRouteArg {
-  href?: string | null
-  name?: string | null
-  pointIndex?: number | null
-  pointTotal?: number | null
-}
-
 interface BwcOverrides {
   datetime?: string
   nextPoint?: NextPointArg | null
-  activeRoute?: ActiveRouteArg
   bearingTrue?: number | undefined
   bearingMagnetic?: number | undefined | null
   distance?: number | undefined
@@ -68,15 +54,6 @@ function pushBwcStreams(app: AnyApp, overrides: BwcOverrides): void {
     .push(
       'nextPoint' in overrides ? overrides.nextPoint : LIVE_SNAPSHOT_1.nextPoint
     )
-  if ('activeRoute' in overrides) {
-    app.streambundle
-      .getSelfStream('navigation.course.activeRoute')
-      .push(overrides.activeRoute)
-  } else {
-    app.streambundle
-      .getSelfStream('navigation.course.activeRoute')
-      .push(LIVE_SNAPSHOT_1.activeRoute)
-  }
   app.streambundle
     .getSelfStream('navigation.course.calcValues.bearingTrue')
     .push(
@@ -223,9 +200,9 @@ describe('BWC', function () {
   })
 
   describe('waypoint ID derivation (field 12)', function () {
-    it('emits "WP <pointIndex+1>" for the first point of a multi-point route', (done) => {
+    it('forwards the server-provided name for the active route point', (done) => {
       const onEmit = (_event: string, value: unknown): void => {
-        // pointIndex=0 → "WP1"
+        // LIVE_SNAPSHOT_1.nextPoint.name === "WP1"
         assert.equal(parseBwc(value as string).fields.waypointId, 'WP1')
         done()
       }
@@ -233,29 +210,22 @@ describe('BWC', function () {
       pushBwcStreams(app, {})
     })
 
-    it('emits "WP3" when pointIndex advances to the third leg', (done) => {
+    it('forwards a different server-provided name (WP3) verbatim', (done) => {
       const onEmit = (_event: string, value: unknown): void => {
         assert.equal(parseBwc(value as string).fields.waypointId, 'WP3')
         done()
       }
       const app = createAppWithPlugin(onEmit, 'BWC')
       pushBwcStreams(app, {
-        activeRoute: { ...LIVE_SNAPSHOT_1.activeRoute, pointIndex: 2 }
+        nextPoint: {
+          type: 'RoutePoint',
+          position: LIVE_SNAPSHOT_1.nextPoint.position,
+          name: 'WP3'
+        }
       })
     })
 
-    it('emits "WP1" for a single-point route (does not use the route name)', (done) => {
-      const onEmit = (_event: string, value: unknown): void => {
-        assert.equal(parseBwc(value as string).fields.waypointId, 'WP1')
-        done()
-      }
-      const app = createAppWithPlugin(onEmit, 'BWC')
-      pushBwcStreams(app, {
-        activeRoute: { name: 'SOLO', pointIndex: 0, pointTotal: 1 }
-      })
-    })
-
-    it('prefers nextPoint.name when the server populates it (SignalK#2608)', (done) => {
+    it('forwards a custom server-provided waypoint name verbatim', (done) => {
       const onEmit = (_event: string, value: unknown): void => {
         assert.equal(parseBwc(value as string).fields.waypointId, 'WP-A')
         done()
@@ -270,7 +240,7 @@ describe('BWC', function () {
       })
     })
 
-    it('emits "DP" for a Location-type destination with no route (goto navigation)', (done) => {
+    it('emits "DP" for a Location-type destination (goto navigation)', (done) => {
       const onEmit = (_event: string, value: unknown): void => {
         assert.equal(parseBwc(value as string).fields.waypointId, 'DP')
         done()
@@ -279,24 +249,26 @@ describe('BWC', function () {
       pushBwcStreams(app, {
         nextPoint: {
           type: 'Location',
-          position: LIVE_SNAPSHOT_1.nextPoint.position
-        },
-        activeRoute: { href: null, name: null }
+          position: LIVE_SNAPSHOT_1.nextPoint.position,
+          name: 'DP'
+        }
       })
     })
 
-    it('emits "DP" when activeRoute stream is the {} default and nextPoint is a Location', (done) => {
+    it('emits an empty field 12 when the server omits the name', (done) => {
       const onEmit = (_event: string, value: unknown): void => {
-        assert.equal(parseBwc(value as string).fields.waypointId, 'DP')
+        const { fields, body, fieldCount, checksum } = parseBwc(value as string)
+        assert.equal(fields.waypointId, '')
+        assert.equal(fieldCount, 13, 'field still present, just empty')
+        assert.equal(checksum, xorChecksum(body), 'checksum still valid')
         done()
       }
       const app = createAppWithPlugin(onEmit, 'BWC')
       pushBwcStreams(app, {
         nextPoint: {
-          type: 'Location',
+          type: 'RoutePoint',
           position: LIVE_SNAPSHOT_1.nextPoint.position
-        },
-        activeRoute: {}
+        }
       })
     })
 
@@ -543,7 +515,7 @@ describe('BWC', function () {
   })
 
   describe('Signal K subscription metadata', function () {
-    it('subscribes to the six required Signal K paths in order', () => {
+    it('subscribes to the five required Signal K paths in order', () => {
       const stubApp = {
         streambundle: {
           getSelfStream: (): unknown => ({ toProperty: () => ({}) })
@@ -556,14 +528,13 @@ describe('BWC', function () {
       assert.deepStrictEqual(bwc.keys, [
         'navigation.datetime',
         'navigation.course.nextPoint',
-        'navigation.course.activeRoute',
         'navigation.course.calcValues.bearingTrue',
         'navigation.course.calcValues.bearingMagnetic',
         'navigation.course.calcValues.distance'
       ])
     })
 
-    it('seeds activeRoute with {} and bearingMagnetic with null so the combined stream fires', () => {
+    it('seeds bearingMagnetic with null so the combined stream fires', () => {
       const stubApp = {
         streambundle: {
           getSelfStream: (): unknown => ({ toProperty: () => ({}) })
@@ -576,7 +547,6 @@ describe('BWC', function () {
       assert.deepStrictEqual(bwc.defaults, [
         '',
         undefined,
-        {},
         undefined,
         null,
         undefined

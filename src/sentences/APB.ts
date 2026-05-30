@@ -20,12 +20,12 @@ All three bearing pairs are reported Magnetic, computed from the True bearings
 and `navigation.magneticVariation`. For autopilots that require True bearings
 use APB-true.
 
-Waypoint ID (field 10) follows the BWC pattern: prefer `nextPoint.name`, then
-synthesize "WP <pointIndex+1>" from `activeRoute.pointIndex`, else empty.
+Field 10 (Destination Waypoint ID) is nextPoint.name, forwarded by
+generateWaypointName; it is emitted empty when the server sends no name.
 */
 import * as nmea from '../nmea'
 import { generateWaypointName } from '../waypointNameGenerator'
-import type { ActiveRoute, NextPoint } from '../waypointNameGenerator'
+import type { NextPoint } from '../waypointNameGenerator'
 import type { SentenceEncoder, SignalKApp } from '../types/plugin'
 
 export default function (_app: SignalKApp): SentenceEncoder {
@@ -37,19 +37,17 @@ export default function (_app: SignalKApp): SentenceEncoder {
       'navigation.course.calcValues.bearingTrackTrue',
       'navigation.course.calcValues.bearingTrue',
       'navigation.course.nextPoint',
-      'navigation.magneticVariation',
-      'navigation.course.activeRoute'
+      'navigation.magneticVariation'
     ],
-    defaults: [undefined, undefined, undefined, {}, undefined, {}],
+    defaults: [undefined, undefined, undefined, {}, undefined],
     f: function (
       xte: number,
       originToDest: number,
       bearingTrue: number,
       nextPoint: NextPoint | null | undefined,
-      magneticVariation: number,
-      activeRoute: ActiveRoute | null | undefined
+      magneticVariation: number
     ): string {
-      const waypointId = generateWaypointName(nextPoint, activeRoute)
+      const waypointId = generateWaypointName(nextPoint)
       const bearingOriginToDestMag = nmea.radsToPositiveDeg(
         nmea.fixAngle(originToDest - magneticVariation)
       )
