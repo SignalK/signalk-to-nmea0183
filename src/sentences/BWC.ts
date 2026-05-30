@@ -24,25 +24,21 @@ Signal K source paths verified by subscribing to the live deltastream of a
 running signalk-server with an active route:
 
   - navigation.datetime                            -> ISO datetime
-  - navigation.course.nextPoint                    -> {type, position, [name]}
-  - navigation.course.activeRoute                  -> {href, name, pointIndex, pointTotal}
+  - navigation.course.nextPoint                    -> {type, position, name?}
   - navigation.course.calcValues.bearingTrue       -> bearing to waypoint (rad)
   - navigation.course.calcValues.bearingMagnetic   -> bearing to waypoint, magnetic (rad, optional)
   - navigation.course.calcValues.distance          -> distance to waypoint (m)
 
-`navigation.course.nextPoint` is the canonical waypoint path: it is published
-as a composite delta containing both `type` (RoutePoint / Location /
-VesselPosition) and `position` regardless of the active calculation method.
-The parallel `navigation.courseGreatCircle.nextPoint` is silent on the
-deltastream (only its leaf children emit) and is NOT what to subscribe to.
+`navigation.course.nextPoint` is the canonical waypoint path: a single
+composite delta carrying `type` and `position` (plus `name`, on servers that
+publish it) for every calculation method. The parallel
+`navigation.courseGreatCircle.nextPoint` only emits its leaf children on the
+delta stream, never the composite, so do NOT subscribe to it.
 
-Waypoint name (field 12) is resolved by `generateWaypointName`, shared with
-RMB/APB/APB-true:
-  1. nextPoint.name when SignalK/signalk-server#2608 lands
-  2. "WP <pointIndex+1>" when a route is active (e.g. "WP 1", "WP 2")
-  3. "WP 1" as a single-point default. BWC is used for both active-route
-     and "goto" navigation, so a sensible identifier is preferred over an
-     empty field that some chartplotters reject.
+Field 12 (Waypoint ID) is whatever name the server set on nextPoint, forwarded
+by generateWaypointName (shared with RMB/APB/APB-true). Along an active route
+that is typically "WP1", "WP2", ...; for a go-to position it is "DP". If the
+server sends no name the field is emitted empty.
 
 Bearing values reflect the calcMethod set in signalk-server (GreatCircle or
 Rhumbline). For typical sailing distances the difference is negligible; if
@@ -51,7 +47,7 @@ GreatCircle.
 */
 import * as nmea from '../nmea'
 import { generateWaypointName } from '../waypointNameGenerator'
-import type { ActiveRoute, NextPoint } from '../waypointNameGenerator'
+import type { NextPoint } from '../waypointNameGenerator'
 import type { SentenceEncoder, SignalKApp } from '../types/plugin'
 
 function inLatRange(v: unknown): v is number {
@@ -72,20 +68,17 @@ export default function (_app: SignalKApp): SentenceEncoder {
     keys: [
       'navigation.datetime',
       'navigation.course.nextPoint',
-      'navigation.course.activeRoute',
       'navigation.course.calcValues.bearingTrue',
       'navigation.course.calcValues.bearingMagnetic',
       'navigation.course.calcValues.distance'
     ],
-    // activeRoute defaults to {} so a Location-type destination (no route)
-    // still emits; bearingMagnetic seeds with null so older servers that
-    // don't publish it still let the combined stream fire (encoder emits
-    // empty fields 8/9 when magnetic is missing).
-    defaults: ['', undefined, {}, undefined, null, undefined],
+    // bearingMagnetic seeds with null so servers that don't publish it still
+    // let the combined stream fire (the encoder emits empty fields 8/9 when
+    // magnetic is missing).
+    defaults: ['', undefined, undefined, null, undefined],
     f: function (
       datetime8601: string,
       nextPoint: NextPoint | null | undefined,
-      activeRoute: ActiveRoute | null | undefined,
       bearingTrue: number | undefined,
       bearingMagnetic: number | null | undefined,
       distance: number | undefined
@@ -122,7 +115,7 @@ export default function (_app: SignalKApp): SentenceEncoder {
         ? nmea.radsToPositiveDeg(bearingMagnetic as number)
         : undefined
 
-      const waypointId = generateWaypointName(nextPoint, activeRoute)
+      const waypointId = generateWaypointName(nextPoint)
 
       return nmea.toSentence([
         '$IIBWC',

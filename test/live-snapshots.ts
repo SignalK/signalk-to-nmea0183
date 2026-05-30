@@ -11,9 +11,11 @@
  *   3. active-route          - multi-point route active, currently at point 1
  *
  * Each scenario asserts the routing sentences (RMB, APB, APB-true, XTE)
- * against the captured state. Pushes are ordered context-first (paths
- * with a default in the encoder) then trigger-last so the combined
- * stream's first fire already has all context populated.
+ * against the captured state. nextPoint / previousPoint carry the `name`
+ * that signalk-server populates (its own "WP<n>" / "DP" / "VP" defaults);
+ * the plugin forwards those into the waypoint-ID fields. Pushes are ordered
+ * context-first (paths with a default in the encoder) then trigger-last so
+ * the combined stream's first fire already has all context populated.
  *
  * Full snapshots are kept under test/snapshots/ for diagnostic re-runs
  * via scripts/probe-snapshot.ts; new scenarios can be captured with
@@ -41,14 +43,16 @@ const SCENARIO_NO_WAYPOINT: Scenario = {
         latitude: 26.54696714586578,
         longitude: -77.06287980079651
       },
-      type: 'Location'
+      type: 'Location',
+      name: 'DP'
     },
     'navigation.course.previousPoint': {
       position: {
         latitude: 26.546606666666666,
         longitude: -77.05950333333334
       },
-      type: 'VesselPosition'
+      type: 'VesselPosition',
+      name: 'VP'
     },
     'navigation.course.activeRoute': null,
     'navigation.magneticVariation': -0.16089135395421264
@@ -69,14 +73,16 @@ const SCENARIO_WAYPOINT: Scenario = {
         longitude: -77.06213951110841
       },
       href: '/resources/waypoints/c9dc41b2-1bce-4e7d-80f2-882aca7a3eae',
-      type: 'Waypoint'
+      type: 'Waypoint',
+      name: 'WP1'
     },
     'navigation.course.previousPoint': {
       position: {
         latitude: 26.546733333333332,
         longitude: -77.05952333333333
       },
-      type: 'VesselPosition'
+      type: 'VesselPosition',
+      name: 'VP'
     },
     'navigation.course.activeRoute': null,
     'navigation.magneticVariation': -0.16089135395421264
@@ -96,14 +102,16 @@ const SCENARIO_ROUTE: Scenario = {
       position: {
         latitude: 26.54661003894277,
         longitude: -77.06357717514038
-      }
+      },
+      name: 'WP1'
     },
     'navigation.course.previousPoint': {
       position: {
         latitude: 26.546718333333335,
         longitude: -77.05952833333333
       },
-      type: 'VesselPosition'
+      type: 'VesselPosition',
+      name: 'VP'
     },
     'navigation.course.activeRoute': {
       href: '/resources/routes/c1551d44-65dc-409d-b09a-7482202cc2a1',

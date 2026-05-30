@@ -128,17 +128,34 @@ describe('APB-true', function () {
     })
   })
 
-  it('falls back to "WP1" when nextPoint has no name and no route is active', (done) => {
-    // Route points and direct-to-position both arrive without a name (just a
-    // type and position). Empty field 10 confuses some chartplotters, so the
-    // generator emits "WP1" as a sensible single-point default. With an
-    // active multi-point route, "WP <pointIndex+1>" is used instead.
+  it('forwards a server default name (WP1) into field 10', (done) => {
+    // signalk-server fills nextPoint.name itself (e.g. "WP1" for the first
+    // point of a route, or a direct-to-waypoint with no resource name). The
+    // plugin forwards it unchanged.
+    const onEmit = (_event: string, value: unknown): void => {
+      const fields = parseApb(value as string)
+      assert.equal(fields.waypointId, 'WP1')
+      done()
+    }
+    const app = createAppWithPlugin(onEmit, 'APB-true')
+    pushApbStreams(app, {
+      nextPoint: {
+        position: { latitude: 25.04133, longitude: -77.24333 },
+        type: 'RoutePoint',
+        name: 'WP1'
+      }
+    })
+  })
+
+  it('leaves field 10 empty when nextPoint has no name', (done) => {
+    // Without a server-provided name the waypoint-ID field is emitted empty:
+    // the plugin forwards names but does not fabricate one.
     const onEmit = (_event: string, value: unknown): void => {
       const fields = parseApb(value as string)
       assert.equal(
         fields.waypointId,
-        'WP1',
-        'field 10 should default to "WP1" when no waypoint name is available'
+        '',
+        'field 10 should be empty when no waypoint name is available'
       )
       done()
     }

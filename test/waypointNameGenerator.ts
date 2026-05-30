@@ -3,110 +3,67 @@ import * as assert from 'assert'
 import { generateWaypointName } from '../src/waypointNameGenerator'
 
 describe('generateWaypointName', function () {
-  describe('priority: point.name wins over fallback', function () {
-    it('uses nextPoint.name when present', function () {
+  describe('forwards the server-provided point.name', function () {
+    it('returns the name verbatim when present', function () {
       assert.strictEqual(
-        generateWaypointName(
-          { name: 'NASSAU', type: 'Waypoint' },
-          { name: 'Bahamas Cruise', pointIndex: 2 }
-        ),
+        generateWaypointName({ name: 'NASSAU', type: 'Waypoint' }),
         'NASSAU'
       )
     })
-  })
 
-  describe('RoutePoint fallback uses activeRoute.pointIndex', function () {
-    it('synthesizes "WP1" for pointIndex 0', function () {
+    it('forwards the server defaults unchanged (WP<n> / DP / VP)', function () {
+      // signalk-server fills these defaults itself; the plugin passes them through.
       assert.strictEqual(
-        generateWaypointName(
-          { type: 'RoutePoint' },
-          { name: 'Bahamas', pointIndex: 0 }
-        ),
-        'WP1'
+        generateWaypointName({ name: 'WP2', type: 'RoutePoint' }),
+        'WP2'
       )
-    })
-    it('synthesizes "WP3" for pointIndex 2', function () {
       assert.strictEqual(
-        generateWaypointName({ type: 'RoutePoint' }, { pointIndex: 2 }),
-        'WP3'
+        generateWaypointName({ name: 'DP', type: 'Location' }),
+        'DP'
       )
-    })
-    it('synthesizes "WP6" for pointIndex 5 even without route name', function () {
       assert.strictEqual(
-        generateWaypointName({ type: 'RoutePoint' }, { pointIndex: 5 }),
-        'WP6'
-      )
-    })
-    it('falls back to "WP1" for RoutePoint when pointIndex is missing', function () {
-      assert.strictEqual(
-        generateWaypointName({ type: 'RoutePoint' }, null),
-        'WP1'
-      )
-    })
-  })
-
-  describe('type-specific defaults (mirrors signalk-server #2608)', function () {
-    it('returns "DP" for direct-to-Location', function () {
-      assert.strictEqual(generateWaypointName({ type: 'Location' }, null), 'DP')
-    })
-    it('returns "VP" for previous VesselPosition', function () {
-      assert.strictEqual(
-        generateWaypointName({ type: 'VesselPosition' }, null),
+        generateWaypointName({ name: 'VP', type: 'VesselPosition' }),
         'VP'
       )
     })
-    it('returns "WP1" for direct-to-Waypoint with no name', function () {
-      assert.strictEqual(
-        generateWaypointName(
-          { type: 'Waypoint', href: '/resources/waypoints/abc-123' },
-          null
-        ),
-        'WP1'
-      )
+  })
+
+  describe('returns an empty string when no name is available', function () {
+    it('empty for a typed point with no name', function () {
+      assert.strictEqual(generateWaypointName({ type: 'RoutePoint' }), '')
     })
-    it('returns "WP1" for unknown / missing type', function () {
-      assert.strictEqual(generateWaypointName({}, null), 'WP1')
+
+    it('empty for an empty object', function () {
+      assert.strictEqual(generateWaypointName({}), '')
     })
-    it('returns "WP1" for null nextPoint and null activeRoute', function () {
-      assert.strictEqual(generateWaypointName(null, null), 'WP1')
+
+    it('empty for null', function () {
+      assert.strictEqual(generateWaypointName(null), '')
+    })
+
+    it('empty for undefined', function () {
+      assert.strictEqual(generateWaypointName(undefined), '')
+    })
+
+    it('empty when name is an empty string', function () {
+      assert.strictEqual(generateWaypointName({ name: '' }), '')
     })
   })
 
   describe('NMEA framing-character defenses', function () {
     it('strips comma, asterisk, dollar, CR, LF from name', function () {
       assert.strictEqual(
-        generateWaypointName({ name: 'A,B*C$D\rE\nF' }, null),
+        generateWaypointName({ name: 'A,B*C$D\rE\nF' }),
         'ABCDEF'
       )
     })
+
     it('truncates names longer than 20 characters', function () {
       assert.strictEqual(
-        generateWaypointName(
-          { name: 'A_VERY_LONG_WAYPOINT_NAME_THAT_OVERFLOWS' },
-          null
-        ),
+        generateWaypointName({
+          name: 'A_VERY_LONG_WAYPOINT_NAME_THAT_OVERFLOWS'
+        }),
         'A_VERY_LONG_WAYPOINT'
-      )
-    })
-  })
-
-  describe('robustness against partial/undefined inputs', function () {
-    it('treats undefined nextPoint as empty object', function () {
-      assert.strictEqual(
-        generateWaypointName(undefined, { pointIndex: 0 }),
-        'WP1'
-      )
-    })
-    it('treats undefined activeRoute as empty object', function () {
-      assert.strictEqual(generateWaypointName({ name: 'X' }, undefined), 'X')
-    })
-    it('ignores non-numeric pointIndex (falls back to type default)', function () {
-      assert.strictEqual(
-        generateWaypointName(
-          { type: 'RoutePoint' },
-          { pointIndex: '1' as unknown as number }
-        ),
-        'WP1'
       )
     })
   })

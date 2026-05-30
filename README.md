@@ -60,8 +60,15 @@ Each sentence is independently toggleable and has its own throttle
 
 - **APB** — autopilot info, magnetic bearings (`--true` variant also
   available)
+- **BWC** — bearing and distance to waypoint
 - **RMB** — recommended minimum navigation info to waypoint
 - **XTE** — cross-track error (`-GC` great-circle variant also available)
+
+The waypoint identifier in these sentences is taken from the `name`
+the Signal K server publishes on the active destination (the server
+supplies its own `WP<n>` / `DP` / `VP` defaults). Servers that support
+waypoint naming fill it; older servers leave the identifier fields
+empty.
 
 ### Position, heading, speed
 

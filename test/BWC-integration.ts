@@ -9,7 +9,8 @@ import type { SignalKPlugin } from '../src/types/plugin'
 
 // Live snapshot captured from signalk-server's deltastream (vessel sailing
 // near Marsh Harbour, Bahamas, 9° W magnetic variation, 3-point route
-// "TO DELETE" active, currently heading to point 1 of 3).
+// "TO DELETE" active, currently heading to point 1 of 3). The server fills
+// nextPoint.name ("WP1" for the first route point); the plugin forwards it.
 const LIVE_SNAPSHOT = {
   datetime: '2026-05-08T19:32:22.000Z',
   nextPoint: {
@@ -17,14 +18,8 @@ const LIVE_SNAPSHOT = {
     position: {
       latitude: 26.547617287650734,
       longitude: -77.05992185300417
-    }
-  },
-  activeRoute: {
-    href: '/resources/routes/d12f9af7-8556-440c-984a-a9795693fc8d',
-    name: 'TO DELETE',
-    reverse: false,
-    pointIndex: 0,
-    pointTotal: 3
+    },
+    name: 'WP1'
   },
   bearingTrue: 5.890679316509219,
   bearingMagnetic: 5.729787364152641,
@@ -71,7 +66,6 @@ describe('BWC Integration', function () {
     const sentence = encoder.f(
       LIVE_SNAPSHOT.datetime,
       LIVE_SNAPSHOT.nextPoint,
-      LIVE_SNAPSHOT.activeRoute,
       LIVE_SNAPSHOT.bearingTrue,
       LIVE_SNAPSHOT.bearingMagnetic,
       LIVE_SNAPSHOT.distance
@@ -88,7 +82,6 @@ describe('BWC Integration', function () {
     const sentence = encoder.f(
       LIVE_SNAPSHOT.datetime,
       LIVE_SNAPSHOT.nextPoint,
-      LIVE_SNAPSHOT.activeRoute,
       LIVE_SNAPSHOT.bearingTrue,
       LIVE_SNAPSHOT.bearingMagnetic,
       LIVE_SNAPSHOT.distance
@@ -115,7 +108,7 @@ describe('BWC Integration', function () {
     assert.equal(
       fields[12],
       'WP1',
-      'waypoint ID synthesized as "WP <pointIndex+1>"'
+      'waypoint ID forwarded from server-provided nextPoint.name'
     )
   })
 
@@ -127,7 +120,6 @@ describe('BWC Integration', function () {
     const sentence = encoder.f(
       LIVE_SNAPSHOT.datetime,
       LIVE_SNAPSHOT.nextPoint,
-      LIVE_SNAPSHOT.activeRoute,
       LIVE_SNAPSHOT.bearingTrue,
       null,
       LIVE_SNAPSHOT.distance
@@ -146,7 +138,6 @@ describe('BWC Integration', function () {
     const sentence = encoder.f(
       LIVE_SNAPSHOT.datetime,
       LIVE_SNAPSHOT.nextPoint,
-      LIVE_SNAPSHOT.activeRoute,
       LIVE_SNAPSHOT.bearingTrue,
       LIVE_SNAPSHOT.bearingMagnetic,
       LIVE_SNAPSHOT.distance
