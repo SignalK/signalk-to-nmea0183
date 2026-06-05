@@ -17,15 +17,33 @@ export default function (_app: SignalKApp): SentenceEncoder {
     title: 'VHW - Speed and direction',
     keys: [
       'navigation.headingTrue',
+      'navigation.headingMagnetic',
       'navigation.magneticVariation',
       'navigation.speedThroughWater'
     ],
+    defaults: [
+      null, // navigation.headingTrue
+      null, // navigation.headingMagnetic
+      0, // navigation.magneticVariation
+      0 // navigation.speedThroughWater
+    ],
     f: function vhw(
-      headingTrue: number,
+      headingTrue: number | null,
+      headingMagnetic: number | null,
       magneticVariation: number,
-      speedThroughWater: number
-    ): string {
-      const headingMagnetic = headingTrue - magneticVariation
+      speedThroughWater: number | null
+    ): string | undefined {
+      if (headingMagnetic === null && headingTrue !== null) {
+        headingMagnetic = headingTrue - magneticVariation
+      }
+      if (headingTrue === null  && headingMagnetic !== null) {
+        headingTrue = headingMagnetic + magneticVariation
+      }
+
+      if (headingTrue === null || headingMagnetic === null || speedThroughWater === null) {
+        return undefined
+      }
+
       return nmea.toSentence([
         '$IIVHW',
         nmea.radsToPositiveDeg(headingTrue).toFixed(1),
