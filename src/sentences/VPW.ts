@@ -14,7 +14,12 @@ export default function (_app: SignalKApp): SentenceEncoder {
     sentence: 'VPW',
     title: 'VPW - Speed – Measured Parallel to Wind',
     keys: ['performance.velocityMadeGood'],
-    f: function vpw(velocityMadeGood: number): string {
+    defaults: [null],
+    f: function vpw(velocityMadeGood: number | null): string | undefined {
+      if (velocityMadeGood === undefined || velocityMadeGood === null || isNaN(velocityMadeGood)) {
+        return undefined
+      }
+
       return nmea.toSentence([
         '$IIVPW',
         nmea.msToKnots(velocityMadeGood).toFixed(2),

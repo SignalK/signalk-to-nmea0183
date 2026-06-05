@@ -6,15 +6,21 @@
 import * as nmea from '../nmea'
 import type { SentenceEncoder, SignalKApp } from '../types/plugin'
 
-export default function (_app: SignalKApp): SentenceEncoder<[number]> {
+export default function (_app: SignalKApp): SentenceEncoder {
   return {
+    sentence: 'XDR',
     title: 'XDR (Barometer) - Atmospheric Pressure',
     keys: ['environment.outside.pressure'],
-    f: function (pressure: number): string {
+    defaults: [null],
+    f: function xdrBaro(pressure: number | null | undefined): string | undefined {
+      if (pressure === null || pressure === undefined || isNaN(pressure)) {
+        return undefined
+      }
+
       return nmea.toSentence([
         '$IIXDR',
         'P',
-        (pressure / 1.0e5).toFixed(4),
+        nmea.paToBar(pressure).toFixed(4),
         'B',
         'Barometer'
       ])

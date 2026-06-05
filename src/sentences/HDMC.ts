@@ -7,7 +7,22 @@ export default function (_app: SignalKApp): SentenceEncoder {
     sentence: 'HDM',
     title: 'HDM - Heading Magnetic, calculated from True',
     keys: ['navigation.headingTrue', 'navigation.magneticVariation'],
-    f: function (headingTrue: number, magneticVariation: number): string {
+    defaults: [undefined, 0],
+    f: function hdmc(
+      headingTrue: number | undefined,
+      magneticVariation: number | undefined
+    ): string | undefined {
+      if (
+        headingTrue === undefined ||
+        headingTrue === null ||
+        isNaN(headingTrue) ||
+        magneticVariation === undefined ||
+        magneticVariation === null ||
+        isNaN(magneticVariation)
+      ) {
+        return undefined
+      }
+
       const heading = headingTrue - magneticVariation
       return nmea.toSentence([
         '$IIHDM',

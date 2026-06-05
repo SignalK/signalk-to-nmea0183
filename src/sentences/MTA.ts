@@ -13,9 +13,13 @@ export default function (_app: SignalKApp): SentenceEncoder {
     sentence: 'MTA',
     title: 'MTA - Air temperature.',
     keys: ['environment.outside.temperature'],
-    f: function (temperature: number): string {
-      const celcius = temperature - 273.15
-      return nmea.toSentence(['$IIMTA', celcius.toFixed(2), 'C'])
+    defaults: [null],
+    f: function mta(temperature: number | null | undefined): string | undefined {
+      if (temperature === null || temperature === undefined || isNaN(temperature)) {
+        return undefined
+      }
+
+      return nmea.toSentence(['$IIMTA', nmea.kToC(temperature).toFixed(2), 'C'])
     }
   }
 }

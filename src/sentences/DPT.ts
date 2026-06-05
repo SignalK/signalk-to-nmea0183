@@ -21,11 +21,24 @@ export default function (_app: SignalKApp): SentenceEncoder {
       'environment.depth.belowTransducer',
       'environment.depth.transducerToKeel'
     ],
-    f: function dpt(belowTransducer: number, transducerToKeel: number): string {
+    defaults: [undefined, 0],
+    f: function dpt(
+      belowTransducer: number | undefined,
+      transducerToKeel: number | undefined
+    ): string | undefined {
+      if (belowTransducer === undefined || belowTransducer === null || isNaN(belowTransducer)) {
+        return undefined
+      }
+
+      const offset = (typeof transducerToKeel === 'number' && !isNaN(transducerToKeel))
+        ? -Math.abs(transducerToKeel)
+        : 0
+
       return nmea.toSentence([
         '$IIDPT',
         belowTransducer.toFixed(2),
-        (-Math.abs(transducerToKeel)).toFixed(3)
+        offset.toFixed(3),
+        '' // Field 3: Maximum range scale (optional)
       ])
     }
   }

@@ -18,7 +18,12 @@ export default function (_app: SignalKApp): SentenceEncoder {
   return {
     title: 'PSILTBS - Garmin proprietary target boat speed',
     keys: ['performance.targetSpeed'],
-    f: function (tbs: number): string {
+    defaults: [null],
+    f: function psiltbs(tbs: number | null | undefined): string | undefined {
+      if (tbs === null || tbs === undefined || isNaN(tbs)) {
+        return undefined
+      }
+
       return nmea.toSentence(['$PSILTBS', nmea.msToKnots(tbs).toFixed(2), 'N'])
     }
   }

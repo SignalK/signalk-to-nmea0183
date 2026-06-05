@@ -6,16 +6,21 @@
 import * as nmea from '../nmea'
 import type { SentenceEncoder, SignalKApp } from '../types/plugin'
 
-export default function (_app: SignalKApp): SentenceEncoder<[number]> {
+export default function (_app: SignalKApp): SentenceEncoder {
   return {
+    sentence: 'XDR',
     title: 'XDR (TempAir) - Air temperature.',
     keys: ['environment.outside.temperature'],
-    f: function (temperature: number): string {
-      const celcius = temperature - 273.15
+    defaults: [null],
+    f: function xdrTemp(temperature: number | null | undefined): string | undefined {
+      if (temperature === null || temperature === undefined || isNaN(temperature)) {
+        return undefined
+      }
+
       return nmea.toSentence([
         '$IIXDR',
         'C',
-        celcius.toFixed(2),
+        nmea.kToC(temperature).toFixed(2),
         'C',
         'TempAir'
       ])

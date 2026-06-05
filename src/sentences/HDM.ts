@@ -7,7 +7,12 @@ export default function (_app: SignalKApp): SentenceEncoder {
     sentence: 'HDM',
     title: 'HDM - Heading Magnetic',
     keys: ['navigation.headingMagnetic'],
-    f: function (heading: number): string {
+    defaults: [undefined],
+    f: function hdm(heading: number | undefined): string | undefined {
+      if (heading === undefined || heading === null || isNaN(heading)) {
+        return undefined
+      }
+
       return nmea.toSentence([
         '$IIHDM',
         nmea.radsToPositiveDeg(heading).toFixed(1),

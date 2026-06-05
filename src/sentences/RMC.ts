@@ -45,36 +45,55 @@ export default function (_app: SignalKApp): SentenceEncoder {
       'navigation.position',
       'navigation.magneticVariation'
     ],
-    defaults: ['', undefined, null, undefined, ''],
-    f: function (
-      datetime8601: string,
-      sog: number | string,
+    defaults: [null, undefined, undefined, undefined, 0], // datetime, sog, cog, position, magneticVariation
+    f: function rmc(
+      datetime8601: string | null | undefined,
+      sog: number | null | undefined,
       cog: number | null | undefined,
-      position: Position,
-      magneticVariation: number | string
-    ): string {
-      const datetime = formatDatetime(datetime8601)
+      position: Position | null | undefined,
+      magneticVariation: number | null | undefined
+    ): string | undefined {
+      if (
+        position === undefined ||
+        position === null ||
+        sog === undefined ||
+        sog === null ||
+        isNaN(sog)
+      ) {
+        return undefined
+      }
+
+      let datetimeInput: string = datetime8601 ?? ''
+      if (
+        !datetimeInput ||
+        (typeof datetimeInput === 'string' && datetimeInput.trim() === '')
+      ) {
+        datetimeInput = new Date().toISOString()
+      }
+
+      const datetime = formatDatetime(datetimeInput)
       let magneticVariationDeg = ''
       let magneticVariationDir = ''
-      if (typeof magneticVariation === 'number') {
-        magneticVariationDir = 'E'
-        if (magneticVariation < 0) {
-          magneticVariationDir = 'W'
-          magneticVariation = -magneticVariation
-        }
-        magneticVariationDeg = radsToDeg(magneticVariation).toFixed(1)
+      if (typeof magneticVariation === 'number' && !isNaN(magneticVariation)) {
+        magneticVariationDir = magneticVariation < 0 ? 'W' : 'E'
+        magneticVariationDeg = radsToDeg(Math.abs(magneticVariation)).toFixed(1)
       }
+
+      const cogFormatted =
+        cog != null && !isNaN(cog) ? radsToPositiveDeg(cog).toFixed(1) : ''
+
       return toSentence([
         '$GPRMC',
         datetime.time,
         'A',
         toNmeaDegreesLatitude(position.latitude),
         toNmeaDegreesLongitude(position.longitude),
-        msToKnots(Number(sog)).toFixed(1),
-        cog != null ? radsToPositiveDeg(cog).toFixed(1) : '',
+        msToKnots(sog).toFixed(1),
+        cogFormatted,
         datetime.date,
         magneticVariationDeg,
-        magneticVariationDir
+        magneticVariationDir,
+        'A' // FAA mode indicator (A=Autonomous)
       ])
     }
   }

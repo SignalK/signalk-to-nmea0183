@@ -11,11 +11,17 @@ interface Attitude {
   roll: number
 }
 
-export default function (_app: SignalKApp): SentenceEncoder<[Attitude]> {
+export default function (_app: SignalKApp): SentenceEncoder {
   return {
+    sentence: 'XDR',
     title: 'XDR (PTCH-ROLL) - Pitch and Roll',
     keys: ['navigation.attitude'],
-    f: function (attitude: Attitude): string {
+    defaults: [null],
+    f: function xdrAttitude(attitude: Attitude | null | undefined): string | undefined {
+      if (!attitude || isNaN(attitude.pitch) || isNaN(attitude.roll)) {
+        return undefined
+      }
+
       return nmea.toSentence([
         '$IIXDR',
         'A',

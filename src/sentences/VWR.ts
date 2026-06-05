@@ -17,15 +17,29 @@ export default function (_app: SignalKApp): SentenceEncoder {
     optionKey: 'VWR',
     title: 'VWR - Apparent wind angle and speed',
     keys: ['environment.wind.speedApparent', 'environment.wind.angleApparent'],
-    f: function (speedApparent: number, angleApparent: number): string {
-      let windDirection = 'R'
-      if (angleApparent < 0) {
-        angleApparent = -angleApparent
-        windDirection = 'L'
+    defaults: [undefined, undefined],
+    f: function vwr(
+      speedApparent: number | undefined,
+      angleApparent: number | undefined
+    ): string | undefined {
+      if (
+        speedApparent === undefined ||
+        speedApparent === null ||
+        isNaN(speedApparent) ||
+        angleApparent === undefined ||
+        angleApparent === null ||
+        isNaN(angleApparent)
+      ) {
+        return undefined
       }
+
+      const normalizedAngle = nmea.fixAngle(angleApparent)
+      const windDirection = normalizedAngle < 0 ? 'L' : 'R'
+      const magnitude = Math.abs(normalizedAngle)
+
       return nmea.toSentence([
         '$IIVWR',
-        nmea.radsToDeg(angleApparent).toFixed(2),
+        nmea.radsToDeg(magnitude).toFixed(2),
         windDirection,
         nmea.msToKnots(speedApparent).toFixed(2),
         'N',

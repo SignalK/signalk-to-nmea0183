@@ -17,11 +17,20 @@ export default function (_app: SignalKApp): SentenceEncoder {
       'performance.polarVelocityMadeGoodRatio',
       'performance.polarSpeedRatio'
     ],
-    f: function (
-      targetAngle: number,
-      polarVelocityMadeGoodRatio: number,
-      polarSpeedRatio: number
-    ): string {
+    defaults: [null, null, null],
+    f: function pnkep03(
+      targetAngle: number | null | undefined,
+      polarVelocityMadeGoodRatio: number | null | undefined,
+      polarSpeedRatio: number | null | undefined
+    ): string | undefined {
+      if (
+        targetAngle == null || isNaN(targetAngle) ||
+        polarVelocityMadeGoodRatio == null || isNaN(polarVelocityMadeGoodRatio) ||
+        polarSpeedRatio == null || isNaN(polarSpeedRatio)
+      ) {
+        return undefined
+      }
+
       return nmea.toSentence([
         '$PNKEP',
         '03',

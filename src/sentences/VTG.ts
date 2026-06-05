@@ -17,18 +17,41 @@ export default function (_app: SignalKApp): SentenceEncoder {
     keys: [
       'navigation.courseOverGroundMagnetic',
       'navigation.courseOverGroundTrue',
-      'navigation.speedOverGround'
+      'navigation.speedOverGround',
+      'navigation.magneticVariation'
     ],
-    f: function (
-      courseOverGroundMagnetic: number,
-      courseOverGroundTrue: number,
-      speedOverGround: number
-    ): string {
+    defaults: [null, null, null, 0],
+    f: function vtg(
+      courseOverGroundMagnetic: number | null,
+      courseOverGroundTrue: number | null,
+      speedOverGround: number | null,
+      magneticVariation: number
+    ): string | undefined {
+      if (speedOverGround === null || isNaN(speedOverGround)) {
+        return undefined
+      }
+
+      if (courseOverGroundMagnetic === null && courseOverGroundTrue !== null) {
+        courseOverGroundMagnetic = courseOverGroundTrue - magneticVariation
+      }
+
+      if (courseOverGroundTrue === null && courseOverGroundMagnetic !== null) {
+        courseOverGroundTrue = courseOverGroundMagnetic + magneticVariation
+      }
+
+      const cogTrue = (courseOverGroundTrue !== null && !isNaN(courseOverGroundTrue))
+        ? nmea.radsToPositiveDeg(courseOverGroundTrue).toFixed(1)
+        : ''
+
+      const cogMag = (courseOverGroundMagnetic !== null && !isNaN(courseOverGroundMagnetic))
+        ? nmea.radsToPositiveDeg(courseOverGroundMagnetic).toFixed(1)
+        : ''
+
       return nmea.toSentence([
         '$IIVTG',
-        nmea.radsToPositiveDeg(courseOverGroundTrue).toFixed(2),
+        cogTrue,
         'T',
-        nmea.radsToPositiveDeg(courseOverGroundMagnetic).toFixed(2),
+        cogMag,
         'M',
         nmea.msToKnots(speedOverGround).toFixed(2),
         'N',

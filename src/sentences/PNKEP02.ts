@@ -9,7 +9,12 @@ export default function (_app: SignalKApp): SentenceEncoder {
   return {
     title: 'PNKEP,02 - Course (COG) on other tack from 0 to 359°',
     keys: ['performance.tackMagnetic'],
-    f: function (tackMagnetic: number): string {
+    defaults: [null],
+    f: function pnkep02(tackMagnetic: number | null | undefined): string | undefined {
+      if (tackMagnetic === null || tackMagnetic === undefined || isNaN(tackMagnetic)) {
+        return undefined
+      }
+
       return nmea.toSentence([
         '$PNKEP',
         '02',

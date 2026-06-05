@@ -22,11 +22,24 @@ export default function (_app: SignalKApp): SentenceEncoder {
       'navigation.magneticVariation',
       'environment.wind.speedTrue'
     ],
-    f: function (
-      directionTrue: number,
-      magneticVariation: number,
-      speedTrue: number
-    ): string {
+    defaults: [undefined, 0, undefined],
+    f: function mwd(
+      directionTrue: number | undefined,
+      magneticVariation: number | undefined,
+      speedTrue: number | undefined
+    ): string | undefined {
+      if (
+        directionTrue === undefined ||
+        directionTrue === null ||
+        isNaN(directionTrue) ||
+        speedTrue === undefined ||
+        speedTrue === null ||
+        isNaN(speedTrue)
+      ) {
+        return undefined
+      }
+
+      magneticVariation = magneticVariation ?? 0
       const directionMagnetic = nmea.fixAngle(directionTrue - magneticVariation)
       return nmea.toSentence([
         '$IIMWD',

@@ -65,12 +65,10 @@ export default function (_app: SignalKApp): SentenceEncoder {
       gnssSatellites: number,
       gnssHorizontalDilution: number,
       gnssAntennaAltitude: number,
-      gnssgeoidalSeparation: number,
+      gnssGeoidalSeparation: number,
       gnssDifferentialAge: number | string | null | undefined,
       gnssDifferentialReference: string | null | undefined
     ): string | undefined {
-      let ignssMethodQuality = 0
-
       let datetimeInput: string = datetime8601 ?? ''
       if (
         !datetimeInput ||
@@ -82,30 +80,20 @@ export default function (_app: SignalKApp): SentenceEncoder {
       const datetime = formatDatetime(datetimeInput)
 
       if (!position) {
-        console.error(`[signalk-to-nmea0183] GGA: no position, not converting`)
+        _app.debug(`GGA: skipping emission - no position available`)
         return undefined
       }
 
-      if (!gnssDifferentialAge) {
-        gnssDifferentialAge = ''
-      }
+      gnssDifferentialAge = gnssDifferentialAge ?? ''
+      gnssDifferentialReference = gnssDifferentialReference ?? ''
 
-      if (!gnssDifferentialReference) {
-        gnssDifferentialReference = ''
-      }
-
+      let ignssMethodQuality = 0
       switch (gnssMethodQuality) {
-        case 'no GPS':
-          ignssMethodQuality = 0
-          break
         case 'GNSS Fix':
           ignssMethodQuality = 1
           break
         case 'DGNSS fix':
           ignssMethodQuality = 2
-          break
-        case 'Precise GNSS':
-          ignssMethodQuality = 3
           break
         case 'RTK fixed integer':
           ignssMethodQuality = 4
@@ -113,16 +101,13 @@ export default function (_app: SignalKApp): SentenceEncoder {
         case 'RTK float':
           ignssMethodQuality = 5
           break
-        case 'Estimated (DR) mode':
-          ignssMethodQuality = 6
-          break
-        case 'Manual input':
-          ignssMethodQuality = 7
-          break
-        case 'Simulator mode':
-          ignssMethodQuality = 8
-          break
+        default:
+          if (typeof gnssMethodQuality === 'number') {
+            ignssMethodQuality = gnssMethodQuality
+          }
       }
+
+      const sats = (isNaN(gnssSatellites) ? 0 : gnssSatellites).toString().padStart(2, '0')
 
       return toSentence([
         '$GPGGA',
@@ -130,14 +115,14 @@ export default function (_app: SignalKApp): SentenceEncoder {
         toNmeaDegreesLatitude(position.latitude),
         toNmeaDegreesLongitude(position.longitude),
         ignssMethodQuality,
-        gnssSatellites,
-        gnssHorizontalDilution.toFixed(1),
-        gnssAntennaAltitude.toFixed(1),
+        sats,
+        (isNaN(gnssHorizontalDilution) ? 0 : gnssHorizontalDilution).toFixed(1),
+        (isNaN(gnssAntennaAltitude) ? 0 : gnssAntennaAltitude).toFixed(1),
         'M',
-        gnssgeoidalSeparation.toFixed(1),
+        (isNaN(gnssGeoidalSeparation) ? 0 : gnssGeoidalSeparation).toFixed(1),
         'M',
-        gnssDifferentialAge as string | number,
-        gnssDifferentialReference as string
+        gnssDifferentialAge,
+        gnssDifferentialReference
       ])
     }
   }

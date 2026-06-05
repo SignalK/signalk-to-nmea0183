@@ -17,7 +17,12 @@ export default function (_app: SignalKApp): SentenceEncoder {
     sentence: 'RSA',
     title: 'RSA - Rudder Sensor Angle',
     keys: ['steering.rudderAngle'],
-    f: function (rudderAngle: number): string {
+    defaults: [null],
+    f: function rsa(rudderAngle: number | null | undefined): string | undefined {
+      if (rudderAngle === null || rudderAngle === undefined || isNaN(rudderAngle)) {
+        return undefined
+      }
+
       return nmea.toSentence([
         '$IIRSA',
         nmea.radsToDeg(rudderAngle).toFixed(2),

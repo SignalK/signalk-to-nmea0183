@@ -16,11 +16,17 @@ Enable only one to avoid duplicate sentences on the bus.
 import * as nmea from '../nmea'
 import type { SentenceEncoder, SignalKApp } from '../types/plugin'
 
-export default function (_app: SignalKApp): SentenceEncoder<[number]> {
+export default function (_app: SignalKApp): SentenceEncoder {
   return {
+    sentence: 'XTE',
     title: 'XTE - Cross-track error (w.r.t. server-configured calcMethod)',
     keys: ['navigation.course.calcValues.crossTrackError'],
-    f: function (crossTrackError: number): string {
+    defaults: [null],
+    f: function xteGc(crossTrackError: number | null | undefined): string | undefined {
+      if (crossTrackError === null || crossTrackError === undefined || isNaN(crossTrackError)) {
+        return undefined
+      }
+
       return nmea.toSentence([
         '$IIXTE',
         'A',

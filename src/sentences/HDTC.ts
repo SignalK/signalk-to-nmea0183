@@ -7,10 +7,25 @@ export default function (_app: SignalKApp): SentenceEncoder {
     sentence: 'HDTC',
     title: 'HDT - Heading True calculated from magnetic heading and variation',
     keys: ['navigation.headingMagnetic', 'navigation.magneticVariation'],
-    f: function (headingMagnetic: number, magneticVariation: number): string {
+    defaults: [undefined, 0],
+    f: function hdtc(
+      headingMagnetic: number | undefined,
+      magneticVariation: number | undefined
+    ): string | undefined {
+      if (
+        headingMagnetic === undefined ||
+        headingMagnetic === null ||
+        isNaN(headingMagnetic) ||
+        magneticVariation === undefined ||
+        magneticVariation === null ||
+        isNaN(magneticVariation)
+      ) {
+        return undefined
+      }
+
       const heading = headingMagnetic + magneticVariation
       return nmea.toSentence([
-        '$IIHDT',
+        '$IIHDT', // Talker ID: Integrated Instrumentation
         nmea.radsToPositiveDeg(heading).toFixed(1),
         'T'
       ])

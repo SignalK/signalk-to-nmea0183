@@ -14,12 +14,28 @@ export default function (_app: SignalKApp): SentenceEncoder {
     sentence: 'VLW',
     title: 'VLW - Total log and daily log',
     keys: ['navigation.log', 'navigation.trip.log'],
-    f: function (logDistance: number, tripDistance: number): string {
+    defaults: [null, null],
+    f: function vlw(
+      logDistance: number | null,
+      tripDistance: number | null
+    ): string | undefined {
+      const totalLog = (logDistance !== null && !isNaN(logDistance))
+        ? nmea.mToNm(logDistance).toFixed(2)
+        : ''
+
+      const tripLog = (tripDistance !== null && !isNaN(tripDistance))
+        ? nmea.mToNm(tripDistance).toFixed(2)
+        : ''
+
+      if (totalLog === '' && tripLog === '') {
+        return undefined
+      }
+
       return nmea.toSentence([
         '$IIVLW',
-        nmea.mToNm(logDistance).toFixed(2),
+        totalLog,
         'N',
-        nmea.mToNm(tripDistance).toFixed(2),
+        tripLog,
         'N'
       ])
     }

@@ -7,7 +7,12 @@ export default function (_app: SignalKApp): SentenceEncoder {
     sentence: 'HDT',
     title: 'HDT - Heading True',
     keys: ['navigation.headingTrue'],
-    f: function (heading: number): string {
+    defaults: [undefined],
+    f: function hdt(heading: number | undefined): string | undefined {
+      if (heading === undefined || heading === null || isNaN(heading)) {
+        return undefined
+      }
+
       return nmea.toSentence([
         '$IIHDT',
         nmea.radsToPositiveDeg(heading).toFixed(1),

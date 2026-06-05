@@ -16,17 +16,34 @@ export default function (_app: SignalKApp): SentenceEncoder {
     sentence: 'VWT',
     title: 'VWT - True wind speed relative to boat.',
     keys: ['environment.wind.angleTrueWater', 'environment.wind.speedTrue'],
-    f: function (angleTrueWater: number, speedTrue: number): string {
+    defaults: [undefined, undefined],
+    f: function vwt(
+      angleTrueWater: number | undefined,
+      speedTrue: number | undefined
+    ): string | undefined {
+      if (
+        angleTrueWater === undefined ||
+        angleTrueWater === null ||
+        isNaN(angleTrueWater) ||
+        speedTrue === undefined ||
+        speedTrue === null ||
+        isNaN(speedTrue)
+      ) {
+        return undefined
+      }
+
       // environment.wind.angleTrueWater is signed radians, negative to port.
       // NMEA 0183 VWT expects magnitude 0..180 followed by L/R.
+      const normalizedAngle = nmea.fixAngle(angleTrueWater)
       let windDirection = 'R'
-      if (angleTrueWater < 0) {
-        angleTrueWater = -angleTrueWater
+      let magnitude = normalizedAngle
+      if (magnitude < 0) {
+        magnitude = -magnitude
         windDirection = 'L'
       }
       return nmea.toSentence([
         '$IIVWT',
-        nmea.radsToDeg(angleTrueWater).toFixed(2),
+        nmea.radsToDeg(magnitude).toFixed(2),
         windDirection,
         nmea.msToKnots(speedTrue).toFixed(2),
         'N',

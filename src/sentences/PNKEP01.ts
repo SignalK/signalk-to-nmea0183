@@ -13,7 +13,12 @@ export default function (_app: SignalKApp): SentenceEncoder {
   return {
     title: 'PNKEP,01 - Target Polar speed',
     keys: ['performance.polarSpeed'],
-    f: function (polarSpeed: number): string {
+    defaults: [null],
+    f: function pnkep01(polarSpeed: number | null | undefined): string | undefined {
+      if (polarSpeed === null || polarSpeed === undefined || isNaN(polarSpeed)) {
+        return undefined
+      }
+
       return nmea.toSentence([
         '$PNKEP',
         '01',

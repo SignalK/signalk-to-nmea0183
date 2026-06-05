@@ -48,18 +48,27 @@ export default function (_app: SignalKApp): SentenceEncoder {
       'navigation.course.calcValues.velocityMadeGood',
       'navigation.course.previousPoint'
     ],
-    defaults: [undefined, {}, undefined, undefined, undefined, {}],
-    f: function (
-      crossTrackError: number,
-      wp: NextPoint,
-      wpDistance: number,
-      bearingTrue: number,
-      vmg: number,
+    defaults: [null, null, null, null, null, null],
+    f: function rmb(
+      crossTrackError: number | null | undefined,
+      wp: NextPoint | null | undefined,
+      wpDistance: number | null | undefined,
+      bearingTrue: number | null | undefined,
+      vmg: number | null | undefined,
       prevWp: PreviousPoint | null | undefined
     ): string | undefined {
+      if (
+        crossTrackError === null || isNaN(crossTrackError as number) ||
+        wpDistance === null || isNaN(wpDistance as number) ||
+        bearingTrue === null || isNaN(bearingTrue as number) ||
+        vmg === null || isNaN(vmg as number)
+      ) {
+        return undefined
+      }
+
       const wpLat = wp?.position?.latitude
       const wpLon = wp?.position?.longitude
-      if (typeof wpLat !== 'number' || typeof wpLon !== 'number') {
+      if (typeof wpLat !== 'number' || typeof wpLon !== 'number' || isNaN(wpLat) || isNaN(wpLon)) {
         return undefined
       }
       const destinationId = generateWaypointName(wp)

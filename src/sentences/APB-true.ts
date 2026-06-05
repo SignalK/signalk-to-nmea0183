@@ -22,30 +22,46 @@ export default function (_app: SignalKApp): SentenceEncoder {
       'navigation.course.calcValues.bearingTrue',
       'navigation.course.nextPoint'
     ],
-    defaults: [undefined, undefined, undefined, {}],
-    f: function (
-      xte: number,
-      originToDest: number,
-      bearingTrue: number,
-      nextPoint: NextPoint | null | undefined
-    ): string {
+    defaults: [null, null, null, null],
+    f: function apbTrue(
+      xte: number | null | undefined,
+      originToDest: number | null | undefined,
+      bearingTrue: number | null | undefined,
+      nextPoint: NextPoint | null
+    ): string | undefined {
+      if (
+        xte === undefined ||
+        xte === null ||
+        isNaN(xte) ||
+        originToDest === undefined ||
+        originToDest === null ||
+        isNaN(originToDest) ||
+        bearingTrue === undefined ||
+        bearingTrue === null ||
+        isNaN(bearingTrue)
+      ) {
+        return undefined
+      }
+
       const waypointId = generateWaypointName(nextPoint)
+      const bearingToDest = nmea.radsToPositiveDeg(bearingTrue).toFixed(0)
+
       return nmea.toSentence([
         '$IIAPB',
-        'A',
-        'A',
-        Math.abs(nmea.mToNm(xte)).toFixed(3),
-        xte > 0 ? 'L' : 'R',
-        'N',
-        'V',
-        'V',
+        'A', // Status: A = OK
+        'A', // Cycle lock: A = OK
+        Math.abs(nmea.mToNm(xte)).toFixed(3), // Cross Track Error magnitude
+        xte < 0 ? 'R' : 'L', // Align with XTE.ts: Default to 'L' at 0
+        'N', // XTE units (Nautical Miles)
+        'V', // Status: Arrival Circle Entered
+        'V', // Status: Perpendicular passed at waypoint
         nmea.radsToPositiveDeg(originToDest).toFixed(0),
-        'T',
+        'T', // Bearing origin to destination (True)
         waypointId,
-        nmea.radsToPositiveDeg(bearingTrue).toFixed(0),
-        'T',
-        nmea.radsToPositiveDeg(bearingTrue).toFixed(0),
-        'T'
+        bearingToDest,
+        'T', // Bearing, present position to destination (True)
+        bearingToDest,
+        'T' // Heading-to-steer to destination waypoint (True)
       ])
     }
   }

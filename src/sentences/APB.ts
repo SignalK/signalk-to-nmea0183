@@ -39,37 +39,51 @@ export default function (_app: SignalKApp): SentenceEncoder {
       'navigation.course.nextPoint',
       'navigation.magneticVariation'
     ],
-    defaults: [undefined, undefined, undefined, {}, undefined],
-    f: function (
-      xte: number,
-      originToDest: number,
-      bearingTrue: number,
-      nextPoint: NextPoint | null | undefined,
-      magneticVariation: number
-    ): string {
+    defaults: [null, null, null, null, 0],
+    f: function apb(
+      xte: number | null | undefined,
+      originToDest: number | null | undefined,
+      bearingTrue: number | null | undefined,
+      nextPoint: NextPoint | null,
+      magneticVariation: number | null | undefined
+    ): string | undefined {
+      if (
+        xte === undefined ||
+        xte === null ||
+        isNaN(xte) ||
+        originToDest === undefined ||
+        originToDest === null ||
+        isNaN(originToDest) ||
+        bearingTrue === undefined ||
+        bearingTrue === null ||
+        isNaN(bearingTrue) ||
+        magneticVariation === undefined ||
+        magneticVariation === null ||
+        isNaN(magneticVariation)
+      ) {
+        return undefined
+      }
+
       const waypointId = generateWaypointName(nextPoint)
-      const bearingOriginToDestMag = nmea.radsToPositiveDeg(
-        nmea.fixAngle(originToDest - magneticVariation)
-      )
-      const bearingToDestMag = nmea.radsToPositiveDeg(
-        nmea.fixAngle(bearingTrue - magneticVariation)
-      )
+      const bearingOriginToDestMag = nmea.radsToPositiveDeg(originToDest - magneticVariation).toFixed(0)
+      const bearingToDestMag = nmea.radsToPositiveDeg(bearingTrue - magneticVariation).toFixed(0)
+
       return nmea.toSentence([
         '$IIAPB',
-        'A',
-        'A',
-        Math.abs(nmea.mToNm(xte)).toFixed(3),
-        xte > 0 ? 'L' : 'R',
-        'N',
-        'V',
-        'V',
-        bearingOriginToDestMag.toFixed(0),
-        'M',
+        'A', // Status: A = OK, V = warning
+        'A', // Status: A = OK, V = warning
+        Math.abs(nmea.mToNm(xte)).toFixed(3), // Cross Track Error magnitude
+        xte < 0 ? 'R' : 'L', // Align with XTE.ts: Default to 'L' at 0
+        'N', // Cross-track units (N = nautical miles)
+        'V', // Status: Arrival Circle Entered (V = Void)
+        'V', // Status: Perpendicular passed at waypoint (V = Void)
+        bearingOriginToDestMag, // Bearing origin to destination
+        'M', // Magnetic
         waypointId,
-        bearingToDestMag.toFixed(0),
-        'M',
-        bearingToDestMag.toFixed(0),
-        'M'
+        bearingToDestMag, // Bearing, present position to destination
+        'M', // Magnetic
+        bearingToDestMag, // Heading-to-steer to destination waypoint
+        'M' // Magnetic
       ])
     }
   }

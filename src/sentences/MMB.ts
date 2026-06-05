@@ -13,12 +13,17 @@ export default function (_app: SignalKApp): SentenceEncoder {
     sentence: 'MMB',
     title: 'MMB - Environment outside pressure',
     keys: ['environment.outside.pressure'],
-    f: function (pressure: number): string {
+    defaults: [null],
+    f: function mmb(pressure: number | null | undefined): string | undefined {
+      if (pressure === null || pressure === undefined || isNaN(pressure)) {
+        return undefined
+      }
+
       return nmea.toSentence([
         '$IIMMB',
-        (pressure / 3386.39).toFixed(4),
+        nmea.paToInHg(pressure).toFixed(4),
         'I',
-        (pressure / 1.0e5).toFixed(4),
+        nmea.paToBar(pressure).toFixed(4),
         'B'
       ])
     }

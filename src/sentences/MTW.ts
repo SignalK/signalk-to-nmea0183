@@ -7,9 +7,13 @@ export default function (_app: SignalKApp): SentenceEncoder {
     sentence: 'MTW',
     title: 'MTW - Water Temperature',
     keys: ['environment.water.temperature'],
-    f: function (temperature: number): string {
-      const celcius = temperature - 273.15
-      return nmea.toSentence(['$IIMTW', celcius.toFixed(1), 'C'])
+    defaults: [null],
+    f: function mtw(temperature: number | null | undefined): string | undefined {
+      if (temperature === null || temperature === undefined || isNaN(temperature)) {
+        return undefined
+      }
+
+      return nmea.toSentence(['$IIMTW', nmea.kToC(temperature).toFixed(1), 'C'])
     }
   }
 }

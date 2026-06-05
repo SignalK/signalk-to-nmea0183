@@ -26,7 +26,18 @@ export default function (_app: SignalKApp): SentenceEncoder {
     sentence: 'MWV',
     title: 'MWV - Apparent Wind heading and speed',
     keys: ['environment.wind.angleApparent', 'environment.wind.speedApparent'],
-    f: function (angle: number, speed: number): string {
+    defaults: [null, null],
+    f: function mwvr(
+      angle: number | null | undefined,
+      speed: number | null | undefined
+    ): string | undefined {
+      if (
+        angle === null || angle === undefined || isNaN(angle) ||
+        speed === null || speed === undefined || isNaN(speed)
+      ) {
+        return undefined
+      }
+
       return nmea.toSentence([
         '$IIMWV',
         nmea.radsToPositiveDeg(angle).toFixed(2),

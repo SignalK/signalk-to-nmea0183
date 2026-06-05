@@ -23,12 +23,16 @@ export default function (_app: SignalKApp): SentenceEncoder {
     keys: ['navigation.headingMagnetic', 'navigation.magneticVariation'],
     defaults: [undefined, ''],
     f: function hdg(
-      headingMagnetic: number,
+      headingMagnetic: number | undefined,
       magneticVariation: number | ''
-    ): string {
+    ): string | undefined {
+      if (headingMagnetic === undefined || headingMagnetic === null || isNaN(headingMagnetic)) {
+        return undefined
+      }
+
       let magneticVariationDeg = ''
       let magneticVariationDir = ''
-      if (magneticVariation !== '') {
+      if (typeof magneticVariation === 'number' && !isNaN(magneticVariation)) {
         magneticVariationDir = 'E'
         if (magneticVariation < 0) {
           magneticVariationDir = 'W'

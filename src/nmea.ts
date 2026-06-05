@@ -5,25 +5,6 @@
  * conversions.
  */
 
-const m_hex = [
-  '0',
-  '1',
-  '2',
-  '3',
-  '4',
-  '5',
-  '6',
-  '7',
-  '8',
-  '9',
-  'A',
-  'B',
-  'C',
-  'D',
-  'E',
-  'F'
-]
-
 export function toSentence(parts: Array<string | number>): string {
   const base = parts.join(',')
   return base + computeChecksum(base)
@@ -38,17 +19,15 @@ function computeChecksum(sentence: string): string {
   for (i = 2; i < sentence.length; ++i) {
     c1 = c1 ^ sentence.charCodeAt(i)
   }
-  return '*' + toHexString(c1)
-}
-
-function toHexString(v: number): string {
-  const msn = (v >> 4) & 0x0f
-  const lsn = (v >> 0) & 0x0f
-  return m_hex[msn]! + m_hex[lsn]!
+  return '*' + c1.toString(16).toUpperCase().padStart(2, '0')
 }
 
 export function radsToDeg(radians: number): number {
   return (radians * 180) / Math.PI
+}
+
+export function radsPerSecToDegPerMin(v: number): number {
+  return radsToDeg(v) * 60
 }
 
 export function msToKnots(v: number): number {
@@ -63,10 +42,28 @@ export function mToNm(v: number): number {
   return v * 0.000539957
 }
 
+export function mToFeet(v: number): number {
+  return v * 3.28084
+}
+
+export function mToFathoms(v: number): number {
+  return v * 0.546807
+}
+
+export function kToC(v: number): number {
+  return v - 273.15
+}
+
+export function paToInHg(v: number): number {
+  return v / 3386.39
+}
+
+export function paToBar(v: number): number {
+  return v / 100000.0
+}
+
 function padd(n: string, p: number, c?: string): string {
-  const pad_char = typeof c !== 'undefined' ? c : '0'
-  const pad = new Array(1 + p).join(pad_char)
-  return (pad + n).slice(-pad.length)
+  return n.padStart(p, c ?? '0')
 }
 
 function decimalDegreesToDegreesAndDecimalMinutes(
@@ -139,10 +136,11 @@ export function toNmeaDegreesLongitude(inVal: unknown): string {
 }
 
 export function fixAngle(d: number): number {
-  let result = d
-  if (d > Math.PI) result -= 2 * Math.PI
-  if (d < -Math.PI) result += 2 * Math.PI
-  return result
+  // Use modulo to handle multi-wrap angles and keep within [-PI, PI]
+  const angle = d % (2 * Math.PI)
+  if (angle > Math.PI) return angle - 2 * Math.PI
+  if (angle < -Math.PI) return angle + 2 * Math.PI
+  return angle
 }
 
 function toPositiveRadians(d: number): number {
@@ -198,15 +196,13 @@ export function formatDatetime(datetime8601: unknown): FormattedDatetime {
     return empty
   }
 
-  const hours = ('00' + datetime.getUTCHours()).slice(-2)
-  const minutes = ('00' + datetime.getUTCMinutes()).slice(-2)
-  const seconds = ('00' + datetime.getUTCSeconds()).slice(-2)
-  const centiseconds = (
-    '00' + Math.floor(datetime.getUTCMilliseconds() / 10)
-  ).slice(-2)
+  const hours = padd(datetime.getUTCHours().toString(), 2)
+  const minutes = padd(datetime.getUTCMinutes().toString(), 2)
+  const seconds = padd(datetime.getUTCSeconds().toString(), 2)
+  const centiseconds = padd(Math.floor(datetime.getUTCMilliseconds() / 10).toString(), 2)
 
-  const day = ('00' + datetime.getUTCDate()).slice(-2)
-  const month = ('00' + (datetime.getUTCMonth() + 1)).slice(-2)
+  const day = padd(datetime.getUTCDate().toString(), 2)
+  const month = padd((datetime.getUTCMonth() + 1).toString(), 2)
   const year = '' + datetime.getUTCFullYear()
   return {
     hours,
@@ -217,6 +213,6 @@ export function formatDatetime(datetime8601: unknown): FormattedDatetime {
     day,
     month,
     year,
-    date: day + month + ('00' + year).slice(-2)
+    date: day + month + year.slice(-2)
   }
 }

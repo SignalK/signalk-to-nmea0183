@@ -18,7 +18,15 @@ export default function (_app: SignalKApp): SentenceEncoder {
     title:
       'PSILCD1 - Send polar speed and target wind angle to Silva/Nexus/Garmin displays',
     keys: ['performance.polarSpeed', 'performance.targetAngle'],
-    f: function (polarSpeed: number, targetAngle: number): string {
+    defaults: [null, null],
+    f: function psilcd1(
+      polarSpeed: number | null | undefined,
+      targetAngle: number | null | undefined
+    ): string | undefined {
+      if (polarSpeed == null || isNaN(polarSpeed) || targetAngle == null || isNaN(targetAngle)) {
+        return undefined
+      }
+
       return nmea.toSentence([
         '$PSILCD1',
         nmea.msToKnots(polarSpeed).toFixed(2),
