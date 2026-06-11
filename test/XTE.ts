@@ -9,7 +9,9 @@ describe('Cross-Track Error (XTE)', function () {
       done()
     }
     const app = createAppWithPlugin(onEmit, 'XTE')
-    app.streambundle.getSelfStream('navigation.course.calcValues.crossTrackError').push(-185.2)
+    app.streambundle
+      .getSelfStream('navigation.course.calcValues.crossTrackError')
+      .push(-185.2)
   })
 
   it('XTE-GC: emits identical output for same path', (done) => {
@@ -18,13 +20,22 @@ describe('Cross-Track Error (XTE)', function () {
       done()
     }
     const app = createAppWithPlugin(onEmit, 'XTE-GC')
-    app.streambundle.getSelfStream('navigation.course.calcValues.crossTrackError').push(185.2)
+    app.streambundle
+      .getSelfStream('navigation.course.calcValues.crossTrackError')
+      .push(185.2)
   })
 
   it('XTE: Guard Clause ignores null values', (done) => {
     let emitted = false
-    const app = createAppWithPlugin(() => { emitted = true }, 'XTE')
-    app.streambundle.getSelfStream('navigation.course.calcValues.crossTrackError').push(null)
-    setTimeout(() => { assert.equal(emitted, false); done() }, 50)
+    const app = createAppWithPlugin(() => {
+      emitted = true
+    }, 'XTE')
+    app.streambundle
+      .getSelfStream('navigation.course.calcValues.crossTrackError')
+      .push(null)
+    setTimeout(() => {
+      assert.equal(emitted, false)
+      done()
+    }, 50)
   })
 })

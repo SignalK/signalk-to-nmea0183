@@ -17,7 +17,9 @@ export default function (_app: SignalKApp): SentenceEncoder {
     title: 'XDR (PTCH-ROLL) - Pitch and Roll',
     keys: ['navigation.attitude'],
     defaults: [null],
-    f: function xdrAttitude(attitude: Attitude | null | undefined): string | undefined {
+    f: function xdrAttitude(
+      attitude: Attitude | null | undefined
+    ): string | undefined {
       if (!attitude || isNaN(attitude.pitch) || isNaN(attitude.roll)) {
         return undefined
       }

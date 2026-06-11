@@ -58,12 +58,16 @@ describe('Performance and Motion', function () {
       done()
     }
     const app = createAppWithPlugin(onEmit, 'XDRNA')
-    app.streambundle.getSelfStream('navigation.attitude').push({ pitch: 0.1, roll: -0.2 })
+    app.streambundle
+      .getSelfStream('navigation.attitude')
+      .push({ pitch: 0.1, roll: -0.2 })
   })
 
   it('RSA: Guard Clause ignores NaN rudder', (done) => {
     let emitted = false
-    const app = createAppWithPlugin(() => { emitted = true }, 'RSA')
+    const app = createAppWithPlugin(() => {
+      emitted = true
+    }, 'RSA')
     app.streambundle.getSelfStream('steering.rudderAngle').push(NaN)
     setTimeout(() => {
       assert.equal(emitted, false)

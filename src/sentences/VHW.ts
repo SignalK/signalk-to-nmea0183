@@ -49,10 +49,14 @@ export default function (_app: SignalKApp): SentenceEncoder {
       }
 
       if (
-        headingTrue === null || headingTrue === undefined ||
-        headingMagnetic === null || headingMagnetic === undefined ||
-        magneticVariation === null || magneticVariation === undefined ||
-        speedThroughWater === null || speedThroughWater === undefined ||
+        headingTrue === null ||
+        headingTrue === undefined ||
+        headingMagnetic === null ||
+        headingMagnetic === undefined ||
+        magneticVariation === null ||
+        magneticVariation === undefined ||
+        speedThroughWater === null ||
+        speedThroughWater === undefined ||
         isNaN(speedThroughWater)
       ) {
         return undefined

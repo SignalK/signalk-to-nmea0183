@@ -14,8 +14,14 @@ export default function (_app: SignalKApp): SentenceEncoder {
     title: 'MTA - Air temperature.',
     keys: ['environment.outside.temperature'],
     defaults: [null],
-    f: function mta(temperature: number | null | undefined): string | undefined {
-      if (temperature === null || temperature === undefined || isNaN(temperature)) {
+    f: function mta(
+      temperature: number | null | undefined
+    ): string | undefined {
+      if (
+        temperature === null ||
+        temperature === undefined ||
+        isNaN(temperature)
+      ) {
         return undefined
       }
 

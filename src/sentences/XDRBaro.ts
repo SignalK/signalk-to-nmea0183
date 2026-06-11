@@ -12,7 +12,9 @@ export default function (_app: SignalKApp): SentenceEncoder {
     title: 'XDR (Barometer) - Atmospheric Pressure',
     keys: ['environment.outside.pressure'],
     defaults: [null],
-    f: function xdrBaro(pressure: number | null | undefined): string | undefined {
+    f: function xdrBaro(
+      pressure: number | null | undefined
+    ): string | undefined {
       if (pressure === null || pressure === undefined || isNaN(pressure)) {
         return undefined
       }

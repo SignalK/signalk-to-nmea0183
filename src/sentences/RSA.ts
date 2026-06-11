@@ -18,8 +18,14 @@ export default function (_app: SignalKApp): SentenceEncoder {
     title: 'RSA - Rudder Sensor Angle',
     keys: ['steering.rudderAngle'],
     defaults: [null],
-    f: function rsa(rudderAngle: number | null | undefined): string | undefined {
-      if (rudderAngle === null || rudderAngle === undefined || isNaN(rudderAngle)) {
+    f: function rsa(
+      rudderAngle: number | null | undefined
+    ): string | undefined {
+      if (
+        rudderAngle === null ||
+        rudderAngle === undefined ||
+        isNaN(rudderAngle)
+      ) {
         return undefined
       }
 

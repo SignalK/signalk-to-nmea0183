@@ -31,8 +31,12 @@ describe('Depth Sentences', function () {
         done()
       }
       const app = createAppWithPlugin(onEmit, 'DPT')
-      app.streambundle.getSelfStream('environment.depth.belowTransducer').push(10)
-      app.streambundle.getSelfStream('environment.depth.transducerToKeel').push(1.5)
+      app.streambundle
+        .getSelfStream('environment.depth.belowTransducer')
+        .push(10)
+      app.streambundle
+        .getSelfStream('environment.depth.transducerToKeel')
+        .push(1.5)
     })
 
     it('defaults offset to 0 if transducerToKeel is missing', (done) => {
@@ -41,7 +45,9 @@ describe('Depth Sentences', function () {
         done()
       }
       const app = createAppWithPlugin(onEmit, 'DPT')
-      app.streambundle.getSelfStream('environment.depth.belowTransducer').push(10)
+      app.streambundle
+        .getSelfStream('environment.depth.belowTransducer')
+        .push(10)
     })
   })
 
@@ -52,17 +58,25 @@ describe('Depth Sentences', function () {
         done()
       }
       const app = createAppWithPlugin(onEmit, 'DPT-surface')
-      app.streambundle.getSelfStream('environment.depth.belowTransducer').push(10)
-      app.streambundle.getSelfStream('environment.depth.surfaceToTransducer').push(1.5)
+      app.streambundle
+        .getSelfStream('environment.depth.belowTransducer')
+        .push(10)
+      app.streambundle
+        .getSelfStream('environment.depth.surfaceToTransducer')
+        .push(1.5)
     })
   })
 
   describe('Guard Clauses', () => {
     it('does not emit when depth is NaN', (done) => {
       let emitted = false
-      const onEmit = () => { emitted = true }
+      const onEmit = () => {
+        emitted = true
+      }
       const app = createAppWithPlugin(onEmit, 'DBT')
-      app.streambundle.getSelfStream('environment.depth.belowTransducer').push(NaN)
+      app.streambundle
+        .getSelfStream('environment.depth.belowTransducer')
+        .push(NaN)
       setTimeout(() => {
         assert.equal(emitted, false)
         done()

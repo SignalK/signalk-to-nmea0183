@@ -8,8 +8,14 @@ export default function (_app: SignalKApp): SentenceEncoder {
     title: 'MTW - Water Temperature',
     keys: ['environment.water.temperature'],
     defaults: [null],
-    f: function mtw(temperature: number | null | undefined): string | undefined {
-      if (temperature === null || temperature === undefined || isNaN(temperature)) {
+    f: function mtw(
+      temperature: number | null | undefined
+    ): string | undefined {
+      if (
+        temperature === null ||
+        temperature === undefined ||
+        isNaN(temperature)
+      ) {
         return undefined
       }
 

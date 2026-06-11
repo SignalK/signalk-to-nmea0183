@@ -12,8 +12,14 @@ export default function (_app: SignalKApp): SentenceEncoder {
     title: 'XDR (TempAir) - Air temperature.',
     keys: ['environment.outside.temperature'],
     defaults: [null],
-    f: function xdrTemp(temperature: number | null | undefined): string | undefined {
-      if (temperature === null || temperature === undefined || isNaN(temperature)) {
+    f: function xdrTemp(
+      temperature: number | null | undefined
+    ): string | undefined {
+      if (
+        temperature === null ||
+        temperature === undefined ||
+        isNaN(temperature)
+      ) {
         return undefined
       }
 

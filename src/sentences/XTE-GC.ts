@@ -22,8 +22,14 @@ export default function (_app: SignalKApp): SentenceEncoder {
     title: 'XTE - Cross-track error (w.r.t. server-configured calcMethod)',
     keys: ['navigation.course.calcValues.crossTrackError'],
     defaults: [null],
-    f: function xteGc(crossTrackError: number | null | undefined): string | undefined {
-      if (crossTrackError === null || crossTrackError === undefined || isNaN(crossTrackError)) {
+    f: function xteGc(
+      crossTrackError: number | null | undefined
+    ): string | undefined {
+      if (
+        crossTrackError === null ||
+        crossTrackError === undefined ||
+        isNaN(crossTrackError)
+      ) {
         return undefined
       }
 

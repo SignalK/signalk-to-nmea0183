@@ -24,11 +24,16 @@ export default function (_app: SignalKApp): SentenceEncoder {
       polarSpeedRatio: number | null | undefined
     ): string | undefined {
       if (
-        angleApparent == null || isNaN(angleApparent) ||
-        speedApparent == null || isNaN(speedApparent) ||
-        angleTrueWater == null || isNaN(angleTrueWater) ||
-        speedTrue == null || isNaN(speedTrue) ||
-        speedThroughWater == null || isNaN(speedThroughWater)
+        angleApparent == null ||
+        isNaN(angleApparent) ||
+        speedApparent == null ||
+        isNaN(speedApparent) ||
+        angleTrueWater == null ||
+        isNaN(angleTrueWater) ||
+        speedTrue == null ||
+        isNaN(speedTrue) ||
+        speedThroughWater == null ||
+        isNaN(speedThroughWater)
       ) {
         return undefined
       }

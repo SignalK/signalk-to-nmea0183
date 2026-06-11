@@ -26,7 +26,11 @@ export default function (_app: SignalKApp): SentenceEncoder {
       headingMagnetic: number | undefined,
       magneticVariation: number | ''
     ): string | undefined {
-      if (headingMagnetic === undefined || headingMagnetic === null || isNaN(headingMagnetic)) {
+      if (
+        headingMagnetic === undefined ||
+        headingMagnetic === null ||
+        isNaN(headingMagnetic)
+      ) {
         return undefined
       }
 

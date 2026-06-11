@@ -16,7 +16,11 @@ export default function (_app: SignalKApp): SentenceEncoder {
     keys: ['performance.velocityMadeGood'],
     defaults: [null],
     f: function vpw(velocityMadeGood: number | null): string | undefined {
-      if (velocityMadeGood === undefined || velocityMadeGood === null || isNaN(velocityMadeGood)) {
+      if (
+        velocityMadeGood === undefined ||
+        velocityMadeGood === null ||
+        isNaN(velocityMadeGood)
+      ) {
         return undefined
       }
 

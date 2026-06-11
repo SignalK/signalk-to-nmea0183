@@ -27,7 +27,9 @@ describe('Proprietary Encoders', function () {
     }
     const app = createAppWithPlugin(onEmit, 'PNKEP03')
     app.streambundle.getSelfStream('performance.targetAngle').push(Math.PI / 4)
-    app.streambundle.getSelfStream('performance.polarVelocityMadeGoodRatio').push(0.9)
+    app.streambundle
+      .getSelfStream('performance.polarVelocityMadeGoodRatio')
+      .push(0.9)
     app.streambundle.getSelfStream('performance.polarSpeedRatio').push(0.95)
   })
 

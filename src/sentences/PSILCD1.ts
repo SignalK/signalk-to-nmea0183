@@ -23,7 +23,12 @@ export default function (_app: SignalKApp): SentenceEncoder {
       polarSpeed: number | null | undefined,
       targetAngle: number | null | undefined
     ): string | undefined {
-      if (polarSpeed == null || isNaN(polarSpeed) || targetAngle == null || isNaN(targetAngle)) {
+      if (
+        polarSpeed == null ||
+        isNaN(polarSpeed) ||
+        targetAngle == null ||
+        isNaN(targetAngle)
+      ) {
         return undefined
       }
 

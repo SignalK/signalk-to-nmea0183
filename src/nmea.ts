@@ -199,7 +199,10 @@ export function formatDatetime(datetime8601: unknown): FormattedDatetime {
   const hours = padd(datetime.getUTCHours().toString(), 2)
   const minutes = padd(datetime.getUTCMinutes().toString(), 2)
   const seconds = padd(datetime.getUTCSeconds().toString(), 2)
-  const centiseconds = padd(Math.floor(datetime.getUTCMilliseconds() / 10).toString(), 2)
+  const centiseconds = padd(
+    Math.floor(datetime.getUTCMilliseconds() / 10).toString(),
+    2
+  )
 
   const day = padd(datetime.getUTCDate().toString(), 2)
   const month = padd((datetime.getUTCMonth() + 1).toString(), 2)

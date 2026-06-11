@@ -32,8 +32,12 @@ export default function (_app: SignalKApp): SentenceEncoder {
       speed: number | null | undefined
     ): string | undefined {
       if (
-        angle === null || angle === undefined || isNaN(angle) ||
-        speed === null || speed === undefined || isNaN(speed)
+        angle === null ||
+        angle === undefined ||
+        isNaN(angle) ||
+        speed === null ||
+        speed === undefined ||
+        isNaN(speed)
       ) {
         return undefined
       }

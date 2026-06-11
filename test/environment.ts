@@ -8,7 +8,9 @@ describe('Environment Sentences', function () {
       done()
     }
     const app = createAppWithPlugin(onEmit, 'MTA')
-    app.streambundle.getSelfStream('environment.outside.temperature').push(293.15)
+    app.streambundle
+      .getSelfStream('environment.outside.temperature')
+      .push(293.15)
   })
 
   it('MTW: converts Kelvin to Celsius (Water)', (done) => {
@@ -44,12 +46,16 @@ describe('Environment Sentences', function () {
       done()
     }
     const app = createAppWithPlugin(onEmit, 'XDRTemp')
-    app.streambundle.getSelfStream('environment.outside.temperature').push(293.15)
+    app.streambundle
+      .getSelfStream('environment.outside.temperature')
+      .push(293.15)
   })
 
   it('Guard Clause: XDRBaro ignores null pressure', (done) => {
     let emitted = false
-    const onEmit = () => { emitted = true }
+    const onEmit = () => {
+      emitted = true
+    }
     const app = createAppWithPlugin(onEmit, 'XDRBaro')
     app.streambundle.getSelfStream('environment.outside.pressure').push(null)
     setTimeout(() => {

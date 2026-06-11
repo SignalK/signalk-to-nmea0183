@@ -15,11 +15,11 @@ export default function (_app: SignalKApp): SentenceEncoder {
 
       return nmea.toSentence([
         '$IIDBK',
-      nmea.mToFeet(depth).toFixed(1),
+        nmea.mToFeet(depth).toFixed(1),
         'f',
         depth.toFixed(2),
         'M',
-      nmea.mToFathoms(depth).toFixed(1),
+        nmea.mToFathoms(depth).toFixed(1),
         'F'
       ])
     }

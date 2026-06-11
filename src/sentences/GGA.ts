@@ -107,7 +107,9 @@ export default function (_app: SignalKApp): SentenceEncoder {
           }
       }
 
-      const sats = (isNaN(gnssSatellites) ? 0 : gnssSatellites).toString().padStart(2, '0')
+      const sats = (isNaN(gnssSatellites) ? 0 : gnssSatellites)
+        .toString()
+        .padStart(2, '0')
 
       return toSentence([
         '$GPGGA',

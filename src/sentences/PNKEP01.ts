@@ -14,8 +14,14 @@ export default function (_app: SignalKApp): SentenceEncoder {
     title: 'PNKEP,01 - Target Polar speed',
     keys: ['performance.polarSpeed'],
     defaults: [null],
-    f: function pnkep01(polarSpeed: number | null | undefined): string | undefined {
-      if (polarSpeed === null || polarSpeed === undefined || isNaN(polarSpeed)) {
+    f: function pnkep01(
+      polarSpeed: number | null | undefined
+    ): string | undefined {
+      if (
+        polarSpeed === null ||
+        polarSpeed === undefined ||
+        isNaN(polarSpeed)
+      ) {
         return undefined
       }
 

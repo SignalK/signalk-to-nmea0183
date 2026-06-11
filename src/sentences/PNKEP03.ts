@@ -24,9 +24,12 @@ export default function (_app: SignalKApp): SentenceEncoder {
       polarSpeedRatio: number | null | undefined
     ): string | undefined {
       if (
-        targetAngle == null || isNaN(targetAngle) ||
-        polarVelocityMadeGoodRatio == null || isNaN(polarVelocityMadeGoodRatio) ||
-        polarSpeedRatio == null || isNaN(polarSpeedRatio)
+        targetAngle == null ||
+        isNaN(targetAngle) ||
+        polarVelocityMadeGoodRatio == null ||
+        isNaN(polarVelocityMadeGoodRatio) ||
+        polarSpeedRatio == null ||
+        isNaN(polarSpeedRatio)
       ) {
         return undefined
       }

@@ -26,13 +26,18 @@ export default function (_app: SignalKApp): SentenceEncoder {
       belowTransducer: number | undefined,
       transducerToKeel: number | undefined
     ): string | undefined {
-      if (belowTransducer === undefined || belowTransducer === null || isNaN(belowTransducer)) {
+      if (
+        belowTransducer === undefined ||
+        belowTransducer === null ||
+        isNaN(belowTransducer)
+      ) {
         return undefined
       }
 
-      const offset = (typeof transducerToKeel === 'number' && !isNaN(transducerToKeel))
-        ? -Math.abs(transducerToKeel)
-        : 0
+      const offset =
+        typeof transducerToKeel === 'number' && !isNaN(transducerToKeel)
+          ? -Math.abs(transducerToKeel)
+          : 0
 
       return nmea.toSentence([
         '$IIDPT',

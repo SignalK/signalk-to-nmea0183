@@ -65,8 +65,12 @@ export default function (_app: SignalKApp): SentenceEncoder {
       }
 
       const waypointId = generateWaypointName(nextPoint)
-      const bearingOriginToDestMag = nmea.radsToPositiveDeg(originToDest - magneticVariation).toFixed(0)
-      const bearingToDestMag = nmea.radsToPositiveDeg(bearingTrue - magneticVariation).toFixed(0)
+      const bearingOriginToDestMag = nmea
+        .radsToPositiveDeg(originToDest - magneticVariation)
+        .toFixed(0)
+      const bearingToDestMag = nmea
+        .radsToPositiveDeg(bearingTrue - magneticVariation)
+        .toFixed(0)
 
       return nmea.toSentence([
         '$IIAPB',

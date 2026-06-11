@@ -12,8 +12,14 @@ export default function (_app: SignalKApp): SentenceEncoder {
     title: 'XTE - Cross-track error (w.r.t. Rhumb line)',
     keys: ['navigation.course.calcValues.crossTrackError'],
     defaults: [null],
-    f: function xte(crossTrackError: number | null | undefined): string | undefined {
-      if (crossTrackError === null || crossTrackError === undefined || isNaN(crossTrackError)) {
+    f: function xte(
+      crossTrackError: number | null | undefined
+    ): string | undefined {
+      if (
+        crossTrackError === null ||
+        crossTrackError === undefined ||
+        isNaN(crossTrackError)
+      ) {
         return undefined
       }
 

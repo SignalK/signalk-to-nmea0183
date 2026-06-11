@@ -10,8 +10,14 @@ export default function (_app: SignalKApp): SentenceEncoder {
     title: 'PNKEP,02 - Course (COG) on other tack from 0 to 359°',
     keys: ['performance.tackMagnetic'],
     defaults: [null],
-    f: function pnkep02(tackMagnetic: number | null | undefined): string | undefined {
-      if (tackMagnetic === null || tackMagnetic === undefined || isNaN(tackMagnetic)) {
+    f: function pnkep02(
+      tackMagnetic: number | null | undefined
+    ): string | undefined {
+      if (
+        tackMagnetic === null ||
+        tackMagnetic === undefined ||
+        isNaN(tackMagnetic)
+      ) {
         return undefined
       }
 

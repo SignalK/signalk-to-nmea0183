@@ -39,13 +39,15 @@ export default function (_app: SignalKApp): SentenceEncoder {
         courseOverGroundTrue = courseOverGroundMagnetic + magneticVariation
       }
 
-      const cogTrue = (courseOverGroundTrue !== null && !isNaN(courseOverGroundTrue))
-        ? nmea.radsToPositiveDeg(courseOverGroundTrue).toFixed(1)
-        : ''
+      const cogTrue =
+        courseOverGroundTrue !== null && !isNaN(courseOverGroundTrue)
+          ? nmea.radsToPositiveDeg(courseOverGroundTrue).toFixed(1)
+          : ''
 
-      const cogMag = (courseOverGroundMagnetic !== null && !isNaN(courseOverGroundMagnetic))
-        ? nmea.radsToPositiveDeg(courseOverGroundMagnetic).toFixed(1)
-        : ''
+      const cogMag =
+        courseOverGroundMagnetic !== null && !isNaN(courseOverGroundMagnetic)
+          ? nmea.radsToPositiveDeg(courseOverGroundMagnetic).toFixed(1)
+          : ''
 
       return nmea.toSentence([
         '$IIVTG',

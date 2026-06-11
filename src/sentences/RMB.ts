@@ -58,17 +58,26 @@ export default function (_app: SignalKApp): SentenceEncoder {
       prevWp: PreviousPoint | null | undefined
     ): string | undefined {
       if (
-        crossTrackError === null || isNaN(crossTrackError as number) ||
-        wpDistance === null || isNaN(wpDistance as number) ||
-        bearingTrue === null || isNaN(bearingTrue as number) ||
-        vmg === null || isNaN(vmg as number)
+        crossTrackError === null ||
+        isNaN(crossTrackError as number) ||
+        wpDistance === null ||
+        isNaN(wpDistance as number) ||
+        bearingTrue === null ||
+        isNaN(bearingTrue as number) ||
+        vmg === null ||
+        isNaN(vmg as number)
       ) {
         return undefined
       }
 
       const wpLat = wp?.position?.latitude
       const wpLon = wp?.position?.longitude
-      if (typeof wpLat !== 'number' || typeof wpLon !== 'number' || isNaN(wpLat) || isNaN(wpLon)) {
+      if (
+        typeof wpLat !== 'number' ||
+        typeof wpLon !== 'number' ||
+        isNaN(wpLat) ||
+        isNaN(wpLon)
+      ) {
         return undefined
       }
       const destinationId = generateWaypointName(wp)

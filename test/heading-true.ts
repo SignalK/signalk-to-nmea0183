@@ -18,8 +18,12 @@ describe('Heading True and VWR', function () {
       done()
     }
     const app = createAppWithPlugin(onEmit, 'HDTC')
-    app.streambundle.getSelfStream('navigation.headingMagnetic').push((170 * Math.PI) / 180)
-    app.streambundle.getSelfStream('navigation.magneticVariation').push((10 * Math.PI) / 180)
+    app.streambundle
+      .getSelfStream('navigation.headingMagnetic')
+      .push((170 * Math.PI) / 180)
+    app.streambundle
+      .getSelfStream('navigation.magneticVariation')
+      .push((10 * Math.PI) / 180)
   })
 
   it('VWR: emits apparent wind angle and speed with L/R indicator', (done) => {
@@ -29,13 +33,17 @@ describe('Heading True and VWR', function () {
       done()
     }
     const app = createAppWithPlugin(onEmit, 'VWR')
-    app.streambundle.getSelfStream('environment.wind.angleApparent').push(-0.52359877559)
+    app.streambundle
+      .getSelfStream('environment.wind.angleApparent')
+      .push(-0.52359877559)
     app.streambundle.getSelfStream('environment.wind.speedApparent').push(2.0)
   })
 
   it('HDTC: Guard Clause ignores null magnetic heading', (done) => {
     let emitted = false
-    const app = createAppWithPlugin(() => { emitted = true }, 'HDTC')
+    const app = createAppWithPlugin(() => {
+      emitted = true
+    }, 'HDTC')
     app.streambundle.getSelfStream('navigation.headingMagnetic').push(null)
     setTimeout(() => {
       assert.equal(emitted, false)
