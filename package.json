@@ -62,7 +62,7 @@
     "@stryker-mutator/core": "^9.6.1",
     "@stryker-mutator/mocha-runner": "^9.6.1",
     "@types/mocha": "^10.0.10",
-    "@types/node": "^22.19.17",
+    "@types/node": "^25.9.3",
     "@types/react": "^19.2.14",
     "@types/react-dom": "^19.2.3",
     "baconjs": "^3.0.0",
