@@ -41,7 +41,6 @@ const msFromKnots = (kn: number): number => (kn * 1852) / 3600
 // Helpers
 // ---------------------------------------------------------------------------
 
-
 /**
  * Full end-to-end helper: create app, push paths sequentially, assert last.
  */
@@ -248,7 +247,9 @@ describe('VHW', function () {
         emitted = true
       }
       const app = createAppWithPlugin(onEmit, 'VHW')
-      app.streambundle.getSelfStream('navigation.magneticVariation').push(deg(10))
+      app.streambundle
+        .getSelfStream('navigation.magneticVariation')
+        .push(deg(10))
       setTimeout(() => {
         assert.strictEqual(emitted, false)
         done()
