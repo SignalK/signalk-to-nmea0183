@@ -263,6 +263,7 @@ const expectations: Expectation[] = [
     title: 'VHW - Speed and direction',
     keys: [
       'navigation.headingTrue',
+      'navigation.headingMagnetic',
       'navigation.magneticVariation',
       'navigation.speedThroughWater'
     ]

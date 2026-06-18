@@ -1,5 +1,9 @@
 ## Change Log
 
+### Unreleased
+
+- [#205](https://github.com/SignalK/signalk-to-nmea0183/pull/205) feature: VHW now emits when any of headingTrue, headingMagnetic, or speedThroughWater is present (previously all three were required); magnetic and true headings resolve independently (direct path preferred, otherwise derived), and absent or non-finite fields are sent empty (@arneluehrs)
+
 ### v1.6.0 (2019/09/06 15:05 +00:00)
 
 - [#42](https://github.com/SignalK/signalk-to-nmea0183/pull/42) fix: compatibility with navionics which only accepts $GP for RMC (@cmotelet)
