@@ -24,6 +24,10 @@
  * headingTrue, headingMagnetic, and speedThroughWater are absent.
  * Speed alone, or any heading alone, is enough to emit.
  *
+ * Non-finite inputs (null, NaN, Infinity, or a non-numeric value) are
+ * treated as absent: a dropped-out sensor yields an empty field rather
+ * than a fabricated "0.0" or a literal "NaN" in the sentence.
+ *
  * Example (all fields): $IIVHW,201.1,T,209.2,M,6.5,N,12.0,K*6E
  */
 
@@ -34,6 +38,15 @@ import type { SentenceEncoder, SignalKApp } from '../types/plugin'
 // combined stream can fire even before those paths emit a value.
 const MISSING = '' as const
 type MaybeNumber = number | typeof MISSING
+
+// Coerce a raw stream value to a usable number, or to MISSING. Signal K
+// paths can deliver null (path present but no current value) and a
+// misbehaving source can deliver NaN/Infinity or a non-numeric value;
+// treating all of those as MISSING leaves the corresponding field empty
+// instead of emitting a fabricated reading.
+function asNumber(value: unknown): MaybeNumber {
+  return typeof value === 'number' && Number.isFinite(value) ? value : MISSING
+}
 
 export default function (_app: SignalKApp): SentenceEncoder {
   return {
@@ -50,11 +63,18 @@ export default function (_app: SignalKApp): SentenceEncoder {
     defaults: [MISSING, MISSING, MISSING, MISSING],
 
     f: function vhw(
-      headingTrue: MaybeNumber,
-      headingMagnetic: MaybeNumber,
-      magneticVariation: MaybeNumber,
-      speedThroughWater: MaybeNumber
+      headingTrueRaw: unknown,
+      headingMagneticRaw: unknown,
+      magneticVariationRaw: unknown,
+      speedThroughWaterRaw: unknown
     ): string | undefined {
+      // Normalise each raw stream value: anything that is not a finite
+      // number (null, NaN, Infinity, non-numeric) becomes MISSING.
+      const headingTrue = asNumber(headingTrueRaw)
+      const headingMagnetic = asNumber(headingMagneticRaw)
+      const magneticVariation = asNumber(magneticVariationRaw)
+      const speedThroughWater = asNumber(speedThroughWaterRaw)
+
       // Suppress when there is nothing useful to send.
       if (
         headingTrue === MISSING &&

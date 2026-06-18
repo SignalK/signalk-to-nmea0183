@@ -1,6 +1,8 @@
 import * as assert from 'assert'
 
 import { createAppWithPlugin } from './testutil'
+import vhwFactory from '../src/sentences/VHW'
+import type { SignalKApp } from '../src/types/plugin'
 
 /**
  * VHW test suite
@@ -31,11 +33,19 @@ import { createAppWithPlugin } from './testutil'
  * `testSequential` does this: it spaces pushes 30 ms apart and calls `done`
  * after an additional 30 ms settle delay.
  *
+ * The suite has two layers: direct synchronous unit tests that call the
+ * encoder's pure `f` (fast, deterministic, no timers, and able to exercise
+ * degenerate inputs the stream type forbids), and end-to-end tests that
+ * drive `f` through the BaconJS stream + debounce to cover the wiring.
+ *
  * Checksums were pre-computed and verified independently.
  */
 
 const deg = (d: number): number => (d * Math.PI) / 180
 const msFromKnots = (kn: number): number => (kn * 1852) / 3600
+
+// MISSING sentinel, mirrors the encoder's `defaults`, for direct f() calls.
+const MISSING = ''
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -70,6 +80,111 @@ function testSequential(
   }
   step()
 }
+
+// ---------------------------------------------------------------------------
+
+// ---------------------------------------------------------------------------
+// Direct unit tests: call the encoder's pure `f` synchronously, with no
+// stream and no timers. These pin the field-resolution branches, the
+// suppression rule, and the non-finite-input handling deterministically.
+// ---------------------------------------------------------------------------
+
+describe('VHW encoder (direct)', function () {
+  const encoder = vhwFactory({} as unknown as SignalKApp)
+  const f = (
+    headingTrue: unknown,
+    headingMagnetic: unknown,
+    magneticVariation: unknown,
+    speedThroughWater: unknown
+  ): string | undefined =>
+    encoder.f(
+      headingTrue,
+      headingMagnetic,
+      magneticVariation,
+      speedThroughWater
+    )
+
+  describe('field resolution', function () {
+    it('uses headingTrue directly; magnetic empty without variation', function () {
+      assert.strictEqual(
+        f(deg(180), MISSING, MISSING, MISSING),
+        '$IIVHW,180.0,T,,M,,N,,K*72'
+      )
+    })
+    it('derives true heading from headingMagnetic + variation', function () {
+      assert.strictEqual(
+        f(MISSING, deg(170), deg(10), MISSING),
+        '$IIVHW,180.0,T,170.0,M,,N,,K*5A'
+      )
+    })
+    it('uses headingMagnetic directly; true empty without variation', function () {
+      assert.strictEqual(
+        f(MISSING, deg(170), MISSING, MISSING),
+        '$IIVHW,,T,170.0,M,,N,,K*7D'
+      )
+    })
+    it('derives magnetic heading from headingTrue - variation', function () {
+      assert.strictEqual(
+        f(deg(180), MISSING, deg(10), MISSING),
+        '$IIVHW,180.0,T,170.0,M,,N,,K*5A'
+      )
+    })
+    it('prefers direct headingMagnetic over the headingTrue-derived value', function () {
+      assert.strictEqual(
+        f(deg(180), deg(172), deg(10), msFromKnots(10)),
+        '$IIVHW,180.0,T,172.0,M,10.00,N,18.52,K*57'
+      )
+    })
+    it('emits zero speed as 0.00 (not suppressed)', function () {
+      assert.strictEqual(
+        f(MISSING, MISSING, MISSING, 0),
+        '$IIVHW,,T,,M,0.00,N,0.00,K*55'
+      )
+    })
+  })
+
+  describe('suppression', function () {
+    it('returns undefined when true, magnetic and speed are all absent', function () {
+      assert.strictEqual(f(MISSING, MISSING, MISSING, MISSING), undefined)
+    })
+    it('returns undefined when only magneticVariation is present', function () {
+      assert.strictEqual(f(MISSING, MISSING, deg(10), MISSING), undefined)
+    })
+  })
+
+  describe('non-finite inputs are treated as absent', function () {
+    const badValues: Array<[string, unknown]> = [
+      ['null', null],
+      ['NaN', NaN],
+      ['Infinity', Infinity],
+      ['a string', 'not-a-number'],
+      ['an object', {}]
+    ]
+    for (const [label, bad] of badValues) {
+      it(`blanks the heading field when headingTrue is ${label}, never 0.0/NaN`, function () {
+        assert.strictEqual(
+          f(bad, MISSING, MISSING, msFromKnots(10)),
+          '$IIVHW,,T,,M,10.00,N,18.52,K*5A'
+        )
+      })
+    }
+    it('does not let a null variation poison a derived field', function () {
+      assert.strictEqual(
+        f(deg(180), MISSING, null, MISSING),
+        '$IIVHW,180.0,T,,M,,N,,K*72'
+      )
+    })
+    it('treats a null speed as absent (empty speed fields)', function () {
+      assert.strictEqual(
+        f(MISSING, deg(170), MISSING, null),
+        '$IIVHW,,T,170.0,M,,N,,K*7D'
+      )
+    })
+    it('suppresses entirely when every input is non-finite', function () {
+      assert.strictEqual(f(null, NaN, Infinity, null), undefined)
+    })
+  })
+})
 
 // ---------------------------------------------------------------------------
 
@@ -254,6 +369,39 @@ describe('VHW', function () {
         assert.strictEqual(emitted, false)
         done()
       }, 60)
+    })
+  })
+
+  // ── Group 6: emission sequence (guard against a wrong transient) ─────────
+
+  describe('emission sequence', function () {
+    it('emits a correct partial sentence on each push, never a malformed transient', (done) => {
+      const emissions: string[] = []
+      const onEmit = (_event: string, value: unknown): void => {
+        emissions.push(value as string)
+      }
+      const app = createAppWithPlugin(onEmit, 'VHW')
+      const pushes = [
+        { path: 'navigation.headingTrue', value: deg(180) },
+        { path: 'navigation.speedThroughWater', value: msFromKnots(10) }
+      ]
+      let i = 0
+      function step(): void {
+        if (i < pushes.length) {
+          const { path, value } = pushes[i++]!
+          app.streambundle.getSelfStream(path).push(value)
+          setTimeout(step, 30)
+        } else {
+          setTimeout(() => {
+            assert.deepStrictEqual(emissions, [
+              '$IIVHW,180.0,T,,M,,N,,K*72',
+              '$IIVHW,180.0,T,,M,10.00,N,18.52,K*7D'
+            ])
+            done()
+          }, 30)
+        }
+      }
+      step()
     })
   })
 })
