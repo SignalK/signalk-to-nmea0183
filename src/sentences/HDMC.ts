@@ -49,8 +49,8 @@ export default function (_app: SignalKApp): SentenceEncoder {
       return nmea.toSentence([
         '$IIHDM',
         nmea.radsToPositiveDeg(headingTrue - magneticVariation).toFixed(1),
-        'M',
+        'M'
       ])
-    },
+    }
   }
 }

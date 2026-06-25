@@ -67,8 +67,8 @@ export default function (_app: SignalKApp): SentenceEncoder {
         '', // deviation — always empty (already applied in SK)
         '', // deviation direction — always empty
         variationDeg,
-        variationDir,
+        variationDir
       ])
-    },
+    }
   }
 }

@@ -28,7 +28,7 @@ describe('HDTC', function () {
       'HDTC',
       [
         { path: 'navigation.magneticVariation', value: deg(10) },
-        { path: 'navigation.headingMagnetic', value: deg(170) },
+        { path: 'navigation.headingMagnetic', value: deg(170) }
       ],
       '$IIHDT,180.0,T*2B',
       done
@@ -42,7 +42,7 @@ describe('HDTC', function () {
       'HDTC',
       [
         { path: 'navigation.magneticVariation', value: deg(10) },
-        { path: 'navigation.headingMagnetic', value: deg(355) },
+        { path: 'navigation.headingMagnetic', value: deg(355) }
       ],
       '$IIHDT,5.0,T*27',
       done
@@ -56,7 +56,7 @@ describe('HDTC', function () {
       'HDTC',
       [
         { path: 'navigation.magneticVariation', value: deg(-10) },
-        { path: 'navigation.headingMagnetic', value: deg(5) },
+        { path: 'navigation.headingMagnetic', value: deg(5) }
       ],
       '$IIHDT,355.0,T*21',
       done

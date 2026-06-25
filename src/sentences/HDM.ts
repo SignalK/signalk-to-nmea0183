@@ -28,8 +28,8 @@ export default function (_app: SignalKApp): SentenceEncoder {
       return nmea.toSentence([
         '$IIHDM',
         nmea.radsToPositiveDeg(heading).toFixed(1),
-        'M',
+        'M'
       ])
-    },
+    }
   }
 }

@@ -58,7 +58,7 @@ describe('HDG', function () {
       'HDG',
       [
         { path: 'navigation.magneticVariation', value: 0.1 },
-        { path: 'navigation.headingMagnetic', value: 0.5 },
+        { path: 'navigation.headingMagnetic', value: 0.5 }
       ],
       '$IIHDG,28.65,,,5.73,E*1A',
       done
@@ -73,7 +73,7 @@ describe('HDG', function () {
       'HDG',
       [
         { path: 'navigation.magneticVariation', value: -0.1 },
-        { path: 'navigation.headingMagnetic', value: 0.5 },
+        { path: 'navigation.headingMagnetic', value: 0.5 }
       ],
       '$IIHDG,28.65,,,5.73,W*08',
       done
@@ -87,7 +87,7 @@ describe('HDG', function () {
       'HDG',
       [
         { path: 'navigation.magneticVariation', value: 0 },
-        { path: 'navigation.headingMagnetic', value: 0.5 },
+        { path: 'navigation.headingMagnetic', value: 0.5 }
       ],
       '$IIHDG,28.65,,,0.00,E*1B',
       done

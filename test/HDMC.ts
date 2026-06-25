@@ -28,7 +28,7 @@ describe('HDMC', function () {
       'HDMC',
       [
         { path: 'navigation.magneticVariation', value: deg(10) },
-        { path: 'navigation.headingTrue', value: Math.PI },
+        { path: 'navigation.headingTrue', value: Math.PI }
       ],
       '$IIHDM,170.0,M*24',
       done
@@ -42,7 +42,7 @@ describe('HDMC', function () {
       'HDMC',
       [
         { path: 'navigation.magneticVariation', value: deg(10) },
-        { path: 'navigation.headingTrue', value: deg(5) },
+        { path: 'navigation.headingTrue', value: deg(5) }
       ],
       '$IIHDM,355.0,M*21',
       done
@@ -56,7 +56,7 @@ describe('HDMC', function () {
       'HDMC',
       [
         { path: 'navigation.magneticVariation', value: deg(-10) },
-        { path: 'navigation.headingTrue', value: deg(355) },
+        { path: 'navigation.headingTrue', value: deg(355) }
       ],
       '$IIHDM,5.0,M*27',
       done

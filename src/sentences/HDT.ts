@@ -31,8 +31,8 @@ export default function (_app: SignalKApp): SentenceEncoder {
       return nmea.toSentence([
         '$IIHDT',
         nmea.radsToPositiveDeg(heading).toFixed(1),
-        'T',
+        'T'
       ])
-    },
+    }
   }
 }

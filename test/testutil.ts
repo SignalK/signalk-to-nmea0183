@@ -41,7 +41,7 @@ export function createAppWithPlugin(
         const bus = new Bacon.Bus<unknown>()
         streams[p] = bus
         return bus
-      },
+      }
     },
     emittedEvents: [],
     emit: (name: string, value: unknown): void => {
@@ -53,7 +53,7 @@ export function createAppWithPlugin(
     debug: (msg: unknown): void => {
       console.log(msg)
     },
-    getSelfPath: () => null,
+    getSelfPath: () => null
   }
   // eslint-disable-next-line @typescript-eslint/no-var-requires
   const plugin = require('../src/index')(app)
