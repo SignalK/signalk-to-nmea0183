@@ -104,4 +104,13 @@ describe('HDG', function () {
       done
     )
   })
+
+  // headingMagnetic is required; without it there is nothing to emit.
+  // (The stream will not fire at all until headingMagnetic emits, but a
+  // runtime guard keeps the type system happy and adds robustness.)
+
+  it('does not emit when headingMagnetic has not been pushed', (done) => {
+    // No paths at all — stream must not fire
+    testSuppressed('HDG', [], done)
+  })
 })
