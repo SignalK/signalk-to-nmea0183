@@ -1,10 +1,10 @@
 import { testSequential, testSuppressed } from './testutil'
 
 /**
- * HDMC - HDM sentence calculated from True heading and Variation
+ * HDTC - HDT sentence calculated from Magnetic heading and Variation
  *
- * Derives: headingMagnetic = headingTrue − magneticVariation
- * Produces: $IIHDM,x.x,M*hh
+ * Derives: headingTrue = headingMagnetic + magneticVariation
+ * Produces: $IIHDT,x.x,T*hh
  *
  * Both inputs carry defaults (MISSING sentinel) so the combined stream fires
  * as soon as either path emits.  The guard in the encoder suppresses output
@@ -16,66 +16,66 @@ import { testSequential, testSuppressed } from './testutil'
 
 const deg = (d: number): number => (d * Math.PI) / 180
 
-describe('HDMC', function () {
+describe('HDTC', function () {
   this.timeout(300)
 
   // ── normal computation ───────────────────────────────────────────────────
 
-  it('computes magnetic heading by subtracting variation from true heading', (done) => {
-    // headingTrue=180°, variation=+10° (easterly) → hdgMag = 180 - 10 = 170°
-    // $IIHDM,170.0,M*24
+  it('computes true heading by adding variation to magnetic heading', (done) => {
+    // hdgMag=170°, variation=+10° → hdgTrue = 170 + 10 = 180°
+    // $IIHDT,180.0,T*2B
     testSequential(
-      'HDMC',
+      'HDTC',
       [
         { path: 'navigation.magneticVariation', value: deg(10) },
-        { path: 'navigation.headingTrue', value: Math.PI },
+        { path: 'navigation.headingMagnetic', value: deg(170) },
       ],
-      '$IIHDM,170.0,M*24',
+      '$IIHDT,180.0,T*2B',
       done
     )
   })
 
-  it('wraps into [0, 360) when variation exceeds true heading', (done) => {
-    // headingTrue=5°, variation=+10° → hdgMag = 5 - 10 = -5° → 355°
-    // $IIHDM,355.0,M*21
+  it('wraps into [0, 360) when sum exceeds 360°', (done) => {
+    // hdgMag=355°, variation=+10° → hdgTrue = 355 + 10 = 365° → 5°
+    // $IIHDT,5.0,T*27
     testSequential(
-      'HDMC',
+      'HDTC',
       [
         { path: 'navigation.magneticVariation', value: deg(10) },
-        { path: 'navigation.headingTrue', value: deg(5) },
+        { path: 'navigation.headingMagnetic', value: deg(355) },
       ],
-      '$IIHDM,355.0,M*21',
+      '$IIHDT,5.0,T*27',
       done
     )
   })
 
-  it('wraps into [0, 360) when westerly variation pushes heading above 360°', (done) => {
-    // headingTrue=355°, variation=-10° (westerly) → hdgMag = 355-(-10) = 365° → 5°
-    // $IIHDM,5.0,M*27
+  it('wraps into [0, 360) when westerly variation produces a negative sum', (done) => {
+    // hdgMag=5°, variation=-10° (westerly) → hdgTrue = 5 + (-10) = -5° → 355°
+    // $IIHDT,355.0,T*21
     testSequential(
-      'HDMC',
+      'HDTC',
       [
         { path: 'navigation.magneticVariation', value: deg(-10) },
-        { path: 'navigation.headingTrue', value: deg(355) },
+        { path: 'navigation.headingMagnetic', value: deg(5) },
       ],
-      '$IIHDM,5.0,M*27',
+      '$IIHDT,355.0,T*21',
       done
     )
   })
 
   // ── suppression ──────────────────────────────────────────────────────────
 
-  it('does not emit when only headingTrue is present (variation required)', (done) => {
+  it('does not emit when only headingMagnetic is present (variation required)', (done) => {
     testSuppressed(
-      'HDMC',
-      [{ path: 'navigation.headingTrue', value: Math.PI }],
+      'HDTC',
+      [{ path: 'navigation.headingMagnetic', value: deg(170) }],
       done
     )
   })
 
-  it('does not emit when only magneticVariation is present (headingTrue required)', (done) => {
+  it('does not emit when only magneticVariation is present (headingMagnetic required)', (done) => {
     testSuppressed(
-      'HDMC',
+      'HDTC',
       [{ path: 'navigation.magneticVariation', value: deg(10) }],
       done
     )

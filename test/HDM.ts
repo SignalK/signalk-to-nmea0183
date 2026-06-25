@@ -1,18 +1,55 @@
-import * as assert from 'assert'
+import { testSequential, testSuppressed } from './testutil'
 
-import { createAppWithPlugin } from './testutil'
+/**
+ * HDM - Heading, Magnetic
+ *
+ * $IIHDM,x.x,M*hh
+ *
+ * navigation.headingMagnetic is the only input and carries no default.
+ * Without it the combined stream never fires and no sentence is produced.
+ *
+ * Checksums were pre-computed and verified independently.
+ * See test/testutil.ts for the BaconJS timing rationale behind testSequential.
+ */
 
-// A second single-key sentence (alongside DBT) to exercise the same
-// combineStreamsWith single-input → .toProperty → .changes path with a
-// different encoder shape.
 describe('HDM', function () {
+  // ── normal emission ──────────────────────────────────────────────────────
+
   it('emits heading magnetic in degrees', (done) => {
-    const onEmit = (_event: string, value: unknown): void => {
-      // 0.5 rad ≈ 28.6 deg → $IIHDM,28.6,M*<cs>
-      assert.match(value as string, /^\$IIHDM,28\.6,M\*[0-9A-F]{2}$/)
-      done()
-    }
-    const app = createAppWithPlugin(onEmit, 'HDM')
-    app.streambundle.getSelfStream('navigation.headingMagnetic').push(0.5)
+    // 0.5 rad ≈ 28.6°  →  $IIHDM,28.6,M*1E
+    testSequential(
+      'HDM',
+      [{ path: 'navigation.headingMagnetic', value: 0.5 }],
+      '$IIHDM,28.6,M*1E',
+      done
+    )
+  })
+
+  it('wraps heading above 360° into [0, 360)', (done) => {
+    // 2π + 0.5 rad should give the same result as 0.5 rad
+    // $IIHDM,28.6,M*1E
+    testSequential(
+      'HDM',
+      [{ path: 'navigation.headingMagnetic', value: 2 * Math.PI + 0.5 }],
+      '$IIHDM,28.6,M*1E',
+      done
+    )
+  })
+
+  it('wraps negative heading into [0, 360)', (done) => {
+    // -0.5 rad → 360 - 28.6 = 331.4°  →  $IIHDM,331.4,M*27
+    testSequential(
+      'HDM',
+      [{ path: 'navigation.headingMagnetic', value: -0.5 }],
+      '$IIHDM,331.4,M*27',
+      done
+    )
+  })
+
+  // ── suppression ──────────────────────────────────────────────────────────
+
+  it('does not emit when headingMagnetic has not been pushed', (done) => {
+    // No paths at all — stream must not fire
+    testSuppressed('HDM', [], done)
   })
 })

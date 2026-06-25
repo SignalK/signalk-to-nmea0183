@@ -1,75 +1,107 @@
-import * as assert from 'assert'
+import { testSequential, testSuppressed } from './testutil'
 
-import { createAppWithPlugin } from './testutil'
+/**
+ * HDG - Heading, Deviation & Variation
+ *
+ * $IIHDG,heading,,,variation,varDir*cs
+ *
+ * Field layout:
+ *   0  Magnetic sensor heading (degrees)
+ *   1  Magnetic deviation      — always empty (deviation already applied in SK)
+ *   2  Deviation direction     — always empty
+ *   3  Magnetic variation (degrees, absolute value)
+ *   4  Variation direction: E (positive) or W (negative)
+ *
+ * navigation.headingMagnetic is required (no default); the sentence is
+ * suppressed until it emits.  navigation.magneticVariation is optional;
+ * when absent, fields 3-4 are both left empty (strict NMEA).
+ *
+ * Checksums were pre-computed and verified independently.
+ * See test/testutil.ts for the BaconJS timing rationale behind testSequential.
+ */
 
-// Multi-input sentence with mixed defaults: navigation.headingMagnetic has
-// no default, navigation.magneticVariation defaults to ''. This exercises
-// combineStreamsWith with one Property (toProperty(default)) plus one
-// non-defaulted Bus that we then push to.
-//
-// HDG field layout: $--HDG,heading,deviation,devDir,variation,varDir*cs
-// Deviation fields (1-2) are always empty because Signal K's
-// headingMagnetic already has deviation applied.
+const deg = (d: number): number => (d * Math.PI) / 180
+
 describe('HDG', function () {
+  this.timeout(300)
+
+  // ── headingMagnetic only ─────────────────────────────────────────────────
+
   it('emits heading with empty deviation and variation when only headingMagnetic is pushed', (done) => {
-    const onEmit = (_event: string, value: unknown): void => {
-      // 0.5 rad = 28.65 deg; no variation available
-      // Expected: $IIHDG,28.65,,,,*cs
-      assert.match(value as string, /^\$IIHDG,28\.65,,,,\*[0-9A-F]{2}$/)
-      done()
-    }
-    const app = createAppWithPlugin(onEmit, 'HDG')
-    app.streambundle.getSelfStream('navigation.headingMagnetic').push(0.5)
+    // 0.5 rad ≈ 28.65°; no variation available → fields 3-4 both empty
+    // $IIHDG,28.65,,,,*40
+    testSequential(
+      'HDG',
+      [{ path: 'navigation.headingMagnetic', value: 0.5 }],
+      '$IIHDG,28.65,,,,*40',
+      done
+    )
   })
 
-  it('places easterly variation in fields 4-5', (done) => {
-    const onEmit = (_event: string, value: unknown): void => {
-      // headingMagnetic = 0.5 rad = 28.65 deg
-      // magneticVariation = 0.1 rad = 5.73 deg E
-      // Expected: $IIHDG,28.65,,,5.73,E*cs
-      // Push magneticVariation BEFORE headingMagnetic so the first
-      // combineWith emission already sees the non-default value
-      // (debounceImmediate(20) would swallow a second emission).
-      assert.match(value as string, /^\$IIHDG,28\.65,,,5\.73,E\*[0-9A-F]{2}$/)
-      done()
-    }
-    const app = createAppWithPlugin(onEmit, 'HDG')
-    app.streambundle.getSelfStream('navigation.magneticVariation').push(0.1)
-    app.streambundle.getSelfStream('navigation.headingMagnetic').push(0.5)
+  it('handles heading near 360°', (done) => {
+    // 6.0 rad ≈ 343.77°
+    // $IIHDG,343.77,,,,*7D
+    testSequential(
+      'HDG',
+      [{ path: 'navigation.headingMagnetic', value: 6.0 }],
+      '$IIHDG,343.77,,,,*7D',
+      done
+    )
   })
 
-  it('places westerly variation in fields 4-5 with W direction', (done) => {
-    const onEmit = (_event: string, value: unknown): void => {
-      // magneticVariation = -0.1 rad (westerly, negative per Signal K spec)
-      // Expected: direction = 'W', degrees = 5.73 (absolute value)
-      // Expected: $IIHDG,28.65,,,5.73,W*cs
-      assert.match(value as string, /^\$IIHDG,28\.65,,,5\.73,W\*[0-9A-F]{2}$/)
-      done()
-    }
-    const app = createAppWithPlugin(onEmit, 'HDG')
-    app.streambundle.getSelfStream('navigation.magneticVariation').push(-0.1)
-    app.streambundle.getSelfStream('navigation.headingMagnetic').push(0.5)
+  // ── headingMagnetic + variation ──────────────────────────────────────────
+
+  it('places easterly variation in fields 3-4', (done) => {
+    // headingMagnetic=0.5 rad ≈ 28.65°, variation=0.1 rad ≈ 5.73° E
+    // $IIHDG,28.65,,,5.73,E*1A
+    testSequential(
+      'HDG',
+      [
+        { path: 'navigation.magneticVariation', value: 0.1 },
+        { path: 'navigation.headingMagnetic', value: 0.5 },
+      ],
+      '$IIHDG,28.65,,,5.73,E*1A',
+      done
+    )
   })
 
-  it('handles heading near 360 degrees', (done) => {
-    const onEmit = (_event: string, value: unknown): void => {
-      // 6.0 rad = 343.77 deg
-      assert.match(value as string, /^\$IIHDG,343\.77,,,,\*[0-9A-F]{2}$/)
-      done()
-    }
-    const app = createAppWithPlugin(onEmit, 'HDG')
-    app.streambundle.getSelfStream('navigation.headingMagnetic').push(6.0)
+  it('places westerly variation in fields 3-4 with W direction', (done) => {
+    // magneticVariation=-0.1 rad (negative = westerly per Signal K spec)
+    // → absolute value 5.73°, direction W
+    // $IIHDG,28.65,,,5.73,W*08
+    testSequential(
+      'HDG',
+      [
+        { path: 'navigation.magneticVariation', value: -0.1 },
+        { path: 'navigation.headingMagnetic', value: 0.5 },
+      ],
+      '$IIHDG,28.65,,,5.73,W*08',
+      done
+    )
   })
 
   it('handles zero variation as easterly', (done) => {
-    const onEmit = (_event: string, value: unknown): void => {
-      // magneticVariation = 0 rad; 0 !== '' is true, 0 < 0 is false => 'E'
-      // Expected: $IIHDG,28.65,,,0.00,E*cs
-      assert.match(value as string, /^\$IIHDG,28\.65,,,0\.00,E\*[0-9A-F]{2}$/)
-      done()
-    }
-    const app = createAppWithPlugin(onEmit, 'HDG')
-    app.streambundle.getSelfStream('navigation.magneticVariation').push(0)
-    app.streambundle.getSelfStream('navigation.headingMagnetic').push(0.5)
+    // variation=0 → not negative, so direction is E, degrees 0.00
+    // $IIHDG,28.65,,,0.00,E*1B
+    testSequential(
+      'HDG',
+      [
+        { path: 'navigation.magneticVariation', value: 0 },
+        { path: 'navigation.headingMagnetic', value: 0.5 },
+      ],
+      '$IIHDG,28.65,,,0.00,E*1B',
+      done
+    )
+  })
+
+  // ── suppression ──────────────────────────────────────────────────────────
+
+  it('does not emit when only magneticVariation is present (headingMagnetic required)', (done) => {
+    // headingMagnetic has no default — the sentence must not fire without it
+    testSuppressed(
+      'HDG',
+      [{ path: 'navigation.magneticVariation', value: deg(10) }],
+      done
+    )
   })
 })
