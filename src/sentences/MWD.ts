@@ -7,11 +7,33 @@ $IIMWD,x.x,T,x.x,M,x.x,N,x.x,M*hh
  I__I_Wind direction from 0° to 359° true
 
  speed Might be ground speed.
+
+ Signal K inputs and missing-data handling
+ -----------------------------------------
+ environment.wind.directionTrue — true wind direction.
+ navigation.magneticVariation   — used to derive the magnetic direction.
+ environment.wind.speedTrue      — wind speed (m/s).
+
+ All three default to MISSING so the combined stream fires as soon as any
+ one path emits.  A non-finite value (null, NaN, Infinity or a non-numeric
+ value) is treated as absent and produces an empty field rather than a
+ fabricated "0.0" or a literal "NaN":
+   - true direction empty when directionTrue is absent,
+   - magnetic direction empty unless BOTH directionTrue and variation are
+     present (it cannot be derived otherwise),
+   - both speed fields empty when speedTrue is absent.
+ When no field can be populated the sentence is suppressed entirely.
  */
 
 // NMEA0183 Encoder MWD   $IIMWD,279.07,T,90.97,M,9.75,N,5.02,M*74
 import * as nmea from '../nmea'
 import type { SentenceEncoder, SignalKApp } from '../types/plugin'
+
+const MISSING = '' as const
+type MaybeNumber = number | typeof MISSING
+
+// Treats null, NaN, Infinity and non-numeric values as absent.
+const finiteNum = (v: MaybeNumber): v is number => Number.isFinite(v as number)
 
 export default function (_app: SignalKApp): SentenceEncoder {
   return {
@@ -22,21 +44,51 @@ export default function (_app: SignalKApp): SentenceEncoder {
       'navigation.magneticVariation',
       'environment.wind.speedTrue'
     ],
+    defaults: [MISSING, MISSING, MISSING],
     f: function (
-      directionTrue: number,
-      magneticVariation: number,
-      speedTrue: number
-    ): string {
-      const directionMagnetic = nmea.fixAngle(directionTrue - magneticVariation)
+      directionTrue: MaybeNumber,
+      magneticVariation: MaybeNumber,
+      speedTrue: MaybeNumber
+    ): string | undefined {
+      const directionTrueField = finiteNum(directionTrue)
+        ? nmea.radsToPositiveDeg(directionTrue).toFixed(2)
+        : ''
+
+      // The magnetic direction can only be derived when both the true
+      // direction and the variation are available.
+      const directionMagneticField =
+        finiteNum(directionTrue) && finiteNum(magneticVariation)
+          ? nmea
+              .radsToPositiveDeg(
+                nmea.fixAngle(directionTrue - magneticVariation)
+              )
+              .toFixed(2)
+          : ''
+
+      const speedKnotsField = finiteNum(speedTrue)
+        ? nmea.msToKnots(speedTrue).toFixed(2)
+        : ''
+      const speedMsField = finiteNum(speedTrue) ? speedTrue.toFixed(2) : ''
+
+      // Nothing useful to report — suppress rather than emit an empty hull.
+      if (
+        directionTrueField === '' &&
+        directionMagneticField === '' &&
+        speedKnotsField === '' &&
+        speedMsField === ''
+      ) {
+        return undefined
+      }
+
       return nmea.toSentence([
         '$IIMWD',
-        nmea.radsToPositiveDeg(directionTrue).toFixed(2),
+        directionTrueField,
         'T',
-        nmea.radsToPositiveDeg(directionMagnetic).toFixed(2),
+        directionMagneticField,
         'M',
-        nmea.msToKnots(speedTrue).toFixed(2),
+        speedKnotsField,
         'N',
-        speedTrue.toFixed(2),
+        speedMsField,
         'M'
       ])
     }
