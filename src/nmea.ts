@@ -155,6 +155,18 @@ export function radsToPositiveDeg(r: number): number {
   return radsToDeg(toPositiveRadians(r))
 }
 
+// Sentinel for an absent NMEA field. Encoders default missing Signal K inputs
+// to MISSING so the combined stream fires as soon as any one path emits, and
+// render a non-finite value as an empty field rather than a fabricated "0.0"
+// or a literal "NaN".
+export const MISSING = '' as const
+export type MaybeNumber = number | null | undefined | typeof MISSING
+
+// Treats null, undefined, NaN, Infinity and non-numeric values as absent.
+export function finiteNum(v: MaybeNumber): v is number {
+  return Number.isFinite(v as number)
+}
+
 export interface FormattedDatetime {
   hours: string
   minutes: string

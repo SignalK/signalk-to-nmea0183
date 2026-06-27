@@ -57,6 +57,34 @@ describe('MWD', function () {
     )
   })
 
+  it('produces positive true direction for negative radian input', (done) => {
+    // dirTrue=-10° → 350°, variation=0 → magnetic also 350°.
+    testSequential(
+      'MWD',
+      [
+        { path: 'environment.wind.directionTrue', value: deg(-10) },
+        { path: 'navigation.magneticVariation', value: 0 },
+        { path: 'environment.wind.speedTrue', value: 5 }
+      ],
+      '$IIMWD,350.00,T,350.00,M,9.72,N,5.00,M*4D',
+      done
+    )
+  })
+
+  it('wraps magnetic direction above 360 back into range', (done) => {
+    // dirTrue=355°, variation=-10° (westerly) → raw magnetic = 365° → 5°.
+    testSequential(
+      'MWD',
+      [
+        { path: 'environment.wind.directionTrue', value: deg(355) },
+        { path: 'navigation.magneticVariation', value: deg(-10) },
+        { path: 'environment.wind.speedTrue', value: 5 }
+      ],
+      '$IIMWD,355.00,T,5.00,M,9.72,N,5.00,M*4B',
+      done
+    )
+  })
+
   it('leaves the magnetic field empty when variation is absent', (done) => {
     // Only the true direction is known — magnetic cannot be derived.
     testSequential(

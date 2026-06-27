@@ -191,7 +191,23 @@ const createPlugin = function (app: SignalKApp): SignalKPlugin {
             }
           }
         )
-          .filter((v) => typeof v !== 'undefined')
+          .filter((v) => {
+            if (typeof v !== 'string') {
+              return false
+            }
+            // Safety net: never put a sentence with a literal "NaN" field on
+            // the wire.  Encoders are expected to render absent/non-finite
+            // values as empty fields, but if one misses a guard the result
+            // would be a corrupt sentence like "$IIMWV,NaN,R,...".  Drop it
+            // here rather than emit garbage downstream.  Match a whole "NaN"
+            // field (delimited by comma/checksum) so a legitimate free-text
+            // field that merely contains those letters is left untouched.
+            if (/(?:^|,)NaN(?:,|\*|$)/.test(v)) {
+              app.debug(`dropping sentence with NaN field: ${v}`)
+              return false
+            }
+            return true
+          })
           .changes()
           .debounceImmediate(20)
 

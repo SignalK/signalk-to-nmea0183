@@ -27,13 +27,8 @@
 // NMEA0183 Encoder MWVTCB   $INMWV,61.44,T,6.04,M,A*0A
 
 import * as nmea from '../nmea'
+import { MISSING, finiteNum, type MaybeNumber } from '../nmea'
 import type { SentenceEncoder, SignalKApp } from '../types/plugin'
-
-const MISSING = '' as const
-type MaybeNumber = number | typeof MISSING
-
-// Treats null, NaN, Infinity and non-numeric values as absent.
-const finiteNum = (v: MaybeNumber): v is number => Number.isFinite(v as number)
 
 export default function (_app: SignalKApp): SentenceEncoder {
   return {
