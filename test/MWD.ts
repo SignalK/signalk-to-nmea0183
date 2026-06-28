@@ -1,85 +1,131 @@
-import * as assert from 'assert'
+import { testSequential, testSuppressed } from './testutil'
 
-import { createAppWithPlugin } from './testutil'
+/**
+ * MWD - Wind Direction & Speed (relative to North)
+ *
+ * $IIMWD,dirTrue,T,dirMag,M,speedKn,N,speedMs,M*cs
+ *
+ * Field layout:
+ *   0  True wind direction (degrees)
+ *   1  T
+ *   2  Magnetic wind direction (degrees) — derived from true direction and
+ *      magnetic variation; empty unless BOTH are present
+ *   3  M
+ *   4  Wind speed (knots)
+ *   5  N
+ *   6  Wind speed (m/s)
+ *   7  M
+ *
+ * All three Signal K inputs default to MISSING so the combined stream fires
+ * as soon as any one path emits.  Non-finite values are treated as absent
+ * and produce empty fields; when no field can be populated the sentence is
+ * suppressed.
+ *
+ * Checksums generated from the encoder and verified independently.
+ * See test/testutil.ts for the BaconJS timing rationale behind testSequential.
+ */
 
-type AnyApp = ReturnType<typeof createAppWithPlugin>
-
-// Parse the comma-separated body of an NMEA sentence, stripping the checksum.
-function parseSentence(sentence: string): string[] {
-  const star = sentence.indexOf('*')
-  const body = star >= 0 ? sentence.substring(0, star) : sentence
-  return body.split(',')
-}
-
-function pushMWD(
-  app: AnyApp,
-  directionTrueRad: number,
-  variationRad: number,
-  speedTrueMs: number
-): void {
-  app.streambundle
-    .getSelfStream('environment.wind.directionTrue')
-    .push(directionTrueRad)
-  app.streambundle
-    .getSelfStream('navigation.magneticVariation')
-    .push(variationRad)
-  app.streambundle.getSelfStream('environment.wind.speedTrue').push(speedTrueMs)
-}
+const deg = (d: number): number => (d * Math.PI) / 180
 
 describe('MWD', function () {
+  this.timeout(300)
+
   it('emits true and magnetic direction with speed in knots and m/s', (done) => {
-    // directionTrue = 90 deg, variation = 10 deg east
-    // directionMagnetic = 90 - 10 = 80 deg
-    const onEmit = (_event: string, value: unknown): void => {
-      const parts = parseSentence(value as string)
-      assert.equal(parts[0], '$IIMWD')
-      assert.equal(parts[1], '90.00')
-      assert.equal(parts[2], 'T')
-      assert.equal(parts[3], '80.00')
-      assert.equal(parts[4], 'M')
-      assert.equal(parts[6], 'N')
-      assert.equal(parts[8], 'M')
-      done()
-    }
-    const app = createAppWithPlugin(onEmit, 'MWD')
-    pushMWD(app, Math.PI / 2, (10 * Math.PI) / 180, 5)
+    // dirTrue=90°, variation=10°E → dirMag=80°, speed=5 m/s ≈ 9.72 kn
+    testSequential(
+      'MWD',
+      [
+        { path: 'environment.wind.directionTrue', value: deg(90) },
+        { path: 'navigation.magneticVariation', value: deg(10) },
+        { path: 'environment.wind.speedTrue', value: 5 }
+      ],
+      '$IIMWD,90.00,T,80.00,M,9.72,N,5.00,M*4C',
+      done
+    )
   })
 
-  it('produces positive magnetic direction when variation exceeds true direction', (done) => {
-    // directionTrue = 5 deg, variation = 10 deg east
-    // directionMagnetic = 5 - 10 = -5 deg -> must be 355 deg (not -5)
-    const onEmit = (_event: string, value: unknown): void => {
-      const parts = parseSentence(value as string)
-      assert.equal(parts[1], '5.00')
-      assert.equal(parts[3], '355.00')
-      done()
-    }
-    const app = createAppWithPlugin(onEmit, 'MWD')
-    pushMWD(app, (5 * Math.PI) / 180, (10 * Math.PI) / 180, 5)
-  })
-
-  it('wraps magnetic direction when true near 360 and variation is westerly', (done) => {
-    // directionTrue = 355 deg (6.196 rad), variation = -10 deg (-0.175 rad)
-    // raw magnetic = 355 - (-10) = 365 deg (> 2*PI), fixAngle wraps to 5 deg
-    const onEmit = (_event: string, value: unknown): void => {
-      const parts = parseSentence(value as string)
-      assert.equal(parts[1], '355.00')
-      assert.equal(parts[3], '5.00')
-      done()
-    }
-    const app = createAppWithPlugin(onEmit, 'MWD')
-    pushMWD(app, (355 * Math.PI) / 180, (-10 * Math.PI) / 180, 5)
+  it('wraps magnetic direction below zero into 0-359 range', (done) => {
+    // dirTrue=5°, variation=10°E → raw magnetic = -5° → 355°
+    testSequential(
+      'MWD',
+      [
+        { path: 'environment.wind.directionTrue', value: deg(5) },
+        { path: 'navigation.magneticVariation', value: deg(10) }
+      ],
+      '$IIMWD,5.00,T,355.00,M,,N,,M*42',
+      done
+    )
   })
 
   it('produces positive true direction for negative radian input', (done) => {
-    // directionTrue = -10 deg (equivalent to 350 deg), variation = 0
-    const onEmit = (_event: string, value: unknown): void => {
-      const parts = parseSentence(value as string)
-      assert.equal(parts[1], '350.00')
-      assert.equal(parts[3], '350.00')
-      done()
-    }
-    const app = createAppWithPlugin(onEmit, 'MWD')
-    pushMWD(app, (-10 * Math.PI) / 180, 0, 5)
+    // dirTrue=-10° → 350°, variation=0 → magnetic also 350°.
+    testSequential(
+      'MWD',
+      [
+        { path: 'environment.wind.directionTrue', value: deg(-10) },
+        { path: 'navigation.magneticVariation', value: 0 },
+        { path: 'environment.wind.speedTrue', value: 5 }
+      ],
+      '$IIMWD,350.00,T,350.00,M,9.72,N,5.00,M*4D',
+      done
+    )
+  })
+
+  it('wraps magnetic direction above 360 back into range', (done) => {
+    // dirTrue=355°, variation=-10° (westerly) → raw magnetic = 365° → 5°.
+    testSequential(
+      'MWD',
+      [
+        { path: 'environment.wind.directionTrue', value: deg(355) },
+        { path: 'navigation.magneticVariation', value: deg(-10) },
+        { path: 'environment.wind.speedTrue', value: 5 }
+      ],
+      '$IIMWD,355.00,T,5.00,M,9.72,N,5.00,M*4B',
+      done
+    )
+  })
+
+  it('leaves the magnetic field empty when variation is absent', (done) => {
+    // Only the true direction is known — magnetic cannot be derived.
+    testSequential(
+      'MWD',
+      [{ path: 'environment.wind.directionTrue', value: deg(90) }],
+      '$IIMWD,90.00,T,,M,,N,,M*63',
+      done
+    )
+  })
+
+  it('leaves both direction fields empty when only speed is present', (done) => {
+    testSequential(
+      'MWD',
+      [{ path: 'environment.wind.speedTrue', value: 5 }],
+      '$IIMWD,,T,,M,9.72,N,5.00,M*4D',
+      done
+    )
+  })
+
+  it('treats a non-finite direction as absent (empty field, not NaN)', (done) => {
+    // directionTrue is NaN → both direction fields empty; speed still emitted.
+    testSequential(
+      'MWD',
+      [
+        { path: 'environment.wind.directionTrue', value: NaN },
+        { path: 'environment.wind.speedTrue', value: 5 }
+      ],
+      '$IIMWD,,T,,M,9.72,N,5.00,M*4D',
+      done
+    )
+  })
+
+  it('suppresses the sentence when every value is non-finite', (done) => {
+    testSuppressed(
+      'MWD',
+      [
+        { path: 'environment.wind.directionTrue', value: NaN },
+        { path: 'navigation.magneticVariation', value: Infinity },
+        { path: 'environment.wind.speedTrue', value: NaN }
+      ],
+      done
+    )
   })
 })
