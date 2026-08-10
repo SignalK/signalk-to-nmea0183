@@ -2,8 +2,8 @@
   "extends": "../../tsconfig.json",
   "compilerOptions": {
     // The browser bundle needs ESM + bundler resolution so webpack can
-    // consume the ts-loader output; the root tsconfig is geared toward
-    // the Node CJS plugin build and would emit require()s here.
+    // consume the loader output; the root tsconfig is geared toward the
+    // Node CJS plugin build and would emit require()s here.
     "module": "esnext",
     "moduleResolution": "bundler",
     "target": "ES2022",

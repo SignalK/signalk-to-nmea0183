@@ -20,15 +20,20 @@ module.exports = {
     rules: [
       {
         test: /\.tsx?$/,
-        loader: 'ts-loader',
+        loader: 'esbuild-loader',
         exclude: /node_modules/,
         options: {
-          // The bundle needs ESM + bundler-resolution and JSX support;
-          // the root tsconfig is geared toward the CJS plugin build.
-          // A sibling tsconfig under `src/configpanel/` flips the
-          // relevant knobs without polluting the main settings.
-          configFile: path.resolve(__dirname, 'src/configpanel/tsconfig.json'),
-          transpileOnly: false
+          // esbuild transpiles without type checking; `npm run typecheck`
+          // is the type gate and covers `src/**/*`, this panel included.
+          // A loader that drives the TypeScript compiler API is not an
+          // option: the `typescript` package stopped exporting one in v7.
+          // A sibling tsconfig under `src/configpanel/` supplies the JSX
+          // transform and the ESM + bundler-resolution the browser bundle
+          // needs, without polluting the CJS plugin build.
+          tsconfig: path.resolve(__dirname, 'src/configpanel/tsconfig.json'),
+          // esbuild takes its output target from here, not from the
+          // tsconfig; keep the two in sync.
+          target: 'es2022'
         }
       }
     ]
