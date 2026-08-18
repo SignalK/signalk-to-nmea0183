@@ -51,8 +51,18 @@ module.exports = {
           './src/configpanel/PluginConfigurationPanel'
       },
       shared: {
-        react: { singleton: true, requiredVersion: '^19' },
-        'react-dom': { singleton: true, requiredVersion: '^19' }
+        // The panel renders inside the admin UI's React tree, so it must
+        // use the host's React instance and never carry one of its own.
+        // `import: false` drops the bundled fallback and, with it, the
+        // container's own entry in the share scope; webpack's singleton
+        // resolution would otherwise prefer that higher version over the
+        // host's already-loaded one. `requiredVersion: false` skips the
+        // range check, because the admin UI has shipped React 16 and
+        // React 19 across the server versions in the field and the panel
+        // stays within the hook API both provide. `react-dom` is absent
+        // because the panel renders through the host and never imports
+        // it.
+        react: { singleton: true, requiredVersion: false, import: false }
       }
     })
   ]

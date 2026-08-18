@@ -4,11 +4,15 @@
     "module": "commonjs",
     "moduleResolution": "bundler",
     "lib": ["ES2022", "DOM"],
-    // `react-jsx` uses the modern jsx-runtime entry. The webpack
-    // bundle for `src/configpanel/` compiles with a sibling tsconfig
-    // that flips to ESM + bundler resolution; only the JSX transform
-    // is shared. Non-TSX files are unaffected by this setting.
-    "jsx": "react-jsx",
+    // Classic runtime: JSX compiles to `React.createElement` calls that
+    // go through the panel's single `react` import, which Module
+    // Federation resolves to the admin UI's own React instance. The
+    // automatic runtime would instead pull in `react/jsx-runtime`, which
+    // cannot be shared and would build elements the host's React does
+    // not necessarily recognise. The sibling tsconfig under
+    // `src/configpanel/` inherits this so the type gate and the webpack
+    // build cannot drift apart. Non-TSX files are unaffected.
+    "jsx": "react",
 
     "strict": true,
     "noImplicitOverride": true,
