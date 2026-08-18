@@ -16,8 +16,50 @@ interface TestApp {
   }
   emit: (name: string, value: unknown) => void
   debug: (msg: unknown) => void
+  error: (msg: string) => void
   getSelfPath: (path: string) => { value: unknown } | null
   emittedEvents: EmittedEvent[]
+  /** Messages passed to `app.debug`, captured instead of printed. */
+  debugMessages: string[]
+  /** Messages passed to `app.error`; assert on this to pin down log noise. */
+  loggedErrors: string[]
+}
+
+/**
+ * Build a stub Signal K `app` without starting the plugin. Use this when
+ * a test needs to reach the plugin object before `start` (e.g. to inject
+ * an encoder); most tests want `createAppWithPlugin` instead.
+ */
+export function createTestApp(onEmit: OnEmit): TestApp {
+  const streams: Record<string, Bacon.Bus<unknown>> = {}
+  const app: TestApp = {
+    streambundle: {
+      getSelfStream: (p: string): Bacon.Bus<unknown> => {
+        const existing = streams[p]
+        if (existing) return existing
+        const bus = new Bacon.Bus<unknown>()
+        streams[p] = bus
+        return bus
+      }
+    },
+    emittedEvents: [],
+    debugMessages: [],
+    loggedErrors: [],
+    emit: (name: string, value: unknown): void => {
+      app.emittedEvents.push({ name, value })
+      if (name === 'nmea0183out') {
+        onEmit(name, value)
+      }
+    },
+    debug: (msg: unknown): void => {
+      app.debugMessages.push(String(msg))
+    },
+    error: (msg: string): void => {
+      app.loggedErrors.push(msg)
+    },
+    getSelfPath: () => null
+  }
+  return app
 }
 
 /**
@@ -32,29 +74,7 @@ export function createAppWithPlugin(
   onEmit: OnEmit,
   enabledConversion: string | Conversion[] | Record<string, unknown>
 ): TestApp {
-  const streams: Record<string, Bacon.Bus<unknown>> = {}
-  const app: TestApp = {
-    streambundle: {
-      getSelfStream: (p: string): Bacon.Bus<unknown> => {
-        const existing = streams[p]
-        if (existing) return existing
-        const bus = new Bacon.Bus<unknown>()
-        streams[p] = bus
-        return bus
-      }
-    },
-    emittedEvents: [],
-    emit: (name: string, value: unknown): void => {
-      app.emittedEvents.push({ name, value })
-      if (name === 'nmea0183out') {
-        onEmit(name, value)
-      }
-    },
-    debug: (msg: unknown): void => {
-      console.log(msg)
-    },
-    getSelfPath: () => null
-  }
+  const app = createTestApp(onEmit)
   // eslint-disable-next-line @typescript-eslint/no-var-requires
   const plugin = require('../src/index')(app)
 

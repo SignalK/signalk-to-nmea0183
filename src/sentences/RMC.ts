@@ -50,9 +50,16 @@ export default function (_app: SignalKApp): SentenceEncoder {
       datetime8601: string,
       sog: number | string,
       cog: number | null | undefined,
-      position: Position,
+      position: Position | null | undefined,
       magneticVariation: number | string
-    ): string {
+    ): string | undefined {
+      // Signal K reports navigation.position as null while the GPS has no
+      // fix. Skip the sentence rather than put empty coordinates on the
+      // wire, matching how GLL and GGA handle the same gap.
+      if (!position) {
+        return undefined
+      }
+
       const datetime = formatDatetime(datetime8601)
       let magneticVariationDeg = ''
       let magneticVariationDir = ''

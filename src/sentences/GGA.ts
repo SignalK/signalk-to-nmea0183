@@ -81,8 +81,11 @@ export default function (_app: SignalKApp): SentenceEncoder {
 
       const datetime = formatDatetime(datetimeInput)
 
+      // A missing position is the normal state while the GPS has no fix,
+      // not a fault: log at debug level so an unfixed receiver does not
+      // fill the server log.
       if (!position) {
-        console.error(`[signalk-to-nmea0183] GGA: no position, not converting`)
+        _app.debug('GGA: skipping emission - no position')
         return undefined
       }
 

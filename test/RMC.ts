@@ -151,4 +151,39 @@ describe('RMC', function () {
       .getSelfStream('navigation.position')
       .push({ longitude: -122.4208, latitude: 37.82673 })
   })
+
+  // Signal K publishes navigation.position as null while the GPS has no
+  // fix. That is a normal condition at sea, so the encoder must stay
+  // silent rather than throw and have the plugin log the failure.
+  it('does not emit when position is null', (done) => {
+    let emitted = false
+    const onEmit = (): void => {
+      emitted = true
+    }
+    const app = createAppWithPlugin(onEmit, 'RMC')
+    app.streambundle.getSelfStream('navigation.speedOverGround').push('1')
+    app.streambundle.getSelfStream('navigation.courseOverGroundTrue').push('2')
+    app.streambundle.getSelfStream('navigation.position').push(null)
+    setTimeout(() => {
+      assert.equal(emitted, false)
+      assert.deepEqual(app.loggedErrors, [])
+      done()
+    }, 50)
+  })
+
+  it('resumes emitting once a position arrives after a null', (done) => {
+    const onEmit = (_event: string, value: unknown): void => {
+      assert.equal(value, '$GPRMC,,A,0600.0000,N,00500.0000,E,1.9,114.6,,,*14')
+      done()
+    }
+    const app = createAppWithPlugin(onEmit, 'RMC')
+    app.streambundle.getSelfStream('navigation.speedOverGround').push('1')
+    app.streambundle.getSelfStream('navigation.courseOverGroundTrue').push('2')
+    app.streambundle.getSelfStream('navigation.position').push(null)
+    setTimeout(() => {
+      app.streambundle
+        .getSelfStream('navigation.position')
+        .push({ longitude: 5, latitude: 6 })
+    }, 50)
+  })
 })

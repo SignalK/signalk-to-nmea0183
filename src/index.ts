@@ -180,13 +180,27 @@ const createPlugin = function (app: SignalKApp): SignalKPlugin {
           ? `g${encoder.sentence}`
           : undefined
 
+        // A throwing encoder is called once per combined-stream emission,
+        // which on a live feed means several times a second. Report the
+        // first failure at error level, named after the sentence so the
+        // message is actionable, then route repeats to debug so the
+        // server log stays readable.
+        const encoderName = encoder.sentence ?? encoder.title
+        let failureReported = false
+
         let stream = combineStreamsWith(
           selfStreams,
           function (this: unknown, ...args: unknown[]) {
             try {
               return encoder.f.apply(this, args)
             } catch (e) {
-              console.error((e as Error).message)
+              const message = `${encoderName} encoder failed: ${(e as Error).message}`
+              if (failureReported) {
+                app.debug(message)
+              } else {
+                failureReported = true
+                app.error(message)
+              }
               return undefined
             }
           }
@@ -241,10 +255,7 @@ const createPlugin = function (app: SignalKApp): SignalKPlugin {
       conversions.forEach((conv) => {
         const encoder = plugin.sentences[conv.sentence]
         if (!encoder) {
-          console.error(
-            'sk-to-nmea0183: unknown sentence "%s", skipping',
-            conv.sentence
-          )
+          app.error(`unknown sentence "${conv.sentence}", skipping`)
           return
         }
         mapToNmea(encoder, conv.throttle ?? 0, conv.event)
